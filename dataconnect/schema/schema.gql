@@ -1,0 +1,90 @@
+type Autenticacion @table {
+  firebaseAuthUid: String!
+  correoElectronico: String!
+  usuario: Usuario! @unique
+}
+
+type Usuario @table {
+  nombre: String!
+  numeroDeTelefono: String
+  direccion: String
+  rol: Rol
+}
+
+type Rol @table {
+  nombre: String!
+  descripcion: String
+}
+
+type Permiso @table {
+  nombre: String!
+  codigoAccion: String! @unique
+}
+
+type RolPermiso @table(key: ["rol", "permiso"]) {
+  rol: Rol!
+  permiso: Permiso!
+}
+
+type Puesto @table {
+  nombre: String!
+  ubicacion: String!
+}
+
+type Producto @table {
+  nombre: String!
+  precio: Float!
+  cantidadEnStock: Int!
+  descripcion: String
+  urlDeImagen: String
+  puesto: Puesto!
+}
+
+type Pedido @table {
+  montoTotal: Float!
+  estado: String!
+  fechaCreacion: Timestamp!
+  esCredito: Boolean!
+  usuario: Usuario!
+}
+
+type DetallePedido @table {
+  cantidad: Int!
+  precioEnElMomento: Float!
+  pedido: Pedido!
+  producto: Producto!
+}
+
+type Adeudo @table {
+  montoPendiente: Float!
+  fechaUltimaActualizacion: Timestamp!
+  usuario: Usuario! @unique
+}
+
+type Pago @table {
+  montoPagado: Float!
+  fechaPago: Timestamp!
+  usuario: Usuario!
+  pedido: Pedido
+}
+
+type CarritoItem @table {
+  cantidad: Int!
+  precioEnElMomento: Float!
+  usuario: Usuario!
+  producto: Producto!
+}
+
+type DispositivoToken @table {
+  token: String!
+  plataforma: String!
+  usuario: Usuario!
+}
+
+type Notificacion @table {
+  titulo: String!
+  mensaje: String!
+  fechaEnvio: Timestamp!
+  leido: Boolean!
+  usuario: Usuario!
+}
