@@ -1,0 +1,13 @@
+specVersion: "v1"
+serviceId: "agilu-a232a-service"
+location: "us-east4"
+schemas:
+  - source: "./schema"
+    datasource:
+      postgresql:
+        database: "agilu-a232a-database"
+        cloudSql:
+          instanceId: "agilu-a232a-instance"
+          # schemaValidation: "STRICT"     # STRICT mode makes Postgres schema match Data Connect exactly.
+          # schemaValidation: "COMPATIBLE" # COMPATIBLE mode makes Postgres schema compatible with Data Connect.
+connectorDirs: ["./example"]
