@@ -1,0 +1,32 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "agilu-a232a",
+          "appId": "1:490197495035:android:6c0e3b67db7d701177d45e",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "agilu-a232a",
+          "configurations": {
+            "android": "1:490197495035:android:6c0e3b67db7d701177d45e",
+            "ios": "1:490197495035:ios:2d4cc375f0dca4d177d45e",
+            "web": "1:490197495035:web:083516b7e64a9e3777d45e",
+            "windows": "1:490197495035:web:1df59b07a275cf4277d45e"
+          }
+        }
+      }
+    }
+  },
+  "emulators": {
+    "dataconnect": {
+      "dataDir": "dataconnect/.dataconnect/pgliteData"
+    }
+  },
+  "dataconnect": {
+    "source": "dataconnect"
+  }
+}
