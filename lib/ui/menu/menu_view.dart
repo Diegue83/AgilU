@@ -83,8 +83,14 @@ class _MenuScaffold extends StatelessWidget {
                         Text('\$${p.precio.toStringAsFixed(2)}'),
                         IconButton(
                           icon: const Icon(Icons.add_circle_outline),
-                          onPressed:
-                              p.disponible ? () => carrito.agregar(p) : null,
+                          onPressed: p.disponible
+                              ? () {
+                                  if (!carrito.agregar(p)) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text(carrito.error!)));
+                                  }
+                                }
+                              : null,
                         ),
                       ],
                     ),
