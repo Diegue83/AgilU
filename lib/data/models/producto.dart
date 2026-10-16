@@ -1,3 +1,5 @@
+import '../../core/app_config.dart';
+
 class Producto {
   final String id;
   final String nombre;
@@ -5,6 +7,7 @@ class Producto {
   final double precio;
   final String categoria;
   final bool disponible;
+  final String cafeteriaId;
 
   const Producto({
     required this.id,
@@ -13,6 +16,7 @@ class Producto {
     required this.precio,
     required this.categoria,
     this.disponible = true,
+    this.cafeteriaId = AppConfig.cafeteriaPorDefecto,
   });
 
   factory Producto.fromMap(Map<String, dynamic> map, String id) => Producto(
@@ -22,6 +26,8 @@ class Producto {
         precio: ((map['precio'] ?? 0) as num).toDouble(),
         categoria: (map['categoria'] ?? 'General') as String,
         disponible: (map['disponible'] ?? true) as bool,
+        cafeteriaId:
+            (map['cafeteriaId'] ?? AppConfig.cafeteriaPorDefecto) as String,
       );
 
   Map<String, dynamic> toMap() => {
@@ -30,5 +36,6 @@ class Producto {
         'precio': precio,
         'categoria': categoria,
         'disponible': disponible,
+        'cafeteriaId': cafeteriaId,
       };
 }
