@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'core/routes.dart';
 import 'core/theme.dart';
+import 'data/models/pedido.dart';
 import 'ui/auth/login_view.dart';
 import 'ui/cart/cart_view.dart';
 import 'ui/menu/menu_view.dart';
@@ -22,7 +23,8 @@ class AgilUApp extends StatelessWidget {
         Routes.menu: (_) => const MenuView(),
         Routes.carrito: (_) => const CartView(),
         Routes.confirmacion: (ctx) => ConfirmacionView(
-              folio: ModalRoute.of(ctx)!.settings.arguments as String,
+              resultado:
+                  ModalRoute.of(ctx)!.settings.arguments as ResultadoPedido,
             ),
       },
     );
