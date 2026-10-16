@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../core/reglas_pedido.dart';
 import '../../core/routes.dart';
+import '../../data/models/pedido.dart';
 
 class ConfirmacionView extends StatelessWidget {
-  final String folio;
-  const ConfirmacionView({super.key, required this.folio});
+  final ResultadoPedido resultado;
+  const ConfirmacionView({super.key, required this.resultado});
 
   @override
   Widget build(BuildContext context) {
@@ -22,11 +24,17 @@ class ConfirmacionView extends StatelessWidget {
                     style: Theme.of(context).textTheme.headlineMedium),
                 const SizedBox(height: 8),
                 const Text('Tu folio es:'),
-                Text(folio,
+                SelectableText(resultado.folio,
                     style: Theme.of(context)
                         .textTheme
                         .displaySmall
                         ?.copyWith(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 16),
+                Text('Recoge hoy a las ${ReglasPedido.formatearHora(resultado.recogerA)}'),
+                Text('Total a pagar: \$${resultado.total.toStringAsFixed(2)}'),
+                const SizedBox(height: 8),
+                const Text('Muestra tu folio en la cafetería.',
+                    style: TextStyle(fontSize: 12)),
                 const SizedBox(height: 32),
                 FilledButton(
                   onPressed: () =>

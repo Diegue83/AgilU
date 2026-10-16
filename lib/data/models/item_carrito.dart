@@ -11,7 +11,7 @@ class ItemCarrito {
   Map<String, dynamic> toMap() => {
         'productoId': producto.id,
         'nombre': producto.nombre,
-        'precio': producto.precio,
+        'precioUnitario': producto.precio,
         'cantidad': cantidad,
       };
 }
