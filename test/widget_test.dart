@@ -1,30 +1,49 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:agilu/app.dart';
+import 'package:agilu/core/routes.dart';
+import 'package:agilu/data/repositories/auth_repository.dart';
+import 'package:agilu/data/repositories/menu_repository.dart';
+import 'package:agilu/data/repositories/pedido_repository.dart';
+import 'package:agilu/ui/cart/cart_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 
-import 'package:agilu/main.dart';
+Widget _app(AuthRepository auth, {String ruta = Routes.login}) => MultiProvider(
+      providers: [
+        Provider<AuthRepository>.value(value: auth),
+        Provider<MenuRepository>(create: (_) => MockMenuRepository()),
+        Provider<PedidoRepository>(create: (_) => MockPedidoRepository()),
+        ChangeNotifierProvider(create: (_) => CartViewModel()),
+      ],
+      child: AgilUApp(rutaInicial: ruta),
+    );
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('sin sesión abre en el login', (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository()));
+    expect(find.text('Iniciar sesión'), findsOneWidget);
+  });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  testWidgets('con sesión guardada abre directo en el menú', (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository(), ruta: Routes.menu));
+    await tester.pumpAndSettle();
+    expect(find.text('Menú'), findsOneWidget);
+    expect(find.text('Iniciar sesión'), findsNothing);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+  testWidgets('el login muestra el error de validación', (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository()));
+    await tester.tap(find.text('Iniciar sesión'));
     await tester.pump();
+    expect(find.text('Escribe tu correo y tu contraseña.'), findsOneWidget);
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  testWidgets('login correcto lleva al menú', (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository()));
+    await tester.enterText(find.byType(TextField).at(0), 'alumno@utng.edu.mx');
+    await tester.enterText(find.byType(TextField).at(1), '123456');
+    await tester.tap(find.text('Iniciar sesión'));
+    await tester.pumpAndSettle();
+    expect(find.text('Menú'), findsOneWidget);
   });
 }

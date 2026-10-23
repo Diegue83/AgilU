@@ -9,7 +9,17 @@ import 'ui/menu/menu_view.dart';
 import 'ui/pedido/confirmacion_view.dart';
 
 class AgilUApp extends StatelessWidget {
-  const AgilUApp({super.key});
+  final String rutaInicial;
+  const AgilUApp({super.key, this.rutaInicial = Routes.login});
+
+  static final Map<String, WidgetBuilder> _rutas = {
+    Routes.login: (_) => const LoginView(),
+    Routes.menu: (_) => const MenuView(),
+    Routes.carrito: (_) => const CartView(),
+    Routes.confirmacion: (ctx) => ConfirmacionView(
+          resultado: ModalRoute.of(ctx)!.settings.arguments as ResultadoPedido,
+        ),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -17,16 +27,14 @@ class AgilUApp extends StatelessWidget {
       title: 'ÁgilU',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      initialRoute: Routes.login,
-      routes: {
-        Routes.login: (_) => const LoginView(),
-        Routes.menu: (_) => const MenuView(),
-        Routes.carrito: (_) => const CartView(),
-        Routes.confirmacion: (ctx) => ConfirmacionView(
-              resultado:
-                  ModalRoute.of(ctx)!.settings.arguments as ResultadoPedido,
-            ),
-      },
+      initialRoute: rutaInicial,
+      onGenerateInitialRoutes: (ruta) => [
+        MaterialPageRoute(
+          settings: RouteSettings(name: ruta),
+          builder: _rutas[ruta] ?? _rutas[Routes.login]!,
+        ),
+      ],
+      routes: _rutas,
     );
   }
 }
