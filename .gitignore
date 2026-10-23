@@ -17,6 +17,8 @@ pubspec.lock
 google-services.json
 GoogleService-Info.plist
 firebase_options.dart
+*-debug.log
+test_reglas/node_modules/
 
 # SO
 .DS_Store

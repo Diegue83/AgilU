@@ -2,8 +2,7 @@
 class AppConfig {
   /// false = la app corre con datos de ejemplo (sin Firebase).
   /// true  = usa Firebase Authentication + Cloud Firestore.
-  /// Cambiar a true cuando Juan Diego termine la configuración de Firebase.
-  static const bool usarFirebase = false;
+  static const bool usarFirebase = true;
   static const String cafeteriaPorDefecto = 'cafeteria-central';
   static const int anticipacionMinutos = 60;        // regla del beneficiario
   static const int intervaloRecogidaMinutos = 15;
