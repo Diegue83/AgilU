@@ -1,0 +1,451 @@
+# agilu_connector SDK
+
+## Installation
+```sh
+flutter pub get firebase_data_connect
+flutterfire configure
+```
+For more information, see [Flutter for Firebase installation documentation](https://firebase.google.com/docs/data-connect/flutter-sdk#use-core).
+
+## Data Connect instance
+Each connector creates a static class, with an instance of the `DataConnect` class that can be used to connect to your Data Connect backend and call operations.
+
+### Connecting to the emulator
+
+```dart
+String host = 'localhost'; // or your host name
+int port = 9399; // or your port number
+AgiluConnector.instance.dataConnect.useDataConnectEmulator(host, port);
+```
+
+You can also call queries and mutations by using the connector class.
+## Queries
+
+### ListarMenu
+#### Required Arguments
+```dart
+// No required arguments
+AgiluConnector.instance.listarMenu().execute();
+```
+
+
+
+#### Return Type
+`execute()` returns a `QueryResult<ListarMenuData, void>`
+```dart
+/// Result of an Operation Request (query/mutation).
+class OperationResult<Data, Variables> {
+  OperationResult(this.dataConnect, this.data, this.ref);
+  Data data;
+  OperationRef<Data, Variables> ref;
+  FirebaseDataConnect dataConnect;
+}
+
+/// Result of a query request. Created to hold extra variables in the future.
+class QueryResult<Data, Variables> extends OperationResult<Data, Variables> {
+  QueryResult(super.dataConnect, super.data, super.ref);
+}
+
+final result = await AgiluConnector.instance.listarMenu();
+ListarMenuData data = result.data;
+final ref = result.ref;
+```
+
+#### Getting the Ref
+Each builder returns an `execute` function, which is a helper function that creates a `Ref` object, and executes the underlying operation.
+An example of how to use the `Ref` object is shown below:
+```dart
+final ref = AgiluConnector.instance.listarMenu().ref();
+ref.execute();
+
+ref.subscribe(...);
+```
+
+
+### MiPerfil
+#### Required Arguments
+```dart
+// No required arguments
+AgiluConnector.instance.miPerfil().execute();
+```
+
+
+
+#### Return Type
+`execute()` returns a `QueryResult<MiPerfilData, void>`
+```dart
+/// Result of an Operation Request (query/mutation).
+class OperationResult<Data, Variables> {
+  OperationResult(this.dataConnect, this.data, this.ref);
+  Data data;
+  OperationRef<Data, Variables> ref;
+  FirebaseDataConnect dataConnect;
+}
+
+/// Result of a query request. Created to hold extra variables in the future.
+class QueryResult<Data, Variables> extends OperationResult<Data, Variables> {
+  QueryResult(super.dataConnect, super.data, super.ref);
+}
+
+final result = await AgiluConnector.instance.miPerfil();
+MiPerfilData data = result.data;
+final ref = result.ref;
+```
+
+#### Getting the Ref
+Each builder returns an `execute` function, which is a helper function that creates a `Ref` object, and executes the underlying operation.
+An example of how to use the `Ref` object is shown below:
+```dart
+final ref = AgiluConnector.instance.miPerfil().ref();
+ref.execute();
+
+ref.subscribe(...);
+```
+
+
+### MiPedido
+#### Required Arguments
+```dart
+String id = ...;
+AgiluConnector.instance.miPedido(
+  id: id,
+).execute();
+```
+
+
+
+#### Return Type
+`execute()` returns a `QueryResult<MiPedidoData, MiPedidoVariables>`
+```dart
+/// Result of an Operation Request (query/mutation).
+class OperationResult<Data, Variables> {
+  OperationResult(this.dataConnect, this.data, this.ref);
+  Data data;
+  OperationRef<Data, Variables> ref;
+  FirebaseDataConnect dataConnect;
+}
+
+/// Result of a query request. Created to hold extra variables in the future.
+class QueryResult<Data, Variables> extends OperationResult<Data, Variables> {
+  QueryResult(super.dataConnect, super.data, super.ref);
+}
+
+final result = await AgiluConnector.instance.miPedido(
+  id: id,
+);
+MiPedidoData data = result.data;
+final ref = result.ref;
+```
+
+#### Getting the Ref
+Each builder returns an `execute` function, which is a helper function that creates a `Ref` object, and executes the underlying operation.
+An example of how to use the `Ref` object is shown below:
+```dart
+String id = ...;
+
+final ref = AgiluConnector.instance.miPedido(
+  id: id,
+).ref();
+ref.execute();
+
+ref.subscribe(...);
+```
+
+
+### MisPedidos
+#### Required Arguments
+```dart
+// No required arguments
+AgiluConnector.instance.misPedidos().execute();
+```
+
+
+
+#### Return Type
+`execute()` returns a `QueryResult<MisPedidosData, void>`
+```dart
+/// Result of an Operation Request (query/mutation).
+class OperationResult<Data, Variables> {
+  OperationResult(this.dataConnect, this.data, this.ref);
+  Data data;
+  OperationRef<Data, Variables> ref;
+  FirebaseDataConnect dataConnect;
+}
+
+/// Result of a query request. Created to hold extra variables in the future.
+class QueryResult<Data, Variables> extends OperationResult<Data, Variables> {
+  QueryResult(super.dataConnect, super.data, super.ref);
+}
+
+final result = await AgiluConnector.instance.misPedidos();
+MisPedidosData data = result.data;
+final ref = result.ref;
+```
+
+#### Getting the Ref
+Each builder returns an `execute` function, which is a helper function that creates a `Ref` object, and executes the underlying operation.
+An example of how to use the `Ref` object is shown below:
+```dart
+final ref = AgiluConnector.instance.misPedidos().ref();
+ref.execute();
+
+ref.subscribe(...);
+```
+
+## Mutations
+
+### CrearPerfil
+#### Required Arguments
+```dart
+String nombre = ...;
+AgiluConnector.instance.crearPerfil(
+  nombre: nombre,
+).execute();
+```
+
+
+
+#### Return Type
+`execute()` returns a `OperationResult<CrearPerfilData, CrearPerfilVariables>`
+```dart
+/// Result of an Operation Request (query/mutation).
+class OperationResult<Data, Variables> {
+  OperationResult(this.dataConnect, this.data, this.ref);
+  Data data;
+  OperationRef<Data, Variables> ref;
+  FirebaseDataConnect dataConnect;
+}
+
+final result = await AgiluConnector.instance.crearPerfil(
+  nombre: nombre,
+);
+CrearPerfilData data = result.data;
+final ref = result.ref;
+```
+
+#### Getting the Ref
+Each builder returns an `execute` function, which is a helper function that creates a `Ref` object, and executes the underlying operation.
+An example of how to use the `Ref` object is shown below:
+```dart
+String nombre = ...;
+
+final ref = AgiluConnector.instance.crearPerfil(
+  nombre: nombre,
+).ref();
+ref.execute();
+```
+
+
+### CrearPedido
+#### Required Arguments
+```dart
+String id = ...;
+String puestoId = ...;
+Timestamp recogerA = ...;
+AnyValue items = ...;
+AgiluConnector.instance.crearPedido(
+  id: id,
+  puestoId: puestoId,
+  recogerA: recogerA,
+  items: items,
+).execute();
+```
+
+#### Optional Arguments
+We return a builder for each query. For CrearPedido, we created `CrearPedidoBuilder`. For queries and mutations with optional parameters, we return a builder class.
+The builder pattern allows Data Connect to distinguish between fields that haven't been set and fields that have been set to null. A field can be set by calling its respective setter method like below:
+```dart
+class CrearPedidoVariablesBuilder {
+  ...
+   CrearPedidoVariablesBuilder notas(String? t) {
+   _notas.value = t;
+   return this;
+  }
+
+  ...
+}
+AgiluConnector.instance.crearPedido(
+  id: id,
+  puestoId: puestoId,
+  recogerA: recogerA,
+  items: items,
+)
+.notas(notas)
+.execute();
+```
+
+#### Return Type
+`execute()` returns a `OperationResult<CrearPedidoData, CrearPedidoVariables>`
+```dart
+/// Result of an Operation Request (query/mutation).
+class OperationResult<Data, Variables> {
+  OperationResult(this.dataConnect, this.data, this.ref);
+  Data data;
+  OperationRef<Data, Variables> ref;
+  FirebaseDataConnect dataConnect;
+}
+
+final result = await AgiluConnector.instance.crearPedido(
+  id: id,
+  puestoId: puestoId,
+  recogerA: recogerA,
+  items: items,
+);
+CrearPedidoData data = result.data;
+final ref = result.ref;
+```
+
+#### Getting the Ref
+Each builder returns an `execute` function, which is a helper function that creates a `Ref` object, and executes the underlying operation.
+An example of how to use the `Ref` object is shown below:
+```dart
+String id = ...;
+String puestoId = ...;
+Timestamp recogerA = ...;
+AnyValue items = ...;
+
+final ref = AgiluConnector.instance.crearPedido(
+  id: id,
+  puestoId: puestoId,
+  recogerA: recogerA,
+  items: items,
+).ref();
+ref.execute();
+```
+
+
+### CrearPuesto
+#### Required Arguments
+```dart
+String nombre = ...;
+String ubicacion = ...;
+AgiluConnector.instance.crearPuesto(
+  nombre: nombre,
+  ubicacion: ubicacion,
+).execute();
+```
+
+
+
+#### Return Type
+`execute()` returns a `OperationResult<CrearPuestoData, CrearPuestoVariables>`
+```dart
+/// Result of an Operation Request (query/mutation).
+class OperationResult<Data, Variables> {
+  OperationResult(this.dataConnect, this.data, this.ref);
+  Data data;
+  OperationRef<Data, Variables> ref;
+  FirebaseDataConnect dataConnect;
+}
+
+final result = await AgiluConnector.instance.crearPuesto(
+  nombre: nombre,
+  ubicacion: ubicacion,
+);
+CrearPuestoData data = result.data;
+final ref = result.ref;
+```
+
+#### Getting the Ref
+Each builder returns an `execute` function, which is a helper function that creates a `Ref` object, and executes the underlying operation.
+An example of how to use the `Ref` object is shown below:
+```dart
+String nombre = ...;
+String ubicacion = ...;
+
+final ref = AgiluConnector.instance.crearPuesto(
+  nombre: nombre,
+  ubicacion: ubicacion,
+).ref();
+ref.execute();
+```
+
+
+### CrearProducto
+#### Required Arguments
+```dart
+String nombre = ...;
+double precio = ...;
+int cantidadEnStock = ...;
+String categoria = ...;
+String puestoId = ...;
+AgiluConnector.instance.crearProducto(
+  nombre: nombre,
+  precio: precio,
+  cantidadEnStock: cantidadEnStock,
+  categoria: categoria,
+  puestoId: puestoId,
+).execute();
+```
+
+#### Optional Arguments
+We return a builder for each query. For CrearProducto, we created `CrearProductoBuilder`. For queries and mutations with optional parameters, we return a builder class.
+The builder pattern allows Data Connect to distinguish between fields that haven't been set and fields that have been set to null. A field can be set by calling its respective setter method like below:
+```dart
+class CrearProductoVariablesBuilder {
+  ...
+   CrearProductoVariablesBuilder descripcion(String? t) {
+   _descripcion.value = t;
+   return this;
+  }
+  CrearProductoVariablesBuilder urlDeImagen(String? t) {
+   _urlDeImagen.value = t;
+   return this;
+  }
+
+  ...
+}
+AgiluConnector.instance.crearProducto(
+  nombre: nombre,
+  precio: precio,
+  cantidadEnStock: cantidadEnStock,
+  categoria: categoria,
+  puestoId: puestoId,
+)
+.descripcion(descripcion)
+.urlDeImagen(urlDeImagen)
+.execute();
+```
+
+#### Return Type
+`execute()` returns a `OperationResult<CrearProductoData, CrearProductoVariables>`
+```dart
+/// Result of an Operation Request (query/mutation).
+class OperationResult<Data, Variables> {
+  OperationResult(this.dataConnect, this.data, this.ref);
+  Data data;
+  OperationRef<Data, Variables> ref;
+  FirebaseDataConnect dataConnect;
+}
+
+final result = await AgiluConnector.instance.crearProducto(
+  nombre: nombre,
+  precio: precio,
+  cantidadEnStock: cantidadEnStock,
+  categoria: categoria,
+  puestoId: puestoId,
+);
+CrearProductoData data = result.data;
+final ref = result.ref;
+```
+
+#### Getting the Ref
+Each builder returns an `execute` function, which is a helper function that creates a `Ref` object, and executes the underlying operation.
+An example of how to use the `Ref` object is shown below:
+```dart
+String nombre = ...;
+double precio = ...;
+int cantidadEnStock = ...;
+String categoria = ...;
+String puestoId = ...;
+
+final ref = AgiluConnector.instance.crearProducto(
+  nombre: nombre,
+  precio: precio,
+  cantidadEnStock: cantidadEnStock,
+  categoria: categoria,
+  puestoId: puestoId,
+).ref();
+ref.execute();
+```
+

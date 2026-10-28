@@ -1,0 +1,5 @@
+connectorId: agilu
+generate:
+  dartSdk:
+    - outputDir: ../../lib/dataconnect_generated
+      package: agilu_connector

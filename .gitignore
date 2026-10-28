@@ -18,7 +18,8 @@ google-services.json
 GoogleService-Info.plist
 firebase_options.dart
 *-debug.log
-test_reglas/node_modules/
+test_dataconnect/node_modules/
+dataconnect/.dataconnect/
 
 # SO
 .DS_Store

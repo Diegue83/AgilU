@@ -1,0 +1,68 @@
+query ListarMenu
+  @auth(level: USER, insecureReason: "El menú es el mismo para todos los alumnos con sesión.")
+  @refresh(every: { seconds: 30 }) {
+  productos(orderBy: [{ categoria: ASC }, { nombre: ASC }]) {
+    id
+    nombre
+    descripcion
+    precio
+    categoria
+    disponible
+    puesto {
+      id
+      nombre
+    }
+  }
+}
+
+query MiPerfil @auth(level: USER) {
+  autenticacion(key: { firebaseAuthUid_expr: "auth.uid" }) {
+    correoElectronico
+    usuario {
+      id
+      nombre
+    }
+  }
+}
+
+query MiPedido($id: UUID!) @auth(level: USER) {
+  pedidos(
+    where: {
+      id: { eq: $id }
+      usuario: { autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } } }
+    }
+    limit: 1
+  ) {
+    id
+    folio
+    montoTotal
+    estado
+    recogerA
+  }
+}
+
+query MisPedidos @auth(level: USER) {
+  pedidos(
+    where: {
+      usuario: { autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } } }
+    }
+    orderBy: [{ fechaCreacion: DESC }]
+  ) {
+    id
+    folio
+    montoTotal
+    estado
+    recogerA
+    notas
+    puesto {
+      nombre
+    }
+    detallePedidos_on_pedido {
+      cantidad
+      precioEnElMomento
+      producto {
+        nombre
+      }
+    }
+  }
+}
