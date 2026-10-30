@@ -9,10 +9,12 @@ type Usuario @table {
   numeroDeTelefono: String
   direccion: String
   rol: Rol
+  cafeteria: Cafeteria
 }
 
+# alumno, encargado, beneficiaria. Un usuario sin rol es alumno.
 type Rol @table {
-  nombre: String!
+  nombre: String! @unique
   descripcion: String
 }
 
@@ -26,9 +28,23 @@ type RolPermiso @table(key: ["rol", "permiso"]) {
   permiso: Permiso!
 }
 
+type Cafeteria @table {
+  nombre: String!
+  ubicacion: String
+  aperturaMinutos: Int! @default(value: 450)
+  cierreMinutos: Int! @default(value: 1380)
+  anticipacionMinutos: Int! @default(value: 60)
+  intervaloMinutos: Int! @default(value: 15)
+  activa: Boolean! @default(value: true)
+}
+
+# Estación de la cafetería: tortas y hamburguesas, tacos, guisados, tiendita.
 type Puesto @table {
   nombre: String!
-  ubicacion: String!
+  ubicacion: String
+  orden: Int! @default(value: 0)
+  activo: Boolean! @default(value: true)
+  cafeteria: Cafeteria!
 }
 
 type Producto @table {
@@ -51,7 +67,7 @@ type Pedido @table {
   notas: String
   esCredito: Boolean! @default(value: false)
   usuario: Usuario!
-  puesto: Puesto!
+  cafeteria: Cafeteria!
 }
 
 type ContadorFolio @table(key: "nombre") {

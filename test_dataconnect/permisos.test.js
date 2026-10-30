@@ -25,8 +25,8 @@ const CONECTOR = {
   location: 'us-east4',
 };
 // SQL Connect regresa los UUID sin guiones; así se comparan directo.
-const CAFETERIA = 'a0000000000040008000000000000001';
-const BARRA = 'a0000000000040008000000000000002';
+const CAFETERIA = 'c0000000000040008000000000000001';
+const BARRA = 'c0000000000040008000000000000002';
 const MOLLETES = 'b0000000000040008000000000000002';
 const HORCHATA = 'b0000000000040008000000000000004';
 const CAFE_NO_DISPONIBLE = 'b0000000000040008000000000000005';
@@ -52,7 +52,7 @@ async function alumno(nombre) {
 
 const pedido = (cambios = {}) => ({
   id: randomUUID(),
-  puestoId: CAFETERIA,
+  cafeteriaId: CAFETERIA,
   recogerA: enUnaHora(),
   notas: 'Sin cebolla',
   items: [
@@ -66,21 +66,27 @@ let ana;
 let beto;
 let pedidoDeAna;
 
-async function sembrarCatalogo() {
-  const url =
-    'http://127.0.0.1:9399/v1/projects/demo-agilu/locations/us-east4/' +
-    'services/agilu-a232a-service:executeGraphql';
-  const res = await fetch(url, {
+const ADMIN_URL =
+  'http://127.0.0.1:9399/v1/projects/demo-agilu/locations/us-east4/' +
+  'services/agilu-a232a-service:executeGraphql';
+
+async function comoAdmin(archivo, operationName, variables = {}) {
+  const res = await fetch(ADMIN_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      query: readFileSync(new URL('../dataconnect/seed_data.gql', import.meta.url), 'utf8'),
-      operationName: 'SembrarCatalogo',
+      query: readFileSync(new URL(archivo, import.meta.url), 'utf8'),
+      operationName,
+      variables,
     }),
   });
   const cuerpo = await res.json();
   assert.ok(res.ok && !cuerpo.errors?.length, JSON.stringify(cuerpo));
+  return cuerpo.data;
 }
+
+const sembrarCatalogo = () =>
+  comoAdmin('../dataconnect/seed_data.gql', 'SembrarCatalogo');
 
 before(async () => {
   await sembrarCatalogo();
@@ -156,7 +162,7 @@ describe('crear pedido', () => {
     assert.equal(data._execute, 0);
   });
 
-  test('no se mezclan productos de otro puesto', async () => {
+  test('no se mezclan productos de otra cafetería', async () => {
     const { data } = await ana.mutation(
       'CrearPedido',
       pedido({ items: [{ productoId: MOLLETES, cantidad: 1 }, { productoId: CAPUCHINO, cantidad: 1 }] }),
@@ -226,14 +232,37 @@ describe('leer pedidos', () => {
   });
 });
 
+describe('roles', () => {
+  test('un alumno nuevo no tiene rol', async () => {
+    const { data } = await beto.query('MiPerfil');
+    assert.equal(data.autenticacion.usuario.rol, null);
+  });
+
+  test('el administrador asigna el rol de encargado con su cafetería', async () => {
+    await comoAdmin('../dataconnect/agilu/mutations.gql', 'AsignarRol', {
+      correo: 'beto@utng.edu.mx', rol: 'encargado', cafeteriaId: CAFETERIA,
+    });
+    const { data } = await beto.query('MiPerfil');
+    assert.equal(data.autenticacion.usuario.rol.nombre, 'encargado');
+    assert.equal(data.autenticacion.usuario.cafeteria.id, CAFETERIA);
+  });
+
+  test('un alumno no puede asignarse un rol', async () => {
+    await assert.rejects(
+      ana.mutation('AsignarRol', { correo: 'ana@utng.edu.mx', rol: 'encargado' }),
+    );
+  });
+});
+
 describe('catálogo', () => {
   test('un alumno no puede crear productos ni puestos', async () => {
     await assert.rejects(
-      ana.mutation('CrearPuesto', { nombre: 'Falso', ubicacion: 'X' }),
+      ana.mutation('CrearPuesto', { nombre: 'Falso', cafeteriaId: CAFETERIA }),
     );
     await assert.rejects(
       ana.mutation('CrearProducto', {
-        nombre: 'Gratis', precio: 0, cantidadEnStock: 1, categoria: 'X', puestoId: BARRA,
+        nombre: 'Gratis', precio: 0, cantidadEnStock: 1, categoria: 'X',
+        puestoId: 'a0000000000040008000000000000002',
       }),
     );
   });

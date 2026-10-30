@@ -7,7 +7,11 @@ part 'crear_perfil.dart';
 
 part 'crear_pedido.dart';
 
+part 'crear_cafeteria.dart';
+
 part 'crear_puesto.dart';
+
+part 'asignar_rol.dart';
 
 part 'crear_producto.dart';
 
@@ -33,13 +37,23 @@ class AgiluConnector {
   }
   
   
-  CrearPedidoVariablesBuilder crearPedido ({required String id, required String puestoId, required Timestamp recogerA, required dynamic items, }) {
-    return CrearPedidoVariablesBuilder(dataConnect, id: id,puestoId: puestoId,recogerA: recogerA,items: items,);
+  CrearPedidoVariablesBuilder crearPedido ({required String id, required String cafeteriaId, required Timestamp recogerA, required dynamic items, }) {
+    return CrearPedidoVariablesBuilder(dataConnect, id: id,cafeteriaId: cafeteriaId,recogerA: recogerA,items: items,);
   }
   
   
-  CrearPuestoVariablesBuilder crearPuesto ({required String nombre, required String ubicacion, }) {
-    return CrearPuestoVariablesBuilder(dataConnect, nombre: nombre,ubicacion: ubicacion,);
+  CrearCafeteriaVariablesBuilder crearCafeteria ({required String nombre, }) {
+    return CrearCafeteriaVariablesBuilder(dataConnect, nombre: nombre,);
+  }
+  
+  
+  CrearPuestoVariablesBuilder crearPuesto ({required String nombre, required String cafeteriaId, }) {
+    return CrearPuestoVariablesBuilder(dataConnect, nombre: nombre,cafeteriaId: cafeteriaId,);
+  }
+  
+  
+  AsignarRolVariablesBuilder asignarRol ({required String correo, required String rol, }) {
+    return AsignarRolVariablesBuilder(dataConnect, correo: correo,rol: rol,);
   }
   
   
