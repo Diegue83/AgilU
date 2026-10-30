@@ -2,10 +2,10 @@ part of 'agilu.dart';
 
 class CrearPuestoVariablesBuilder {
   String nombre;
-  String ubicacion;
+  String cafeteriaId;
 
   final FirebaseDataConnect _dataConnect;
-  CrearPuestoVariablesBuilder(this._dataConnect, {required  this.nombre,required  this.ubicacion,});
+  CrearPuestoVariablesBuilder(this._dataConnect, {required  this.nombre,required  this.cafeteriaId,});
   Deserializer<CrearPuestoData> dataDeserializer = (dynamic json)  => CrearPuestoData.fromJson(jsonDecode(json));
   Serializer<CrearPuestoVariables> varsSerializer = (CrearPuestoVariables vars) => jsonEncode(vars.toJson());
   Future<OperationResult<CrearPuestoData, CrearPuestoVariables>> execute() {
@@ -13,7 +13,7 @@ class CrearPuestoVariablesBuilder {
   }
 
   MutationRef<CrearPuestoData, CrearPuestoVariables> ref() {
-    CrearPuestoVariables vars= CrearPuestoVariables(nombre: nombre,ubicacion: ubicacion,);
+    CrearPuestoVariables vars= CrearPuestoVariables(nombre: nombre,cafeteriaId: cafeteriaId,);
     return _dataConnect.mutation("CrearPuesto", dataDeserializer, varsSerializer, vars);
   }
 }
@@ -89,12 +89,12 @@ class CrearPuestoData {
 @immutable
 class CrearPuestoVariables {
   final String nombre;
-  final String ubicacion;
+  final String cafeteriaId;
   @Deprecated('fromJson is deprecated for Variable classes as they are no longer required for deserialization.')
   CrearPuestoVariables.fromJson(Map<String, dynamic> json):
   
   nombre = nativeFromJson<String>(json['nombre']),
-  ubicacion = nativeFromJson<String>(json['ubicacion']);
+  cafeteriaId = nativeFromJson<String>(json['cafeteriaId']);
   @override
   bool operator ==(Object other) {
     if(identical(this, other)) {
@@ -106,23 +106,23 @@ class CrearPuestoVariables {
 
     final CrearPuestoVariables otherTyped = other as CrearPuestoVariables;
     return nombre == otherTyped.nombre && 
-    ubicacion == otherTyped.ubicacion;
+    cafeteriaId == otherTyped.cafeteriaId;
     
   }
   @override
-  int get hashCode => Object.hashAll([nombre.hashCode, ubicacion.hashCode]);
+  int get hashCode => Object.hashAll([nombre.hashCode, cafeteriaId.hashCode]);
   
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
     json['nombre'] = nativeToJson<String>(nombre);
-    json['ubicacion'] = nativeToJson<String>(ubicacion);
+    json['cafeteriaId'] = nativeToJson<String>(cafeteriaId);
     return json;
   }
 
   CrearPuestoVariables({
     required this.nombre,
-    required this.ubicacion,
+    required this.cafeteriaId,
   });
 }
 

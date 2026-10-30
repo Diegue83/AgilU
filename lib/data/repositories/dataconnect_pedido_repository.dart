@@ -25,7 +25,7 @@ class DataConnectPedidoRepository implements PedidoRepository {
     final res = await _conector
         .crearPedido(
           id: id,
-          puestoId: pedido.cafeteriaId,
+          cafeteriaId: pedido.cafeteriaId,
           recogerA:
               Timestamp(0, pedido.recogerA.millisecondsSinceEpoch ~/ 1000),
           items: AnyValue(itemsDe(pedido)),

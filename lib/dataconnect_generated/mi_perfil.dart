@@ -59,7 +59,94 @@ class MiPerfilAutenticacion {
 class MiPerfilAutenticacionUsuario {
   final String id;
   final String nombre;
+  final MiPerfilAutenticacionUsuarioRol? rol;
+  final MiPerfilAutenticacionUsuarioCafeteria? cafeteria;
   MiPerfilAutenticacionUsuario.fromJson(dynamic json):
+  
+  id = nativeFromJson<String>(json['id']),
+  nombre = nativeFromJson<String>(json['nombre']),
+  rol = json['rol'] == null ? null : MiPerfilAutenticacionUsuarioRol.fromJson(json['rol']),
+  cafeteria = json['cafeteria'] == null ? null : MiPerfilAutenticacionUsuarioCafeteria.fromJson(json['cafeteria']);
+  @override
+  bool operator ==(Object other) {
+    if(identical(this, other)) {
+      return true;
+    }
+    if(other.runtimeType != runtimeType) {
+      return false;
+    }
+
+    final MiPerfilAutenticacionUsuario otherTyped = other as MiPerfilAutenticacionUsuario;
+    return id == otherTyped.id && 
+    nombre == otherTyped.nombre && 
+    rol == otherTyped.rol && 
+    cafeteria == otherTyped.cafeteria;
+    
+  }
+  @override
+  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, rol.hashCode, cafeteria.hashCode]);
+  
+
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> json = {};
+    json['id'] = nativeToJson<String>(id);
+    json['nombre'] = nativeToJson<String>(nombre);
+    if (rol != null) {
+      json['rol'] = rol!.toJson();
+    }
+    if (cafeteria != null) {
+      json['cafeteria'] = cafeteria!.toJson();
+    }
+    return json;
+  }
+
+  MiPerfilAutenticacionUsuario({
+    required this.id,
+    required this.nombre,
+    this.rol,
+    this.cafeteria,
+  });
+}
+
+@immutable
+class MiPerfilAutenticacionUsuarioRol {
+  final String nombre;
+  MiPerfilAutenticacionUsuarioRol.fromJson(dynamic json):
+  
+  nombre = nativeFromJson<String>(json['nombre']);
+  @override
+  bool operator ==(Object other) {
+    if(identical(this, other)) {
+      return true;
+    }
+    if(other.runtimeType != runtimeType) {
+      return false;
+    }
+
+    final MiPerfilAutenticacionUsuarioRol otherTyped = other as MiPerfilAutenticacionUsuarioRol;
+    return nombre == otherTyped.nombre;
+    
+  }
+  @override
+  int get hashCode => nombre.hashCode;
+  
+
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> json = {};
+    json['nombre'] = nativeToJson<String>(nombre);
+    return json;
+  }
+
+  MiPerfilAutenticacionUsuarioRol({
+    required this.nombre,
+  });
+}
+
+@immutable
+class MiPerfilAutenticacionUsuarioCafeteria {
+  final String id;
+  final String nombre;
+  MiPerfilAutenticacionUsuarioCafeteria.fromJson(dynamic json):
   
   id = nativeFromJson<String>(json['id']),
   nombre = nativeFromJson<String>(json['nombre']);
@@ -72,7 +159,7 @@ class MiPerfilAutenticacionUsuario {
       return false;
     }
 
-    final MiPerfilAutenticacionUsuario otherTyped = other as MiPerfilAutenticacionUsuario;
+    final MiPerfilAutenticacionUsuarioCafeteria otherTyped = other as MiPerfilAutenticacionUsuarioCafeteria;
     return id == otherTyped.id && 
     nombre == otherTyped.nombre;
     
@@ -88,7 +175,7 @@ class MiPerfilAutenticacionUsuario {
     return json;
   }
 
-  MiPerfilAutenticacionUsuario({
+  MiPerfilAutenticacionUsuarioCafeteria({
     required this.id,
     required this.nombre,
   });

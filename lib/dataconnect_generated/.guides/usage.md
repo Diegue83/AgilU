@@ -3,7 +3,9 @@
 ```dart
 AgiluConnector.instance.CrearPerfil(crearPerfilVariables).execute();
 AgiluConnector.instance.CrearPedido(crearPedidoVariables).execute();
+AgiluConnector.instance.CrearCafeteria(crearCafeteriaVariables).execute();
 AgiluConnector.instance.CrearPuesto(crearPuestoVariables).execute();
+AgiluConnector.instance.AsignarRol(asignarRolVariables).execute();
 AgiluConnector.instance.CrearProducto(crearProductoVariables).execute();
 AgiluConnector.instance.ListarMenu().execute();
 AgiluConnector.instance.MiPerfil().execute();
