@@ -6,6 +6,7 @@ import 'package:agilu/data/repositories/estacion_repository.dart';
 import 'package:agilu/data/repositories/menu_repository.dart';
 import 'package:agilu/data/repositories/pedido_repository.dart';
 import 'package:agilu/data/repositories/perfil_repository.dart';
+import 'package:agilu/data/repositories/producto_repository.dart';
 import 'package:agilu/ui/cart/cart_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -27,6 +28,7 @@ Widget _app(AuthRepository auth,
         Provider<PerfilRepository>.value(
             value: perfiles ?? MockPerfilRepository()),
         Provider<EstacionRepository>(create: (_) => MockEstacionRepository()),
+        Provider<ProductoRepository>(create: (_) => MockProductoRepository()),
         Provider<MenuRepository>(create: (_) => MockMenuRepository()),
         Provider<PedidoRepository>(create: (_) => MockPedidoRepository()),
         ChangeNotifierProvider(create: (_) => CartViewModel()),
@@ -71,7 +73,9 @@ void main() {
     await tester.pumpWidget(_app(MockAuthRepository(),
         perfiles: MockPerfilRepository(perfil: _encargado)));
     await _iniciarSesion(tester);
-    expect(find.text('Estaciones'), findsOneWidget);
+    expect(find.text('Molletes'), findsOneWidget);
+    await tester.tap(find.text('Estaciones'));
+    await tester.pumpAndSettle();
     expect(find.text('Guisados'), findsOneWidget);
   });
 

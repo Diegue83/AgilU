@@ -106,3 +106,39 @@ query MisEstaciones @auth(level: USER) {
     }
   }
 }
+
+# Productos de la cafetería del encargado con sesión (HU-14).
+query MisProductos @auth(level: USER) {
+  productos(
+    where: {
+      puesto: {
+        cafeteria: {
+          usuarios_on_cafeteria: {
+            exist: {
+              rol: { nombre: { eq: "encargado" } }
+              autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+            }
+          }
+        }
+      }
+    }
+    orderBy: [{ nombre: ASC }]
+  ) {
+    id
+    nombre
+    descripcion
+    precio
+    categoria
+    disponible
+    cantidadEnStock
+    urlDeImagen
+    puesto {
+      id
+      nombre
+      orden
+      cafeteria {
+        id
+      }
+    }
+  }
+}

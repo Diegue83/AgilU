@@ -1,0 +1,47 @@
+import '../../dataconnect_generated/agilu.dart';
+import '../models/producto.dart';
+
+/// Catálogo que administra el encargado de una cafetería.
+abstract class ProductoRepository {
+  Future<List<Producto>> misProductos();
+}
+
+class DataConnectProductoRepository implements ProductoRepository {
+  final AgiluConnector _conector;
+  DataConnectProductoRepository({AgiluConnector? conector})
+      : _conector = conector ?? AgiluConnector.instance;
+
+  @override
+  Future<List<Producto>> misProductos() async {
+    final res = await _conector.misProductos().execute();
+    return res.data.productos.map(aProducto).toList();
+  }
+
+  static Producto aProducto(MisProductosProductos p) => Producto(
+        id: p.id,
+        nombre: p.nombre,
+        descripcion: p.descripcion ?? '',
+        precio: p.precio,
+        categoria: p.categoria,
+        disponible: p.disponible,
+        cafeteriaId: p.puesto.cafeteria.id,
+        estacionId: p.puesto.id,
+        estacion: p.puesto.nombre,
+        estacionOrden: p.puesto.orden,
+        urlImagen: p.urlDeImagen,
+      );
+}
+
+class MockProductoRepository implements ProductoRepository {
+  final List<Producto> productos = [
+    const Producto(id: '1', nombre: 'Chilaquiles verdes', descripcion: 'Con pollo y crema', precio: 55, categoria: 'Desayunos', cafeteriaId: 'c1', estacionId: 'e2', estacion: 'Guisados', estacionOrden: 2),
+    const Producto(id: '2', nombre: 'Molletes', descripcion: 'Con pico de gallo', precio: 40, categoria: 'Desayunos', cafeteriaId: 'c1', estacionId: 'e2', estacion: 'Guisados', estacionOrden: 2),
+    const Producto(id: '3', nombre: 'Torta de milanesa', descripcion: 'Con aguacate', precio: 50, categoria: 'Comidas', cafeteriaId: 'c1', estacionId: 'e1', estacion: 'Tortas y hamburguesas', estacionOrden: 1),
+    const Producto(id: '4', nombre: 'Hamburguesa sencilla', descripcion: 'Con papas', precio: 60, categoria: 'Comidas', cafeteriaId: 'c1', estacionId: 'e1', estacion: 'Tortas y hamburguesas', estacionOrden: 1),
+    const Producto(id: '5', nombre: 'Agua de horchata', descripcion: '500 ml', precio: 20, categoria: 'Bebidas', cafeteriaId: 'c1', estacionId: 'e3', estacion: 'Tiendita', estacionOrden: 3),
+    const Producto(id: '6', nombre: 'Café americano', descripcion: '12 oz', precio: 25, categoria: 'Bebidas', disponible: false, cafeteriaId: 'c1', estacionId: 'e3', estacion: 'Tiendita', estacionOrden: 3),
+  ];
+
+  @override
+  Future<List<Producto>> misProductos() async => List.of(productos);
+}

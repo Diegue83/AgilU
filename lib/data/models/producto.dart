@@ -11,6 +11,7 @@ class Producto {
   final String estacionId;
   final String estacion;
   final int estacionOrden;
+  final String? urlImagen;
 
   const Producto({
     required this.id,
@@ -23,6 +24,7 @@ class Producto {
     this.estacionId = '',
     this.estacion = '',
     this.estacionOrden = 0,
+    this.urlImagen,
   });
 
   /// Sección del menú: la estación si la hay, si no la categoría.
