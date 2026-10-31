@@ -12,7 +12,11 @@ class MenuViewModel extends ChangeNotifier {
   MenuViewModel(this._repo) {
     _sub = _repo.observarMenu().listen(
       (lista) {
-        _productos = lista;
+        _productos = List.of(lista)
+          ..sort((a, b) {
+            final c = a.estacionOrden.compareTo(b.estacionOrden);
+            return c != 0 ? c : a.nombre.compareTo(b.nombre);
+          });
         cargando = false;
         error = null;
         notifyListeners();
@@ -30,12 +34,13 @@ class MenuViewModel extends ChangeNotifier {
   String? error;
   String? categoriaSeleccionada; // null = todas
 
+  /// Secciones en el orden de las estaciones que definió el encargado.
   List<String> get categorias =>
-      _productos.map((p) => p.categoria).toSet().toList()..sort();
+      _productos.map((p) => p.seccion).toSet().toList();
 
   List<Producto> get productosVisibles => categoriaSeleccionada == null
       ? _productos
-      : _productos.where((p) => p.categoria == categoriaSeleccionada).toList();
+      : _productos.where((p) => p.seccion == categoriaSeleccionada).toList();
 
   void seleccionarCategoria(String? categoria) {
     categoriaSeleccionada = categoria;

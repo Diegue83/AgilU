@@ -7,10 +7,10 @@ AgiluConnector.instance.CrearCafeteria(crearCafeteriaVariables).execute();
 AgiluConnector.instance.CrearPuesto(crearPuestoVariables).execute();
 AgiluConnector.instance.AsignarRol(asignarRolVariables).execute();
 AgiluConnector.instance.CrearProducto(crearProductoVariables).execute();
+AgiluConnector.instance.CrearEstacion(crearEstacionVariables).execute();
+AgiluConnector.instance.EditarEstacion(editarEstacionVariables).execute();
+AgiluConnector.instance.EliminarEstacion(eliminarEstacionVariables).execute();
 AgiluConnector.instance.ListarMenu().execute();
-AgiluConnector.instance.MiPerfil().execute();
-AgiluConnector.instance.MiPedido(miPedidoVariables).execute();
-AgiluConnector.instance.MisPedidos().execute();
 
 ```
 
