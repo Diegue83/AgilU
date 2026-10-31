@@ -5,6 +5,7 @@ import 'core/theme.dart';
 import 'data/models/pedido.dart';
 import 'ui/auth/login_view.dart';
 import 'ui/cart/cart_view.dart';
+import 'ui/encargado/encargado_view.dart';
 import 'ui/menu/menu_view.dart';
 import 'ui/pedido/confirmacion_view.dart';
 
@@ -16,6 +17,7 @@ class AgilUApp extends StatelessWidget {
     Routes.login: (_) => const LoginView(),
     Routes.menu: (_) => const MenuView(),
     Routes.carrito: (_) => const CartView(),
+    Routes.encargado: (_) => const EncargadoView(),
     Routes.confirmacion: (ctx) => ConfirmacionView(
           resultado: ModalRoute.of(ctx)!.settings.arguments as ResultadoPedido,
         ),

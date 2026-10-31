@@ -9,6 +9,7 @@ import 'core/routes.dart';
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/dataconnect_menu_repository.dart';
 import 'data/repositories/dataconnect_pedido_repository.dart';
+import 'data/repositories/estacion_repository.dart';
 import 'data/repositories/firebase_auth_repository.dart';
 import 'data/repositories/menu_repository.dart';
 import 'data/repositories/pedido_repository.dart';
@@ -32,15 +33,27 @@ Future<void> main() async {
   }
 
   // Capa de datos: se elige la implementación según AppConfig.
+  final PerfilRepository perfiles = AppConfig.usarFirebase
+      ? DataConnectPerfilRepository()
+      : MockPerfilRepository();
   final AuthRepository auth = AppConfig.usarFirebase
-      ? FirebaseAuthRepository(perfil: DataConnectPerfilRepository())
+      ? FirebaseAuthRepository(perfil: perfiles)
       : MockAuthRepository();
   final sesion = await auth.sesionGuardada();
+  final perfil = sesion == null
+      ? null
+      : await perfiles.miPerfil().then((p) => p, onError: (_) => null);
 
   runApp(
     MultiProvider(
       providers: [
         Provider<AuthRepository>.value(value: auth),
+        Provider<PerfilRepository>.value(value: perfiles),
+        Provider<EstacionRepository>(
+          create: (_) => AppConfig.usarFirebase
+              ? DataConnectEstacionRepository()
+              : MockEstacionRepository(),
+        ),
         Provider<MenuRepository>(
           create: (_) => AppConfig.usarFirebase
               ? DataConnectMenuRepository()
@@ -54,7 +67,8 @@ Future<void> main() async {
         // Estado compartido del carrito.
         ChangeNotifierProvider(create: (_) => CartViewModel()),
       ],
-      child: AgilUApp(rutaInicial: sesion == null ? Routes.login : Routes.menu),
+      child: AgilUApp(
+          rutaInicial: sesion == null ? Routes.login : Routes.inicioPara(perfil)),
     ),
   );
 }

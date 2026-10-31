@@ -1,7 +1,10 @@
 query ListarMenu
   @auth(level: USER, insecureReason: "El menú es el mismo para todos los alumnos con sesión.")
   @refresh(every: { seconds: 30 }) {
-  productos(orderBy: [{ categoria: ASC }, { nombre: ASC }]) {
+  productos(
+    where: { puesto: { activo: { eq: true }, cafeteria: { activa: { eq: true } } } }
+    orderBy: [{ nombre: ASC }]
+  ) {
     id
     nombre
     descripcion
@@ -75,6 +78,31 @@ query MisPedidos @auth(level: USER) {
       producto {
         nombre
       }
+    }
+  }
+}
+
+# Estaciones de la cafetería del encargado con sesión (HU-18).
+query MisEstaciones @auth(level: USER) {
+  puestos(
+    where: {
+      cafeteria: {
+        usuarios_on_cafeteria: {
+          exist: {
+            rol: { nombre: { eq: "encargado" } }
+            autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+          }
+        }
+      }
+    }
+    orderBy: [{ orden: ASC }, { nombre: ASC }]
+  ) {
+    id
+    nombre
+    orden
+    activo
+    productos_on_puesto {
+      id
     }
   }
 }
