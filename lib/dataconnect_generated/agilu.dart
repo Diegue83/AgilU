@@ -31,6 +31,8 @@ part 'mis_pedidos.dart';
 
 part 'mis_estaciones.dart';
 
+part 'mis_productos.dart';
+
 
 
 
@@ -107,6 +109,11 @@ class AgiluConnector {
   
   MisEstacionesVariablesBuilder misEstaciones () {
     return MisEstacionesVariablesBuilder(dataConnect, );
+  }
+  
+  
+  MisProductosVariablesBuilder misProductos () {
+    return MisProductosVariablesBuilder(dataConnect, );
   }
   
 

@@ -13,6 +13,7 @@ import 'data/repositories/estacion_repository.dart';
 import 'data/repositories/firebase_auth_repository.dart';
 import 'data/repositories/menu_repository.dart';
 import 'data/repositories/pedido_repository.dart';
+import 'data/repositories/producto_repository.dart';
 import 'data/repositories/perfil_repository.dart';
 import 'dataconnect_generated/agilu.dart';
 import 'firebase_options.dart';
@@ -53,6 +54,11 @@ Future<void> main() async {
           create: (_) => AppConfig.usarFirebase
               ? DataConnectEstacionRepository()
               : MockEstacionRepository(),
+        ),
+        Provider<ProductoRepository>(
+          create: (_) => AppConfig.usarFirebase
+              ? DataConnectProductoRepository()
+              : MockProductoRepository(),
         ),
         Provider<MenuRepository>(
           create: (_) => AppConfig.usarFirebase

@@ -318,6 +318,27 @@ describe('estaciones (HU-18)', () => {
   });
 });
 
+describe('lista de productos del encargado (HU-14)', () => {
+  test('el encargado ve solo los productos de su cafetería', async () => {
+    const { data } = await beto.query('MisProductos');
+    const nombres = data.productos.map((p) => p.nombre);
+    assert.equal(nombres.length, 5);
+    assert.ok(!nombres.includes('Capuchino'));
+    assert.ok(data.productos.every((p) => p.puesto.cafeteria.id === CAFETERIA));
+  });
+
+  test('incluye los no disponibles para poder reactivarlos', async () => {
+    const { data } = await beto.query('MisProductos');
+    const cafe = data.productos.find((p) => p.nombre === 'Café americano');
+    assert.equal(cafe.disponible, false);
+  });
+
+  test('un alumno no ve la lista de administración', async () => {
+    const { data } = await ana.query('MisProductos');
+    assert.equal(data.productos.length, 0);
+  });
+});
+
 describe('catálogo', () => {
   test('un alumno no puede crear productos ni puestos', async () => {
     await assert.rejects(
