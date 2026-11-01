@@ -195,3 +195,40 @@ mutation EliminarEstacion($id: UUID!) @auth(level: USER) @transaction {
     }
   ) @check(expr: "this != null", message: "La estación no es de tu cafetería")
 }
+
+# HU-13: el encargado registra un producto en una estación de su cafetería.
+# El servidor valida nombre y precio aunque la app ya lo haga.
+mutation CrearMiProducto(
+  $nombre: String!
+  $descripcion: String
+  $precio: Float!
+  $puestoId: UUID!
+  $disponible: Boolean!
+) @auth(level: USER) @transaction {
+  query @redact {
+    puesto(id: $puestoId)
+      @check(expr: "this != null", message: "Elige una estación")
+      @check(expr: "vars.nombre.trim().size() > 0", message: "El nombre es obligatorio")
+      @check(expr: "vars.precio > 0.0", message: "El precio debe ser mayor a 0") {
+      cafeteria {
+        usuarios_on_cafeteria(
+          where: {
+            rol: { nombre: { eq: "encargado" } }
+            autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+          }
+        ) @check(expr: "this.size() == 1", message: "La estación no es de tu cafetería") {
+          id
+        }
+      }
+    }
+  }
+  producto_insert(
+    data: {
+      nombre: $nombre
+      descripcion: $descripcion
+      precio: $precio
+      disponible: $disponible
+      puesto: { id: $puestoId }
+    }
+  )
+}

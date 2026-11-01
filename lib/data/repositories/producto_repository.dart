@@ -4,6 +4,24 @@ import '../models/producto.dart';
 /// Catálogo que administra el encargado de una cafetería.
 abstract class ProductoRepository {
   Future<List<Producto>> misProductos();
+  Future<void> crear(DatosProducto datos);
+}
+
+/// Lo que captura el encargado en el formulario de producto.
+class DatosProducto {
+  final String nombre;
+  final String descripcion;
+  final double precio;
+  final String estacionId;
+  final bool disponible;
+
+  const DatosProducto({
+    required this.nombre,
+    required this.descripcion,
+    required this.precio,
+    required this.estacionId,
+    this.disponible = true,
+  });
 }
 
 class DataConnectProductoRepository implements ProductoRepository {
@@ -16,6 +34,17 @@ class DataConnectProductoRepository implements ProductoRepository {
     final res = await _conector.misProductos().execute();
     return res.data.productos.map(aProducto).toList();
   }
+
+  @override
+  Future<void> crear(DatosProducto d) => _conector
+      .crearMiProducto(
+        nombre: d.nombre,
+        precio: d.precio,
+        puestoId: d.estacionId,
+        disponible: d.disponible,
+      )
+      .descripcion(d.descripcion.isEmpty ? null : d.descripcion)
+      .execute();
 
   static Producto aProducto(MisProductosProductos p) => Producto(
         id: p.id,
@@ -42,6 +71,20 @@ class MockProductoRepository implements ProductoRepository {
     const Producto(id: '6', nombre: 'Café americano', descripcion: '12 oz', precio: 25, categoria: 'Bebidas', disponible: false, cafeteriaId: 'c1', estacionId: 'e3', estacion: 'Tiendita', estacionOrden: 3),
   ];
 
+  int _siguiente = 7;
+
   @override
   Future<List<Producto>> misProductos() async => List.of(productos);
+
+  @override
+  Future<void> crear(DatosProducto d) async => productos.add(Producto(
+        id: '${_siguiente++}',
+        nombre: d.nombre,
+        descripcion: d.descripcion,
+        precio: d.precio,
+        categoria: 'General',
+        disponible: d.disponible,
+        cafeteriaId: 'c1',
+        estacionId: d.estacionId,
+      ));
 }
