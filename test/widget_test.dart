@@ -89,4 +89,26 @@ void main() {
         .toList();
     expect(chips, ['Todos', 'Tortas y hamburguesas', 'Guisados', 'Tiendita']);
   });
+
+  testWidgets('el encargado da de alta un producto desde su panel',
+      (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository(),
+        perfiles: MockPerfilRepository(perfil: _encargado)));
+    await _iniciarSesion(tester);
+    await tester.tap(find.text('Producto'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Guardar'));
+    await tester.pump();
+    expect(find.text('El nombre es obligatorio.'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField).at(0), 'Torta cubana');
+    await tester.enterText(find.byType(TextField).at(2), '65');
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Guisados').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Torta cubana'), findsOneWidget);
+  });
 }

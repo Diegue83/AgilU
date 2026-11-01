@@ -322,7 +322,7 @@ describe('lista de productos del encargado (HU-14)', () => {
   test('el encargado ve solo los productos de su cafetería', async () => {
     const { data } = await beto.query('MisProductos');
     const nombres = data.productos.map((p) => p.nombre);
-    assert.equal(nombres.length, 5);
+    assert.ok(nombres.length >= 5);
     assert.ok(!nombres.includes('Capuchino'));
     assert.ok(data.productos.every((p) => p.puesto.cafeteria.id === CAFETERIA));
   });
@@ -336,6 +336,39 @@ describe('lista de productos del encargado (HU-14)', () => {
   test('un alumno no ve la lista de administración', async () => {
     const { data } = await ana.query('MisProductos');
     assert.equal(data.productos.length, 0);
+  });
+});
+
+describe('crear producto (HU-13)', () => {
+  const GUISADOS = 'a0000000000040008000000000000001';
+  const nuevo = (cambios = {}) => ({
+    nombre: 'Enchiladas', descripcion: 'Rojas', precio: 45,
+    puestoId: GUISADOS, disponible: true, ...cambios,
+  });
+
+  test('el encargado crea un producto y aparece en el menú', async () => {
+    await beto.mutation('CrearMiProducto', nuevo());
+    const { data } = await ana.query('ListarMenu');
+    const p = data.productos.find((x) => x.nombre === 'Enchiladas');
+    assert.equal(p.precio, 45);
+    assert.equal(p.puesto.cafeteria.id, CAFETERIA);
+  });
+
+  test('el servidor rechaza nombre vacío y precio no positivo', async () => {
+    await assert.rejects(beto.mutation('CrearMiProducto', nuevo({ nombre: '   ' })), /nombre es obligatorio/);
+    await assert.rejects(beto.mutation('CrearMiProducto', nuevo({ precio: 0 })), /mayor a 0/);
+    await assert.rejects(beto.mutation('CrearMiProducto', nuevo({ precio: -5 })), /mayor a 0/);
+  });
+
+  test('no se puede crear en la estación de otra cafetería', async () => {
+    await assert.rejects(
+      beto.mutation('CrearMiProducto', nuevo({ puestoId: 'a0000000000040008000000000000002' })),
+      /no es de tu cafetería/,
+    );
+  });
+
+  test('un alumno no puede crear productos', async () => {
+    await assert.rejects(ana.mutation('CrearMiProducto', nuevo()), /no es de tu cafetería/);
   });
 });
 

@@ -50,7 +50,7 @@ type Puesto @table {
 type Producto @table {
   nombre: String!
   precio: Float!
-  cantidadEnStock: Int!
+  cantidadEnStock: Int! @default(value: 0)
   descripcion: String
   urlDeImagen: String
   categoria: String! @default(value: "General")
