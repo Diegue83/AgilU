@@ -94,6 +94,16 @@ class _Productos extends StatelessWidget {
               ),
             for (final p in productos)
               ListTile(
+                onTap: () async {
+                  final guardado = await Navigator.push<bool>(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ProductoFormView(
+                          estaciones: vm.estaciones, producto: p),
+                    ),
+                  );
+                  if (guardado == true) await vm.cargar();
+                },
                 title: Text(p.nombre),
                 subtitle: Text(p.estacion),
                 trailing: Column(
