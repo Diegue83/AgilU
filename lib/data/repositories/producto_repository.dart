@@ -5,6 +5,7 @@ import '../models/producto.dart';
 abstract class ProductoRepository {
   Future<List<Producto>> misProductos();
   Future<void> crear(DatosProducto datos);
+  Future<void> editar(String id, DatosProducto datos);
 }
 
 /// Lo que captura el encargado en el formulario de producto.
@@ -38,6 +39,18 @@ class DataConnectProductoRepository implements ProductoRepository {
   @override
   Future<void> crear(DatosProducto d) => _conector
       .crearMiProducto(
+        nombre: d.nombre,
+        precio: d.precio,
+        puestoId: d.estacionId,
+        disponible: d.disponible,
+      )
+      .descripcion(d.descripcion.isEmpty ? null : d.descripcion)
+      .execute();
+
+  @override
+  Future<void> editar(String id, DatosProducto d) => _conector
+      .editarMiProducto(
+        id: id,
         nombre: d.nombre,
         precio: d.precio,
         puestoId: d.estacionId,
@@ -87,4 +100,22 @@ class MockProductoRepository implements ProductoRepository {
         cafeteriaId: 'c1',
         estacionId: d.estacionId,
       ));
+
+  @override
+  Future<void> editar(String id, DatosProducto d) async {
+    final i = productos.indexWhere((p) => p.id == id);
+    final actual = productos[i];
+    productos[i] = Producto(
+      id: id,
+      nombre: d.nombre,
+      descripcion: d.descripcion,
+      precio: d.precio,
+      categoria: actual.categoria,
+      disponible: d.disponible,
+      cafeteriaId: actual.cafeteriaId,
+      estacionId: d.estacionId,
+      estacion: actual.estacionId == d.estacionId ? actual.estacion : '',
+      estacionOrden: actual.estacionOrden,
+    );
+  }
 }

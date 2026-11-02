@@ -31,7 +31,8 @@ class ProductosViewModel extends ChangeNotifier {
       this.estaciones = estaciones;
       error = null;
     } catch (e) {
-      error = mensajeDeError(e, 'No se pudieron cargar los productos.', const []);
+      error =
+          mensajeDeError(e, 'No se pudieron cargar los productos.', const []);
     } finally {
       cargando = false;
       notifyListeners();
@@ -42,7 +43,8 @@ class ProductosViewModel extends ChangeNotifier {
     final texto = _normalizar(busqueda);
     return _todos
         .where((p) =>
-            estacionSeleccionada == null || p.estacionId == estacionSeleccionada)
+            estacionSeleccionada == null ||
+            p.estacionId == estacionSeleccionada)
         .where((p) => texto.isEmpty || _normalizar(p.nombre).contains(texto))
         .toList()
       ..sort((a, b) {

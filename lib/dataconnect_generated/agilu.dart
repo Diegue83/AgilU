@@ -23,6 +23,8 @@ part 'eliminar_estacion.dart';
 
 part 'crear_mi_producto.dart';
 
+part 'editar_mi_producto.dart';
+
 part 'listar_menu.dart';
 
 part 'mi_perfil.dart';
@@ -91,6 +93,11 @@ class AgiluConnector {
   
   CrearMiProductoVariablesBuilder crearMiProducto ({required String nombre, required double precio, required String puestoId, required bool disponible, }) {
     return CrearMiProductoVariablesBuilder(dataConnect, nombre: nombre,precio: precio,puestoId: puestoId,disponible: disponible,);
+  }
+  
+  
+  EditarMiProductoVariablesBuilder editarMiProducto ({required String id, required String nombre, required double precio, required String puestoId, required bool disponible, }) {
+    return EditarMiProductoVariablesBuilder(dataConnect, id: id,nombre: nombre,precio: precio,puestoId: puestoId,disponible: disponible,);
   }
   
   
