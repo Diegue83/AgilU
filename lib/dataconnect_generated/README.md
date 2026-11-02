@@ -965,3 +965,50 @@ final ref = AgiluConnector.instance.editarMiProducto(
 ref.execute();
 ```
 
+
+### EstablecerDisponibilidad
+#### Required Arguments
+```dart
+String id = ...;
+bool disponible = ...;
+AgiluConnector.instance.establecerDisponibilidad(
+  id: id,
+  disponible: disponible,
+).execute();
+```
+
+
+
+#### Return Type
+`execute()` returns a `OperationResult<EstablecerDisponibilidadData, EstablecerDisponibilidadVariables>`
+```dart
+/// Result of an Operation Request (query/mutation).
+class OperationResult<Data, Variables> {
+  OperationResult(this.dataConnect, this.data, this.ref);
+  Data data;
+  OperationRef<Data, Variables> ref;
+  FirebaseDataConnect dataConnect;
+}
+
+final result = await AgiluConnector.instance.establecerDisponibilidad(
+  id: id,
+  disponible: disponible,
+);
+EstablecerDisponibilidadData data = result.data;
+final ref = result.ref;
+```
+
+#### Getting the Ref
+Each builder returns an `execute` function, which is a helper function that creates a `Ref` object, and executes the underlying operation.
+An example of how to use the `Ref` object is shown below:
+```dart
+String id = ...;
+bool disponible = ...;
+
+final ref = AgiluConnector.instance.establecerDisponibilidad(
+  id: id,
+  disponible: disponible,
+).ref();
+ref.execute();
+```
+

@@ -128,4 +128,33 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('\$42.00'), findsOneWidget);
   });
+
+  testWidgets('un producto agotado se ve gris y no se puede agregar',
+      (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository(), ruta: Routes.menu));
+    await tester.pumpAndSettle();
+    final tile = tester.widget<ListTile>(find.ancestor(
+        of: find.text('Café americano'), matching: find.byType(ListTile)));
+    expect(tile.enabled, isFalse);
+    final boton = tester.widget<IconButton>(find.descendant(
+        of: find.ancestor(
+            of: find.text('Café americano'), matching: find.byType(ListTile)),
+        matching: find.byType(IconButton)));
+    expect(boton.onPressed, isNull);
+  });
+
+  testWidgets('el interruptor de la lista cambia la disponibilidad',
+      (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository(),
+        perfiles: MockPerfilRepository(perfil: _encargado)));
+    await _iniciarSesion(tester);
+    final fila = find.ancestor(
+        of: find.text('Café americano'), matching: find.byType(ListTile));
+    await tester.scrollUntilVisible(fila, 200,
+        scrollable: find.byType(Scrollable).first);
+    await tester.tap(find.descendant(of: fila, matching: find.byType(Switch)));
+    await tester.pumpAndSettle();
+    expect(find.descendant(of: fila, matching: find.text('Disponible')),
+        findsOneWidget);
+  });
 }

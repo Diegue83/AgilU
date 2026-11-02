@@ -30,7 +30,8 @@ class ConfirmacionView extends StatelessWidget {
                         .displaySmall
                         ?.copyWith(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 16),
-                Text('Recoge hoy a las ${ReglasPedido.formatearHora(resultado.recogerA)}'),
+                Text(
+                    'Recoge hoy a las ${ReglasPedido.formatearHora(resultado.recogerA)}'),
                 Text('Total a pagar: \$${resultado.total.toStringAsFixed(2)}'),
                 const SizedBox(height: 8),
                 const Text('Muestra tu folio en la cafetería.',

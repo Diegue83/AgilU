@@ -31,9 +31,20 @@
     },
     "dataconnect": {
       "port": 9399
+    },
+    "functions": {
+      "port": 5001
     }
   },
   "dataconnect": {
     "source": "dataconnect"
-  }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "runtime": "nodejs22",
+      "ignore": ["node_modules", ".git", "*.log"]
+    }
+  ]
 }

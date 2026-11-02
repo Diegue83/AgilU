@@ -45,7 +45,8 @@ class DataConnectEstacionRepository implements EstacionRepository {
 
 class MockEstacionRepository implements EstacionRepository {
   final List<Estacion> _estaciones = [
-    const Estacion(id: 'e1', nombre: 'Tortas y hamburguesas', orden: 1, productos: 2),
+    const Estacion(
+        id: 'e1', nombre: 'Tortas y hamburguesas', orden: 1, productos: 2),
     const Estacion(id: 'e2', nombre: 'Guisados', orden: 2, productos: 2),
     const Estacion(id: 'e3', nombre: 'Tiendita', orden: 3, productos: 2),
   ];
@@ -56,8 +57,8 @@ class MockEstacionRepository implements EstacionRepository {
       List.of(_estaciones)..sort((a, b) => a.orden.compareTo(b.orden));
 
   @override
-  Future<void> crear(String nombre, int orden) async =>
-      _estaciones.add(Estacion(id: 'e${_siguiente++}', nombre: nombre, orden: orden));
+  Future<void> crear(String nombre, int orden) async => _estaciones
+      .add(Estacion(id: 'e${_siguiente++}', nombre: nombre, orden: orden));
 
   @override
   Future<void> editar(Estacion e) async {
@@ -69,7 +70,8 @@ class MockEstacionRepository implements EstacionRepository {
   Future<void> eliminar(String id) async {
     final e = _estaciones.firstWhere((x) => x.id == id);
     if (!e.sePuedeEliminar) {
-      throw Exception('La estación tiene productos: desactívala en lugar de borrarla');
+      throw Exception(
+          'La estación tiene productos: desactívala en lugar de borrarla');
     }
     _estaciones.remove(e);
   }
