@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { after, before, describe, test } from 'node:test';
 
 import { deleteApp, initializeApp } from 'firebase/app';
@@ -84,6 +85,20 @@ async function comoAdmin(archivo, operationName, variables = {}) {
   assert.ok(res.ok && !cuerpo.errors?.length, JSON.stringify(cuerpo));
   return cuerpo.data;
 }
+
+// Equivalente mínimo de getDataConnect() del Admin SDK para el emulador.
+const adminDataConnect = {
+  executeGraphql: async (query, { variables } = {}) => {
+    const res = await fetch(ADMIN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, variables }),
+    });
+    const cuerpo = await res.json();
+    assert.ok(res.ok && !cuerpo.errors?.length, JSON.stringify(cuerpo));
+    return cuerpo;
+  },
+};
 
 const sembrarCatalogo = () =>
   comoAdmin('../dataconnect/seed_data.gql', 'SembrarCatalogo');
@@ -416,6 +431,64 @@ describe('editar producto (HU-15)', () => {
 
   test('el servidor valida precio al editar', async () => {
     await assert.rejects(beto.mutation('EditarMiProducto', cambio({ precio: 0 })), /mayor a 0/);
+  });
+});
+
+describe('disponibilidad (HU-16)', () => {
+  const TORTA = 'b0000000000040008000000000000003';
+  const CHILAQUILES = 'b0000000000040008000000000000001';
+
+  test('el encargado marca un producto agotado y sale gris del carrito', async () => {
+    await beto.mutation('EstablecerDisponibilidad', { id: TORTA, disponible: false });
+    const { data } = await ana.query('ListarMenu');
+    assert.equal(data.productos.find((p) => p.id === TORTA).disponible, false);
+    const r = await ana.mutation('CrearPedido', pedido({ items: [{ productoId: TORTA, cantidad: 1 }] }));
+    assert.equal(r.data._execute, 0);
+    await beto.mutation('EstablecerDisponibilidad', { id: TORTA, disponible: true });
+  });
+
+  test('no se puede cambiar la disponibilidad de otra cafetería', async () => {
+    await assert.rejects(
+      beto.mutation('EstablecerDisponibilidad', { id: CAPUCHINO, disponible: false }),
+      /no es de tu cafetería/,
+    );
+  });
+
+  test('un alumno no puede cambiar la disponibilidad', async () => {
+    await assert.rejects(
+      ana.mutation('EstablecerDisponibilidad', { id: TORTA, disponible: false }),
+      /no es de tu cafetería/,
+    );
+  });
+
+  // El emulador de Functions aún no ejecuta disparadores de SQL Connect, así
+  // que se llama al manejador con el mismo evento que enviaría el servicio.
+  test('al agotarse, la función cancela solo los pedidos pendientes que lo incluyen', async () => {
+    const { cancelarSiQuedoAgotado } = createRequire(import.meta.url)('../functions/cancelaciones.js');
+    const conProducto = pedido({ items: [{ productoId: CHILAQUILES, cantidad: 1 }] });
+    const sinProducto = pedido({ items: [{ productoId: HORCHATA, cantidad: 1 }] });
+    await ana.mutation('CrearPedido', conProducto);
+    await ana.mutation('CrearPedido', sinProducto);
+
+    const variables = { id: CHILAQUILES, disponible: false };
+    await beto.mutation('EstablecerDisponibilidad', variables);
+    const evento = { data: { payload: { variables, data: {}, errors: [] } } };
+    const cancelados = await cancelarSiQuedoAgotado(evento, adminDataConnect);
+    assert.ok(cancelados >= 1);
+
+    const res = await ana.query('MiPedido', { id: conProducto.id });
+    assert.equal(res.data.pedidos[0].estado, 'cancelado');
+    const otro = await ana.query('MiPedido', { id: sinProducto.id });
+    assert.equal(otro.data.pedidos[0].estado, 'pendiente');
+    await beto.mutation('EstablecerDisponibilidad', { id: CHILAQUILES, disponible: true });
+  });
+
+  test('volver a marcarlo disponible no cancela nada', async () => {
+    const { cancelarSiQuedoAgotado } = createRequire(import.meta.url)('../functions/cancelaciones.js');
+    const evento = {
+      data: { payload: { variables: { id: CHILAQUILES, disponible: true }, errors: [] } },
+    };
+    assert.equal(await cancelarSiQuedoAgotado(evento, adminDataConnect), 0);
   });
 });
 

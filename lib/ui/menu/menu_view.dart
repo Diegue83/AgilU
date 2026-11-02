@@ -57,7 +57,8 @@ class _MenuScaffold extends StatelessWidget {
               height: 56,
               child: ListView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 children: [
                   _chip('Todos', vm.categoriaSeleccionada == null,
                       () => vm.seleccionarCategoria(null)),
@@ -74,9 +75,11 @@ class _MenuScaffold extends StatelessWidget {
                 itemBuilder: (_, i) {
                   final p = vm.productosVisibles[i];
                   return ListTile(
+                    enabled: p.disponible,
                     title: Text(p.nombre),
-                    subtitle: Text(
-                        p.disponible ? p.descripcion : 'No disponible por ahora'),
+                    subtitle: Text(p.disponible
+                        ? p.descripcion
+                        : 'No disponible por ahora'),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -87,7 +90,8 @@ class _MenuScaffold extends StatelessWidget {
                               ? () {
                                   if (!carrito.agregar(p)) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text(carrito.error!)));
+                                        SnackBar(
+                                            content: Text(carrito.error!)));
                                   }
                                 }
                               : null,

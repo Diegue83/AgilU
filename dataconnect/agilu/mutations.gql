@@ -285,3 +285,28 @@ mutation EditarMiProducto(
     }
   )
 }
+
+# HU-16: marcar un producto agotado o disponible desde la lista.
+# La función cancelarAlAgotar (functions/) cancela los pedidos pendientes que lo incluyen.
+mutation EstablecerDisponibilidad($id: UUID!, $disponible: Boolean!)
+  @auth(level: USER)
+  @transaction {
+  producto_update(
+    first: {
+      where: {
+        id: { eq: $id }
+        puesto: {
+          cafeteria: {
+            usuarios_on_cafeteria: {
+              exist: {
+                rol: { nombre: { eq: "encargado" } }
+                autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+              }
+            }
+          }
+        }
+      }
+    }
+    data: { disponible: $disponible }
+  ) @check(expr: "this != null", message: "El producto no es de tu cafetería")
+}

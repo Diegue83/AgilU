@@ -55,6 +55,22 @@ class ProductosViewModel extends ChangeNotifier {
 
   int get total => _todos.length;
 
+  /// Cambia la disponibilidad con un toque. Si el servidor la rechaza se
+  /// regresa al valor anterior.
+  Future<void> alternarDisponible(Producto p) async {
+    final i = _todos.indexWhere((x) => x.id == p.id);
+    if (i < 0) return;
+    try {
+      await _productos.establecerDisponibilidad(p.id, !p.disponible);
+      _todos = await _productos.misProductos();
+      error = null;
+    } catch (e) {
+      error = mensajeDeError(e, 'No se pudo cambiar la disponibilidad.',
+          const ['El producto no es de tu cafetería']);
+    }
+    notifyListeners();
+  }
+
   void seleccionarEstacion(String? id) {
     estacionSeleccionada = id;
     notifyListeners();

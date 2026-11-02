@@ -41,7 +41,8 @@ class DataConnectPerfilRepository implements PerfilRepository {
 class MockPerfilRepository implements PerfilRepository {
   Perfil perfil;
   MockPerfilRepository({
-    this.perfil = const Perfil(nombre: 'Alumno demo', correo: 'demo@utng.edu.mx'),
+    this.perfil =
+        const Perfil(nombre: 'Alumno demo', correo: 'demo@utng.edu.mx'),
   });
 
   @override

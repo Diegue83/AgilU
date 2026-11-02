@@ -106,18 +106,27 @@ class _Productos extends StatelessWidget {
                 },
                 title: Text(p.nombre),
                 subtitle: Text(p.estacion),
-                trailing: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('\$${p.precio.toStringAsFixed(2)}'),
-                    Text(
-                      p.disponible ? 'Disponible' : 'Agotado',
-                      style: TextStyle(
-                        color: p.disponible
-                            ? Colors.green.shade700
-                            : Theme.of(context).colorScheme.error,
-                      ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text('\$${p.precio.toStringAsFixed(2)}'),
+                        Text(
+                          p.disponible ? 'Disponible' : 'Agotado',
+                          style: TextStyle(
+                            color: p.disponible
+                                ? Colors.green.shade700
+                                : Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Switch(
+                      value: p.disponible,
+                      onChanged: (_) => vm.alternarDisponible(p),
                     ),
                   ],
                 ),

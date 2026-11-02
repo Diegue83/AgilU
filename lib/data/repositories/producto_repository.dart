@@ -6,6 +6,7 @@ abstract class ProductoRepository {
   Future<List<Producto>> misProductos();
   Future<void> crear(DatosProducto datos);
   Future<void> editar(String id, DatosProducto datos);
+  Future<void> establecerDisponibilidad(String id, bool disponible);
 }
 
 /// Lo que captura el encargado en el formulario de producto.
@@ -59,6 +60,11 @@ class DataConnectProductoRepository implements ProductoRepository {
       .descripcion(d.descripcion.isEmpty ? null : d.descripcion)
       .execute();
 
+  @override
+  Future<void> establecerDisponibilidad(String id, bool disponible) => _conector
+      .establecerDisponibilidad(id: id, disponible: disponible)
+      .execute();
+
   static Producto aProducto(MisProductosProductos p) => Producto(
         id: p.id,
         nombre: p.nombre,
@@ -76,12 +82,67 @@ class DataConnectProductoRepository implements ProductoRepository {
 
 class MockProductoRepository implements ProductoRepository {
   final List<Producto> productos = [
-    const Producto(id: '1', nombre: 'Chilaquiles verdes', descripcion: 'Con pollo y crema', precio: 55, categoria: 'Desayunos', cafeteriaId: 'c1', estacionId: 'e2', estacion: 'Guisados', estacionOrden: 2),
-    const Producto(id: '2', nombre: 'Molletes', descripcion: 'Con pico de gallo', precio: 40, categoria: 'Desayunos', cafeteriaId: 'c1', estacionId: 'e2', estacion: 'Guisados', estacionOrden: 2),
-    const Producto(id: '3', nombre: 'Torta de milanesa', descripcion: 'Con aguacate', precio: 50, categoria: 'Comidas', cafeteriaId: 'c1', estacionId: 'e1', estacion: 'Tortas y hamburguesas', estacionOrden: 1),
-    const Producto(id: '4', nombre: 'Hamburguesa sencilla', descripcion: 'Con papas', precio: 60, categoria: 'Comidas', cafeteriaId: 'c1', estacionId: 'e1', estacion: 'Tortas y hamburguesas', estacionOrden: 1),
-    const Producto(id: '5', nombre: 'Agua de horchata', descripcion: '500 ml', precio: 20, categoria: 'Bebidas', cafeteriaId: 'c1', estacionId: 'e3', estacion: 'Tiendita', estacionOrden: 3),
-    const Producto(id: '6', nombre: 'Café americano', descripcion: '12 oz', precio: 25, categoria: 'Bebidas', disponible: false, cafeteriaId: 'c1', estacionId: 'e3', estacion: 'Tiendita', estacionOrden: 3),
+    const Producto(
+        id: '1',
+        nombre: 'Chilaquiles verdes',
+        descripcion: 'Con pollo y crema',
+        precio: 55,
+        categoria: 'Desayunos',
+        cafeteriaId: 'c1',
+        estacionId: 'e2',
+        estacion: 'Guisados',
+        estacionOrden: 2),
+    const Producto(
+        id: '2',
+        nombre: 'Molletes',
+        descripcion: 'Con pico de gallo',
+        precio: 40,
+        categoria: 'Desayunos',
+        cafeteriaId: 'c1',
+        estacionId: 'e2',
+        estacion: 'Guisados',
+        estacionOrden: 2),
+    const Producto(
+        id: '3',
+        nombre: 'Torta de milanesa',
+        descripcion: 'Con aguacate',
+        precio: 50,
+        categoria: 'Comidas',
+        cafeteriaId: 'c1',
+        estacionId: 'e1',
+        estacion: 'Tortas y hamburguesas',
+        estacionOrden: 1),
+    const Producto(
+        id: '4',
+        nombre: 'Hamburguesa sencilla',
+        descripcion: 'Con papas',
+        precio: 60,
+        categoria: 'Comidas',
+        cafeteriaId: 'c1',
+        estacionId: 'e1',
+        estacion: 'Tortas y hamburguesas',
+        estacionOrden: 1),
+    const Producto(
+        id: '5',
+        nombre: 'Agua de horchata',
+        descripcion: '500 ml',
+        precio: 20,
+        categoria: 'Bebidas',
+        cafeteriaId: 'c1',
+        estacionId: 'e3',
+        estacion: 'Tiendita',
+        estacionOrden: 3),
+    const Producto(
+        id: '6',
+        nombre: 'Café americano',
+        descripcion: '12 oz',
+        precio: 25,
+        categoria: 'Bebidas',
+        disponible: false,
+        cafeteriaId: 'c1',
+        estacionId: 'e3',
+        estacion: 'Tiendita',
+        estacionOrden: 3),
   ];
 
   int _siguiente = 7;
@@ -116,6 +177,25 @@ class MockProductoRepository implements ProductoRepository {
       estacionId: d.estacionId,
       estacion: actual.estacionId == d.estacionId ? actual.estacion : '',
       estacionOrden: actual.estacionOrden,
+    );
+  }
+
+  @override
+  Future<void> establecerDisponibilidad(String id, bool disponible) async {
+    final i = productos.indexWhere((p) => p.id == id);
+    final p = productos[i];
+    productos[i] = Producto(
+      id: p.id,
+      nombre: p.nombre,
+      descripcion: p.descripcion,
+      precio: p.precio,
+      categoria: p.categoria,
+      disponible: disponible,
+      cafeteriaId: p.cafeteriaId,
+      estacionId: p.estacionId,
+      estacion: p.estacion,
+      estacionOrden: p.estacionOrden,
+      urlImagen: p.urlImagen,
     );
   }
 }

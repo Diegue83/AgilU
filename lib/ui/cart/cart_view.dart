@@ -30,7 +30,8 @@ class CartView extends StatelessWidget {
               Text('${i.cantidad} × ${i.producto.nombre}'),
             const Divider(),
             Text('Total: \$${vm.total.toStringAsFixed(2)}'),
-            Text('Recoges hoy a las ${ReglasPedido.formatearHora(vm.recogerA!)}'),
+            Text(
+                'Recoges hoy a las ${ReglasPedido.formatearHora(vm.recogerA!)}'),
             const SizedBox(height: 8),
             const Text(
               'Una vez que el encargado empiece a prepararlo ya no podrás cancelarlo.',
@@ -117,7 +118,8 @@ class CartView extends StatelessWidget {
                                   for (final h in horas)
                                     DropdownMenuItem(
                                       value: h,
-                                      child: Text(ReglasPedido.formatearHora(h)),
+                                      child:
+                                          Text(ReglasPedido.formatearHora(h)),
                                     ),
                                 ],
                                 onChanged: vm.elegirHora,
@@ -168,7 +170,8 @@ class CartView extends StatelessWidget {
                               ? const SizedBox(
                                   height: 20,
                                   width: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2))
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2))
                               : const Text('Confirmar pedido'),
                         ),
                       ),
