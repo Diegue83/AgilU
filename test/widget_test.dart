@@ -157,4 +157,24 @@ void main() {
     expect(find.descendant(of: fila, matching: find.text('Disponible')),
         findsOneWidget);
   });
+
+  testWidgets('eliminar un producto pide confirmación', (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository(),
+        perfiles: MockPerfilRepository(perfil: _encargado)));
+    await _iniciarSesion(tester);
+    await tester.tap(find.text('Molletes'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Eliminar producto'));
+    await tester.pumpAndSettle();
+    expect(find.text('¿Eliminar "Molletes"?'), findsOneWidget);
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Editar producto'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Eliminar producto'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Eliminar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Molletes'), findsNothing);
+  });
 }

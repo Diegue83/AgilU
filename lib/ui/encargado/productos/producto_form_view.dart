@@ -70,12 +70,41 @@ class _FormularioState extends State<_Formulario> {
     if (ok && mounted) Navigator.pop(context, true);
   }
 
+  Future<void> _eliminar(ProductoFormViewModel vm) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('¿Eliminar "${vm.actual!.nombre}"?'),
+        content: const Text(
+            'Dejará de aparecer en el menú. Los pedidos anteriores conservan su nombre y precio.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancelar')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Eliminar')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    if (await vm.eliminar() && mounted) Navigator.pop(context, true);
+  }
+
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<ProductoFormViewModel>();
     return Scaffold(
       appBar: AppBar(
-          title: Text(vm.editando ? 'Editar producto' : 'Nuevo producto')),
+          title: Text(vm.editando ? 'Editar producto' : 'Nuevo producto'),
+          actions: [
+            if (vm.editando)
+              IconButton(
+                tooltip: 'Eliminar producto',
+                icon: const Icon(Icons.delete_outline),
+                onPressed: vm.guardando ? null : () => _eliminar(vm),
+              ),
+          ]),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

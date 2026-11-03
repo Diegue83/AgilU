@@ -492,6 +492,55 @@ describe('disponibilidad (HU-16)', () => {
   });
 });
 
+describe('eliminar producto (HU-17)', () => {
+  const ENCHILADAS = async () => {
+    const { data } = await beto.query('MisProductos');
+    return data.productos.find((p) => p.nombre === 'Enchiladas').id;
+  };
+
+  test('el producto eliminado sale del menú y de la lista del encargado', async () => {
+    const id = await ENCHILADAS();
+    const vars = pedido({ items: [{ productoId: id, cantidad: 1 }] });
+    await ana.mutation('CrearPedido', vars);
+
+    await beto.mutation('EliminarMiProducto', { id });
+    const menu = await ana.query('ListarMenu');
+    assert.ok(menu.data.productos.every((p) => p.id !== id));
+    const lista = await beto.query('MisProductos');
+    assert.ok(lista.data.productos.every((p) => p.id !== id));
+
+    const r = await ana.mutation('CrearPedido', pedido({ items: [{ productoId: id, cantidad: 1 }] }));
+    assert.equal(r.data._execute, 0);
+
+    const mios = await ana.query('MisPedidos');
+    const anterior = mios.data.pedidos.find((p) => p.id === vars.id.replaceAll('-', ''));
+    const d = anterior.detallePedidos_on_pedido[0];
+    assert.equal(d.producto.nombre, 'Enchiladas');
+    assert.equal(d.precioEnElMomento, 45);
+  });
+
+  test('no se puede eliminar un producto de otra cafetería', async () => {
+    await assert.rejects(beto.mutation('EliminarMiProducto', { id: CAPUCHINO }), /no es de tu cafetería/);
+  });
+
+  test('un alumno no puede eliminar productos', async () => {
+    await assert.rejects(ana.mutation('EliminarMiProducto', { id: MOLLETES }), /no es de tu cafetería/);
+  });
+
+  test('una estación cuyos productos se eliminaron ya se puede eliminar', async () => {
+    const { data } = await beto.mutation('CrearEstacion', { nombre: 'Temporal', orden: 9 });
+    const estacion = data.puesto_insert.id;
+    await beto.mutation('CrearMiProducto', {
+      nombre: 'Elote', precio: 25, puestoId: estacion, disponible: true,
+    });
+    await assert.rejects(beto.mutation('EliminarEstacion', { id: estacion }));
+    const lista = await beto.query('MisProductos');
+    const elote = lista.data.productos.find((p) => p.nombre === 'Elote').id;
+    await beto.mutation('EliminarMiProducto', { id: elote });
+    await beto.mutation('EliminarEstacion', { id: estacion });
+  });
+});
+
 describe('catálogo', () => {
   test('un alumno no puede crear productos ni puestos', async () => {
     await assert.rejects(

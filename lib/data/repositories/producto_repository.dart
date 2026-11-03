@@ -7,6 +7,7 @@ abstract class ProductoRepository {
   Future<void> crear(DatosProducto datos);
   Future<void> editar(String id, DatosProducto datos);
   Future<void> establecerDisponibilidad(String id, bool disponible);
+  Future<void> eliminar(String id);
 }
 
 /// Lo que captura el encargado en el formulario de producto.
@@ -64,6 +65,10 @@ class DataConnectProductoRepository implements ProductoRepository {
   Future<void> establecerDisponibilidad(String id, bool disponible) => _conector
       .establecerDisponibilidad(id: id, disponible: disponible)
       .execute();
+
+  @override
+  Future<void> eliminar(String id) =>
+      _conector.eliminarMiProducto(id: id).execute();
 
   static Producto aProducto(MisProductosProductos p) => Producto(
         id: p.id,
@@ -198,4 +203,8 @@ class MockProductoRepository implements ProductoRepository {
       urlImagen: p.urlImagen,
     );
   }
+
+  @override
+  Future<void> eliminar(String id) async =>
+      productos.removeWhere((p) => p.id == id);
 }
