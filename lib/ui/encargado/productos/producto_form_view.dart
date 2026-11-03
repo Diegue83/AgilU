@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/models/estacion.dart';
 import '../../../data/models/producto.dart';
+import '../../../data/repositories/foto_repository.dart';
 import '../../../data/repositories/producto_repository.dart';
+import '../../comun/foto_producto.dart';
 import 'producto_form_view_model.dart';
 
 /// Formulario para dar de alta o editar un producto. Devuelve true al
@@ -18,7 +21,7 @@ class ProductoFormView extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (ctx) => ProductoFormViewModel(
           ctx.read<ProductoRepository>(), estaciones,
-          actual: producto),
+          actual: producto, fotos: ctx.read<FotoRepository>()),
       child: const _Formulario(),
     );
   }
@@ -70,6 +73,23 @@ class _FormularioState extends State<_Formulario> {
     if (ok && mounted) Navigator.pop(context, true);
   }
 
+  /// La imagen se reduce a 1024 px y calidad 75 antes de enviarla.
+  Future<void> _elegirFoto(ProductoFormViewModel vm, ImageSource origen) async {
+    final picker = ImagePicker();
+    final archivo = await picker.pickImage(
+      source: origen,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 75,
+    );
+    if (archivo == null) return;
+    final bytes = await archivo.readAsBytes();
+    final tipo = archivo.name.toLowerCase().endsWith('.png')
+        ? 'image/png'
+        : 'image/jpeg';
+    await vm.subirFoto(bytes, tipo);
+  }
+
   Future<void> _eliminar(ProductoFormViewModel vm) async {
     final ok = await showDialog<bool>(
       context: context,
@@ -108,6 +128,36 @@ class _FormularioState extends State<_Formulario> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          if (vm.puedeTenerFoto) ...[
+            Center(child: FotoProducto(url: vm.urlImagen, tamano: 120)),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton.icon(
+                  onPressed: vm.subiendoFoto
+                      ? null
+                      : () => _elegirFoto(vm, ImageSource.gallery),
+                  icon: const Icon(Icons.photo_library_outlined),
+                  label: const Text('Galería'),
+                ),
+                if (ImagePicker().supportsImageSource(ImageSource.camera))
+                  TextButton.icon(
+                    onPressed: vm.subiendoFoto
+                        ? null
+                        : () => _elegirFoto(vm, ImageSource.camera),
+                    icon: const Icon(Icons.photo_camera_outlined),
+                    label: const Text('Cámara'),
+                  ),
+              ],
+            ),
+            if (vm.subiendoFoto) const LinearProgressIndicator(),
+            const SizedBox(height: 16),
+          ] else if (!vm.editando) ...[
+            const Text(
+                'Podrás agregar la foto después de guardar el producto.'),
+            const SizedBox(height: 16),
+          ],
           TextField(
             controller: _nombre,
             textCapitalization: TextCapitalization.sentences,

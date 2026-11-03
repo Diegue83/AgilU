@@ -1,5 +1,8 @@
+import 'dart:typed_data';
+
 import 'package:agilu/data/models/estacion.dart';
 import 'package:agilu/data/models/producto.dart';
+import 'package:agilu/data/repositories/foto_repository.dart';
 import 'package:agilu/data/repositories/producto_repository.dart';
 import 'package:agilu/ui/encargado/productos/producto_form_view_model.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -124,4 +127,37 @@ void main() {
     final vm = ProductoFormViewModel(MockProductoRepository(), _estaciones);
     expect(await vm.eliminar(), isFalse);
   });
+
+  test('subir foto guarda la URL que devuelve el servidor', () async {
+    final repo = MockProductoRepository();
+    final vm = ProductoFormViewModel(repo, _estaciones,
+        actual: repo.productos.first, fotos: MockFotoRepository());
+    expect(vm.puedeTenerFoto, isTrue);
+    expect(
+        await vm.subirFoto(
+            Uint8List.fromList([0xff, 0xd8, 0xff]), 'image/jpeg'),
+        isTrue);
+    expect(vm.urlImagen, 'https://ejemplo.test/productos/1.jpg');
+  });
+
+  test('si el servidor rechaza la foto se explica el motivo', () async {
+    final repo = MockProductoRepository();
+    final vm = ProductoFormViewModel(repo, _estaciones,
+        actual: repo.productos.first, fotos: _FotosQueFallan());
+    expect(await vm.subirFoto(Uint8List(3), 'image/jpeg'), isFalse);
+    expect(vm.error, 'La foto pesa más de 1 MB.');
+    expect(vm.urlImagen, isNull);
+  });
+
+  test('en un alta todavía no se puede subir foto', () {
+    final vm = ProductoFormViewModel(MockProductoRepository(), _estaciones,
+        fotos: MockFotoRepository());
+    expect(vm.puedeTenerFoto, isFalse);
+  });
+}
+
+class _FotosQueFallan implements FotoRepository {
+  @override
+  Future<String> subir(String productoId, Uint8List bytes, String tipo) async =>
+      throw Exception('La foto pesa más de 1 MB.');
 }

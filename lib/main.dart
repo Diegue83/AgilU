@@ -1,3 +1,4 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'data/repositories/dataconnect_menu_repository.dart';
 import 'data/repositories/dataconnect_pedido_repository.dart';
 import 'data/repositories/estacion_repository.dart';
 import 'data/repositories/firebase_auth_repository.dart';
+import 'data/repositories/foto_repository.dart';
 import 'data/repositories/menu_repository.dart';
 import 'data/repositories/pedido_repository.dart';
 import 'data/repositories/producto_repository.dart';
@@ -30,6 +32,8 @@ Future<void> main() async {
       await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
       AgiluConnector.instance.dataConnect
           .useDataConnectEmulator('localhost', 9399);
+      FirebaseFunctions.instanceFor(region: 'us-east4')
+          .useFunctionsEmulator('localhost', 5001);
     }
   }
 
@@ -54,6 +58,11 @@ Future<void> main() async {
           create: (_) => AppConfig.usarFirebase
               ? DataConnectEstacionRepository()
               : MockEstacionRepository(),
+        ),
+        Provider<FotoRepository>(
+          create: (_) => AppConfig.usarFirebase
+              ? CloudFunctionsFotoRepository()
+              : MockFotoRepository(),
         ),
         Provider<ProductoRepository>(
           create: (_) => AppConfig.usarFirebase
