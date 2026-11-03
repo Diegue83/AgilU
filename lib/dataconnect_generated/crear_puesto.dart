@@ -5,41 +5,49 @@ class CrearPuestoVariablesBuilder {
   String cafeteriaId;
 
   final FirebaseDataConnect _dataConnect;
-  CrearPuestoVariablesBuilder(this._dataConnect, {required  this.nombre,required  this.cafeteriaId,});
-  Deserializer<CrearPuestoData> dataDeserializer = (dynamic json)  => CrearPuestoData.fromJson(jsonDecode(json));
-  Serializer<CrearPuestoVariables> varsSerializer = (CrearPuestoVariables vars) => jsonEncode(vars.toJson());
+  CrearPuestoVariablesBuilder(
+    this._dataConnect, {
+    required this.nombre,
+    required this.cafeteriaId,
+  });
+  Deserializer<CrearPuestoData> dataDeserializer =
+      (dynamic json) => CrearPuestoData.fromJson(jsonDecode(json));
+  Serializer<CrearPuestoVariables> varsSerializer =
+      (CrearPuestoVariables vars) => jsonEncode(vars.toJson());
   Future<OperationResult<CrearPuestoData, CrearPuestoVariables>> execute() {
     return ref().execute();
   }
 
   MutationRef<CrearPuestoData, CrearPuestoVariables> ref() {
-    CrearPuestoVariables vars= CrearPuestoVariables(nombre: nombre,cafeteriaId: cafeteriaId,);
-    return _dataConnect.mutation("CrearPuesto", dataDeserializer, varsSerializer, vars);
+    CrearPuestoVariables vars = CrearPuestoVariables(
+      nombre: nombre,
+      cafeteriaId: cafeteriaId,
+    );
+    return _dataConnect.mutation(
+        "CrearPuesto", dataDeserializer, varsSerializer, vars);
   }
 }
 
 @immutable
 class CrearPuestoPuestoInsert {
   final String id;
-  CrearPuestoPuestoInsert.fromJson(dynamic json):
-  
-  id = nativeFromJson<String>(json['id']);
+  CrearPuestoPuestoInsert.fromJson(dynamic json)
+      : id = nativeFromJson<String>(json['id']);
   @override
   bool operator ==(Object other) {
-    if(identical(this, other)) {
+    if (identical(this, other)) {
       return true;
     }
-    if(other.runtimeType != runtimeType) {
+    if (other.runtimeType != runtimeType) {
       return false;
     }
 
     final CrearPuestoPuestoInsert otherTyped = other as CrearPuestoPuestoInsert;
     return id == otherTyped.id;
-    
   }
+
   @override
   int get hashCode => id.hashCode;
-  
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -55,25 +63,23 @@ class CrearPuestoPuestoInsert {
 @immutable
 class CrearPuestoData {
   final CrearPuestoPuestoInsert puesto_insert;
-  CrearPuestoData.fromJson(dynamic json):
-  
-  puesto_insert = CrearPuestoPuestoInsert.fromJson(json['puesto_insert']);
+  CrearPuestoData.fromJson(dynamic json)
+      : puesto_insert = CrearPuestoPuestoInsert.fromJson(json['puesto_insert']);
   @override
   bool operator ==(Object other) {
-    if(identical(this, other)) {
+    if (identical(this, other)) {
       return true;
     }
-    if(other.runtimeType != runtimeType) {
+    if (other.runtimeType != runtimeType) {
       return false;
     }
 
     final CrearPuestoData otherTyped = other as CrearPuestoData;
     return puesto_insert == otherTyped.puesto_insert;
-    
   }
+
   @override
   int get hashCode => puesto_insert.hashCode;
-  
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -90,28 +96,26 @@ class CrearPuestoData {
 class CrearPuestoVariables {
   final String nombre;
   final String cafeteriaId;
-  @Deprecated('fromJson is deprecated for Variable classes as they are no longer required for deserialization.')
-  CrearPuestoVariables.fromJson(Map<String, dynamic> json):
-  
-  nombre = nativeFromJson<String>(json['nombre']),
-  cafeteriaId = nativeFromJson<String>(json['cafeteriaId']);
+  @Deprecated(
+      'fromJson is deprecated for Variable classes as they are no longer required for deserialization.')
+  CrearPuestoVariables.fromJson(Map<String, dynamic> json)
+      : nombre = nativeFromJson<String>(json['nombre']),
+        cafeteriaId = nativeFromJson<String>(json['cafeteriaId']);
   @override
   bool operator ==(Object other) {
-    if(identical(this, other)) {
+    if (identical(this, other)) {
       return true;
     }
-    if(other.runtimeType != runtimeType) {
+    if (other.runtimeType != runtimeType) {
       return false;
     }
 
     final CrearPuestoVariables otherTyped = other as CrearPuestoVariables;
-    return nombre == otherTyped.nombre && 
-    cafeteriaId == otherTyped.cafeteriaId;
-    
+    return nombre == otherTyped.nombre && cafeteriaId == otherTyped.cafeteriaId;
   }
+
   @override
   int get hashCode => Object.hashAll([nombre.hashCode, cafeteriaId.hashCode]);
-  
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -125,4 +129,3 @@ class CrearPuestoVariables {
     required this.cafeteriaId,
   });
 }
-

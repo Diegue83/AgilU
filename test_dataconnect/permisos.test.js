@@ -541,6 +541,61 @@ describe('eliminar producto (HU-17)', () => {
   });
 });
 
+describe('foto del producto (HU-20)', () => {
+  const { subirFoto } = createRequire(import.meta.url)('../functions/fotos.js');
+  const JPG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 4]).toString('base64');
+  const archivos = new Map();
+  const bucket = {
+    name: 'demo-agilu.appspot.com',
+    file: (ruta) => ({ save: async (datos, opciones) => archivos.set(ruta, { datos, opciones }) }),
+  };
+  const deps = { dataConnect: adminDataConnect, bucket };
+  const uidDe = (alumno) => alumno.auth.currentUser.uid;
+
+  test('el encargado sube la foto y el menú muestra su URL', async () => {
+    const { url } = await subirFoto(
+      { uid: uidDe(beto), productoId: MOLLETES, imagenBase64: JPG, tipo: 'image/jpeg' }, deps,
+    );
+    const ruta = `productos/${CAFETERIA}/${MOLLETES}.jpg`;
+    assert.ok(archivos.has(ruta));
+    assert.equal(archivos.get(ruta).opciones.contentType, 'image/jpeg');
+    assert.match(url, /^https:\/\/firebasestorage\.googleapis\.com\/.+token=/);
+    const { data } = await ana.query('ListarMenu');
+    assert.equal(data.productos.find((p) => p.id === MOLLETES).urlDeImagen, url);
+  });
+
+  test('un alumno no puede cambiar la foto', async () => {
+    await assert.rejects(
+      subirFoto({ uid: uidDe(ana), productoId: MOLLETES, imagenBase64: JPG, tipo: 'image/jpeg' }, deps),
+      /no es de tu cafetería/,
+    );
+  });
+
+  test('no se puede cambiar la foto de un producto de otra cafetería', async () => {
+    await assert.rejects(
+      subirFoto({ uid: uidDe(beto), productoId: CAPUCHINO, imagenBase64: JPG, tipo: 'image/jpeg' }, deps),
+      /no es de tu cafetería/,
+    );
+  });
+
+  test('sin sesión se rechaza', async () => {
+    await assert.rejects(
+      subirFoto({ uid: undefined, productoId: MOLLETES, imagenBase64: JPG, tipo: 'image/jpeg' }, deps),
+      /Inicia sesión/,
+    );
+  });
+
+  test('se rechazan archivos que no son imagen, tipos no permitidos y fotos grandes', async () => {
+    const base = { uid: uidDe(beto), productoId: MOLLETES };
+    const texto = Buffer.from('<script>alert(1)</script>').toString('base64');
+    await assert.rejects(subirFoto({ ...base, imagenBase64: texto, tipo: 'image/jpeg' }, deps), /no es una imagen válida/);
+    await assert.rejects(subirFoto({ ...base, imagenBase64: JPG, tipo: 'image/gif' }, deps), /JPG o PNG/);
+    const grande = Buffer.alloc(1024 * 1024 + 1, 0xff).toString('base64');
+    await assert.rejects(subirFoto({ ...base, imagenBase64: grande, tipo: 'image/jpeg' }, deps), /más de 1 MB/);
+    await assert.rejects(subirFoto({ ...base, productoId: "1' OR 1=1", imagenBase64: JPG, tipo: 'image/jpeg' }, deps), /Producto inválido/);
+  });
+});
+
 describe('catálogo', () => {
   test('un alumno no puede crear productos ni puestos', async () => {
     await assert.rejects(

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../data/repositories/estacion_repository.dart';
 import '../../../data/repositories/producto_repository.dart';
+import '../../comun/foto_producto.dart';
 import 'producto_form_view.dart';
 import 'productos_view_model.dart';
 
@@ -104,6 +105,7 @@ class _Productos extends StatelessWidget {
                   );
                   if (guardado == true) await vm.cargar();
                 },
+                leading: FotoProducto(url: p.urlImagen),
                 title: Text(p.nombre),
                 subtitle: Text(p.estacion),
                 trailing: Row(
