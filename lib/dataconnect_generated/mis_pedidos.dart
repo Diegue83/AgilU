@@ -1,20 +1,18 @@
 part of 'agilu.dart';
 
 class MisPedidosVariablesBuilder {
+  
   final FirebaseDataConnect _dataConnect;
-  MisPedidosVariablesBuilder(
-    this._dataConnect,
-  );
-  Deserializer<MisPedidosData> dataDeserializer =
-      (dynamic json) => MisPedidosData.fromJson(jsonDecode(json));
-
+  MisPedidosVariablesBuilder(this._dataConnect, );
+  Deserializer<MisPedidosData> dataDeserializer = (dynamic json)  => MisPedidosData.fromJson(jsonDecode(json));
+  
   Future<QueryResult<MisPedidosData, void>> execute() {
     return ref().execute();
   }
 
   QueryRef<MisPedidosData, void> ref() {
-    return _dataConnect.query(
-        "MisPedidos", dataDeserializer, emptySerializer, null);
+    
+    return _dataConnect.query("MisPedidos", dataDeserializer, emptySerializer, null);
   }
 }
 
@@ -28,51 +26,41 @@ class MisPedidosPedidos {
   final String? notas;
   final MisPedidosPedidosCafeteria cafeteria;
   final List<MisPedidosPedidosDetallePedidosOnPedido> detallePedidos_on_pedido;
-  MisPedidosPedidos.fromJson(dynamic json)
-      : id = nativeFromJson<String>(json['id']),
-        folio = nativeFromJson<int>(json['folio']),
-        montoTotal = nativeFromJson<double>(json['montoTotal']),
-        estado = nativeFromJson<String>(json['estado']),
-        recogerA = Timestamp.fromJson(json['recogerA']),
-        notas = json['notas'] == null
-            ? null
-            : nativeFromJson<String>(json['notas']),
-        cafeteria = MisPedidosPedidosCafeteria.fromJson(json['cafeteria']),
-        detallePedidos_on_pedido =
-            (json['detallePedidos_on_pedido'] as List<dynamic>)
-                .map((e) => MisPedidosPedidosDetallePedidosOnPedido.fromJson(e))
-                .toList();
+  MisPedidosPedidos.fromJson(dynamic json):
+  
+  id = nativeFromJson<String>(json['id']),
+  folio = nativeFromJson<int>(json['folio']),
+  montoTotal = nativeFromJson<double>(json['montoTotal']),
+  estado = nativeFromJson<String>(json['estado']),
+  recogerA = Timestamp.fromJson(json['recogerA']),
+  notas = json['notas'] == null ? null : nativeFromJson<String>(json['notas']),
+  cafeteria = MisPedidosPedidosCafeteria.fromJson(json['cafeteria']),
+  detallePedidos_on_pedido = (json['detallePedidos_on_pedido'] as List<dynamic>)
+        .map((e) => MisPedidosPedidosDetallePedidosOnPedido.fromJson(e))
+        .toList();
   @override
   bool operator ==(Object other) {
-    if (identical(this, other)) {
+    if(identical(this, other)) {
       return true;
     }
-    if (other.runtimeType != runtimeType) {
+    if(other.runtimeType != runtimeType) {
       return false;
     }
 
     final MisPedidosPedidos otherTyped = other as MisPedidosPedidos;
-    return id == otherTyped.id &&
-        folio == otherTyped.folio &&
-        montoTotal == otherTyped.montoTotal &&
-        estado == otherTyped.estado &&
-        recogerA == otherTyped.recogerA &&
-        notas == otherTyped.notas &&
-        cafeteria == otherTyped.cafeteria &&
-        detallePedidos_on_pedido == otherTyped.detallePedidos_on_pedido;
+    return id == otherTyped.id && 
+    folio == otherTyped.folio && 
+    montoTotal == otherTyped.montoTotal && 
+    estado == otherTyped.estado && 
+    recogerA == otherTyped.recogerA && 
+    notas == otherTyped.notas && 
+    cafeteria == otherTyped.cafeteria && 
+    detallePedidos_on_pedido == otherTyped.detallePedidos_on_pedido;
+    
   }
-
   @override
-  int get hashCode => Object.hashAll([
-        id.hashCode,
-        folio.hashCode,
-        montoTotal.hashCode,
-        estado.hashCode,
-        recogerA.hashCode,
-        notas.hashCode,
-        cafeteria.hashCode,
-        detallePedidos_on_pedido.hashCode
-      ]);
+  int get hashCode => Object.hashAll([id.hashCode, folio.hashCode, montoTotal.hashCode, estado.hashCode, recogerA.hashCode, notas.hashCode, cafeteria.hashCode, detallePedidos_on_pedido.hashCode]);
+  
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -85,8 +73,7 @@ class MisPedidosPedidos {
       json['notas'] = nativeToJson<String?>(notas);
     }
     json['cafeteria'] = cafeteria.toJson();
-    json['detallePedidos_on_pedido'] =
-        detallePedidos_on_pedido.map((e) => e.toJson()).toList();
+    json['detallePedidos_on_pedido'] = detallePedidos_on_pedido.map((e) => e.toJson()).toList();
     return json;
   }
 
@@ -105,24 +92,25 @@ class MisPedidosPedidos {
 @immutable
 class MisPedidosPedidosCafeteria {
   final String nombre;
-  MisPedidosPedidosCafeteria.fromJson(dynamic json)
-      : nombre = nativeFromJson<String>(json['nombre']);
+  MisPedidosPedidosCafeteria.fromJson(dynamic json):
+  
+  nombre = nativeFromJson<String>(json['nombre']);
   @override
   bool operator ==(Object other) {
-    if (identical(this, other)) {
+    if(identical(this, other)) {
       return true;
     }
-    if (other.runtimeType != runtimeType) {
+    if(other.runtimeType != runtimeType) {
       return false;
     }
 
-    final MisPedidosPedidosCafeteria otherTyped =
-        other as MisPedidosPedidosCafeteria;
+    final MisPedidosPedidosCafeteria otherTyped = other as MisPedidosPedidosCafeteria;
     return nombre == otherTyped.nombre;
+    
   }
-
   @override
   int get hashCode => nombre.hashCode;
+  
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -140,30 +128,29 @@ class MisPedidosPedidosDetallePedidosOnPedido {
   final int cantidad;
   final double precioEnElMomento;
   final MisPedidosPedidosDetallePedidosOnPedidoProducto producto;
-  MisPedidosPedidosDetallePedidosOnPedido.fromJson(dynamic json)
-      : cantidad = nativeFromJson<int>(json['cantidad']),
-        precioEnElMomento = nativeFromJson<double>(json['precioEnElMomento']),
-        producto = MisPedidosPedidosDetallePedidosOnPedidoProducto.fromJson(
-            json['producto']);
+  MisPedidosPedidosDetallePedidosOnPedido.fromJson(dynamic json):
+  
+  cantidad = nativeFromJson<int>(json['cantidad']),
+  precioEnElMomento = nativeFromJson<double>(json['precioEnElMomento']),
+  producto = MisPedidosPedidosDetallePedidosOnPedidoProducto.fromJson(json['producto']);
   @override
   bool operator ==(Object other) {
-    if (identical(this, other)) {
+    if(identical(this, other)) {
       return true;
     }
-    if (other.runtimeType != runtimeType) {
+    if(other.runtimeType != runtimeType) {
       return false;
     }
 
-    final MisPedidosPedidosDetallePedidosOnPedido otherTyped =
-        other as MisPedidosPedidosDetallePedidosOnPedido;
-    return cantidad == otherTyped.cantidad &&
-        precioEnElMomento == otherTyped.precioEnElMomento &&
-        producto == otherTyped.producto;
+    final MisPedidosPedidosDetallePedidosOnPedido otherTyped = other as MisPedidosPedidosDetallePedidosOnPedido;
+    return cantidad == otherTyped.cantidad && 
+    precioEnElMomento == otherTyped.precioEnElMomento && 
+    producto == otherTyped.producto;
+    
   }
-
   @override
-  int get hashCode => Object.hashAll(
-      [cantidad.hashCode, precioEnElMomento.hashCode, producto.hashCode]);
+  int get hashCode => Object.hashAll([cantidad.hashCode, precioEnElMomento.hashCode, producto.hashCode]);
+  
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -183,24 +170,25 @@ class MisPedidosPedidosDetallePedidosOnPedido {
 @immutable
 class MisPedidosPedidosDetallePedidosOnPedidoProducto {
   final String nombre;
-  MisPedidosPedidosDetallePedidosOnPedidoProducto.fromJson(dynamic json)
-      : nombre = nativeFromJson<String>(json['nombre']);
+  MisPedidosPedidosDetallePedidosOnPedidoProducto.fromJson(dynamic json):
+  
+  nombre = nativeFromJson<String>(json['nombre']);
   @override
   bool operator ==(Object other) {
-    if (identical(this, other)) {
+    if(identical(this, other)) {
       return true;
     }
-    if (other.runtimeType != runtimeType) {
+    if(other.runtimeType != runtimeType) {
       return false;
     }
 
-    final MisPedidosPedidosDetallePedidosOnPedidoProducto otherTyped =
-        other as MisPedidosPedidosDetallePedidosOnPedidoProducto;
+    final MisPedidosPedidosDetallePedidosOnPedidoProducto otherTyped = other as MisPedidosPedidosDetallePedidosOnPedidoProducto;
     return nombre == otherTyped.nombre;
+    
   }
-
   @override
   int get hashCode => nombre.hashCode;
+  
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -216,25 +204,27 @@ class MisPedidosPedidosDetallePedidosOnPedidoProducto {
 @immutable
 class MisPedidosData {
   final List<MisPedidosPedidos> pedidos;
-  MisPedidosData.fromJson(dynamic json)
-      : pedidos = (json['pedidos'] as List<dynamic>)
-            .map((e) => MisPedidosPedidos.fromJson(e))
-            .toList();
+  MisPedidosData.fromJson(dynamic json):
+  
+  pedidos = (json['pedidos'] as List<dynamic>)
+        .map((e) => MisPedidosPedidos.fromJson(e))
+        .toList();
   @override
   bool operator ==(Object other) {
-    if (identical(this, other)) {
+    if(identical(this, other)) {
       return true;
     }
-    if (other.runtimeType != runtimeType) {
+    if(other.runtimeType != runtimeType) {
       return false;
     }
 
     final MisPedidosData otherTyped = other as MisPedidosData;
     return pedidos == otherTyped.pedidos;
+    
   }
-
   @override
   int get hashCode => pedidos.hashCode;
+  
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -246,3 +236,4 @@ class MisPedidosData {
     required this.pedidos,
   });
 }
+

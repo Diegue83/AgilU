@@ -36,6 +36,7 @@ mutation CrearPedido(
         JOIN producto p ON p.id = i.producto_id
         JOIN puesto e ON e.id = p.puesto_id
         WHERE p.disponible
+          AND NOT p.eliminado
           AND e.activo
           AND e.cafeteria_id = $3::uuid
           AND i.cantidad BETWEEN 1 AND 50
@@ -174,7 +175,8 @@ mutation EditarEstacion($id: UUID!, $nombre: String!, $orden: Int!, $activo: Boo
 mutation EliminarEstacion($id: UUID!) @auth(level: USER) @transaction {
   query @redact {
     puesto(id: $id) @check(expr: "this != null", message: "La estación no existe") {
-      productos_on_puesto @check(expr: "this.size() == 0", message: "La estación tiene productos: desactívala en lugar de borrarla") {
+      productos_on_puesto(where: { eliminado: { eq: false } })
+        @check(expr: "this.size() == 0", message: "La estación tiene productos: desactívala en lugar de borrarla") {
         id
       }
     }
@@ -308,5 +310,30 @@ mutation EstablecerDisponibilidad($id: UUID!, $disponible: Boolean!)
       }
     }
     data: { disponible: $disponible }
+  ) @check(expr: "this != null", message: "El producto no es de tu cafetería")
+}
+
+# HU-17: eliminar un producto propio. Es un borrado lógico: el producto sale
+# del menú y de la lista, pero DetallePedido lo sigue referenciando, así que
+# los pedidos anteriores conservan su nombre y precio.
+mutation EliminarMiProducto($id: UUID!) @auth(level: USER) @transaction {
+  producto_update(
+    first: {
+      where: {
+        id: { eq: $id }
+        eliminado: { eq: false }
+        puesto: {
+          cafeteria: {
+            usuarios_on_cafeteria: {
+              exist: {
+                rol: { nombre: { eq: "encargado" } }
+                autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+              }
+            }
+          }
+        }
+      }
+    }
+    data: { eliminado: true, disponible: false }
   ) @check(expr: "this != null", message: "El producto no es de tu cafetería")
 }

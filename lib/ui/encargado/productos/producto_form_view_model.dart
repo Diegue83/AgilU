@@ -60,6 +60,24 @@ class ProductoFormViewModel extends ChangeNotifier {
 
   /// Guarda el producto. Si falla, los datos del formulario se conservan
   /// porque viven en la vista; aquí solo se informa el motivo.
+  /// Elimina el producto que se edita. Devuelve true si se eliminó.
+  Future<bool> eliminar() async {
+    if (!editando || guardando) return false;
+    guardando = true;
+    error = null;
+    notifyListeners();
+    try {
+      await _repo.eliminar(actual!.id);
+      return true;
+    } catch (e) {
+      error = mensajeDeError(e, 'No se pudo eliminar el producto.', _mensajes);
+      return false;
+    } finally {
+      guardando = false;
+      notifyListeners();
+    }
+  }
+
   Future<bool> guardar({
     required String nombre,
     required String descripcion,

@@ -55,6 +55,7 @@ type Producto @table {
   urlDeImagen: String
   categoria: String! @default(value: "General")
   disponible: Boolean! @default(value: true)
+  eliminado: Boolean! @default(value: false)
   puesto: Puesto!
 }
 
