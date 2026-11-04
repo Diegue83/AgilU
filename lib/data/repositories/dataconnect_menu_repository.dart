@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../../dataconnect_generated/agilu.dart';
+import '../models/cafeteria.dart';
 import '../models/producto.dart';
 import 'menu_repository.dart';
 
@@ -38,6 +39,22 @@ class DataConnectMenuRepository implements MenuRepository {
       },
     );
     return controller.stream;
+  }
+
+  @override
+  Future<List<Cafeteria>> cafeterias() async {
+    final res = await _conector.listarCafeterias().execute();
+    return res.data.cafeterias
+        .map((c) => Cafeteria(
+              id: c.id,
+              nombre: c.nombre,
+              aperturaMinutos: c.aperturaMinutos,
+              cierreMinutos: c.cierreMinutos,
+              anticipacionMinutos: c.anticipacionMinutos,
+              intervaloMinutos: c.intervaloMinutos,
+              activa: c.activa,
+            ))
+        .toList();
   }
 
   static Producto aProducto(ListarMenuProductos p) => Producto(

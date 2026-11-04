@@ -596,6 +596,23 @@ describe('foto del producto (HU-20)', () => {
   });
 });
 
+describe('menú del día (HU-19)', () => {
+  test('el alumno ve las cafeterías activas con su horario', async () => {
+    const { data } = await ana.query('ListarCafeterias');
+    const central = data.cafeterias.find((c) => c.id === CAFETERIA);
+    assert.equal(central.aperturaMinutos, 450);
+    assert.equal(central.anticipacionMinutos, 60);
+  });
+
+  test('sin sesión no se ven las cafeterías', async () => {
+    const anonimo = initializeApp({ projectId: 'demo-agilu', apiKey: 'demo' }, 'anonimo-hu19');
+    const dc = getDataConnect(anonimo, CONECTOR);
+    connectDataConnectEmulator(dc, '127.0.0.1', 9399);
+    await assert.rejects(executeQuery(queryRef(dc, 'ListarCafeterias')));
+    await deleteApp(anonimo);
+  });
+});
+
 describe('catálogo', () => {
   test('un alumno no puede crear productos ni puestos', async () => {
     await assert.rejects(

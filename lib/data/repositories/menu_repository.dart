@@ -1,11 +1,28 @@
+import '../models/cafeteria.dart';
 import '../models/producto.dart';
 
 abstract class MenuRepository {
   Stream<List<Producto>> observarMenu();
+  Future<List<Cafeteria>> cafeterias();
 }
 
 /// Datos de ejemplo para desarrollar sin Firebase.
 class MockMenuRepository implements MenuRepository {
+  final List<Cafeteria> lista;
+  MockMenuRepository({
+    this.lista = const [
+      Cafeteria(
+          id: 'cafeteria-central',
+          nombre: 'Cafetería central',
+          aperturaMinutos: 0,
+          cierreMinutos: 24 * 60 - 1,
+          anticipacionMinutos: 0),
+    ],
+  });
+
+  @override
+  Future<List<Cafeteria>> cafeterias() async => lista;
+
   @override
   Stream<List<Producto>> observarMenu() => Stream.value(const [
         Producto(
