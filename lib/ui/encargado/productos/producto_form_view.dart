@@ -7,6 +7,7 @@ import '../../../data/models/producto.dart';
 import '../../../data/repositories/foto_repository.dart';
 import '../../../data/repositories/producto_repository.dart';
 import '../../comun/foto_producto.dart';
+import 'oferta_view.dart';
 import 'producto_form_view_model.dart';
 
 /// Formulario para dar de alta o editar un producto. Devuelve true al
@@ -217,6 +218,7 @@ class _FormularioState extends State<_Formulario> {
                     child: CircularProgressIndicator(strokeWidth: 2))
                 : const Text('Guardar'),
           ),
+          if (vm.editando) const OfertaSeccion(),
         ],
       ),
     );

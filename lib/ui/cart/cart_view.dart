@@ -79,7 +79,7 @@ class CartView extends StatelessWidget {
                         ListTile(
                           title: Text(item.producto.nombre),
                           subtitle: Text(
-                              '\$${item.producto.precio.toStringAsFixed(2)} c/u'),
+                              '\$${item.precioUnitario.toStringAsFixed(2)} c/u'),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [

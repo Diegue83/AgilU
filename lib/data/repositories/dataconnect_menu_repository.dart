@@ -69,5 +69,8 @@ class DataConnectMenuRepository implements MenuRepository {
         estacion: p.puesto.nombre,
         estacionOrden: p.puesto.orden,
         urlImagen: p.urlDeImagen,
+        precioOferta: p.precioOferta,
+        ofertaHasta: p.ofertaHasta?.toDateTime().toLocal(),
+        esEspecialidad: p.esEspecialidad,
       );
 }

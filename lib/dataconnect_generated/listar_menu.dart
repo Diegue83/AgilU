@@ -25,6 +25,9 @@ class ListarMenuProductos {
   final String categoria;
   final bool disponible;
   final String? urlDeImagen;
+  final double? precioOferta;
+  final Timestamp? ofertaHasta;
+  final bool esEspecialidad;
   final ListarMenuProductosPuesto puesto;
   ListarMenuProductos.fromJson(dynamic json):
   
@@ -35,6 +38,9 @@ class ListarMenuProductos {
   categoria = nativeFromJson<String>(json['categoria']),
   disponible = nativeFromJson<bool>(json['disponible']),
   urlDeImagen = json['urlDeImagen'] == null ? null : nativeFromJson<String>(json['urlDeImagen']),
+  precioOferta = json['precioOferta'] == null ? null : nativeFromJson<double>(json['precioOferta']),
+  ofertaHasta = json['ofertaHasta'] == null ? null : Timestamp.fromJson(json['ofertaHasta']),
+  esEspecialidad = nativeFromJson<bool>(json['esEspecialidad']),
   puesto = ListarMenuProductosPuesto.fromJson(json['puesto']);
   @override
   bool operator ==(Object other) {
@@ -53,11 +59,14 @@ class ListarMenuProductos {
     categoria == otherTyped.categoria && 
     disponible == otherTyped.disponible && 
     urlDeImagen == otherTyped.urlDeImagen && 
+    precioOferta == otherTyped.precioOferta && 
+    ofertaHasta == otherTyped.ofertaHasta && 
+    esEspecialidad == otherTyped.esEspecialidad && 
     puesto == otherTyped.puesto;
     
   }
   @override
-  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, descripcion.hashCode, precio.hashCode, categoria.hashCode, disponible.hashCode, urlDeImagen.hashCode, puesto.hashCode]);
+  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, descripcion.hashCode, precio.hashCode, categoria.hashCode, disponible.hashCode, urlDeImagen.hashCode, precioOferta.hashCode, ofertaHasta.hashCode, esEspecialidad.hashCode, puesto.hashCode]);
   
 
   Map<String, dynamic> toJson() {
@@ -73,6 +82,13 @@ class ListarMenuProductos {
     if (urlDeImagen != null) {
       json['urlDeImagen'] = nativeToJson<String?>(urlDeImagen);
     }
+    if (precioOferta != null) {
+      json['precioOferta'] = nativeToJson<double?>(precioOferta);
+    }
+    if (ofertaHasta != null) {
+      json['ofertaHasta'] = ofertaHasta!.toJson();
+    }
+    json['esEspecialidad'] = nativeToJson<bool>(esEspecialidad);
     json['puesto'] = puesto.toJson();
     return json;
   }
@@ -85,6 +101,9 @@ class ListarMenuProductos {
     required this.categoria,
     required this.disponible,
     this.urlDeImagen,
+    this.precioOferta,
+    this.ofertaHasta,
+    required this.esEspecialidad,
     required this.puesto,
   });
 }

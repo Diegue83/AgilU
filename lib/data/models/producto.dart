@@ -12,6 +12,9 @@ class Producto {
   final String estacion;
   final int estacionOrden;
   final String? urlImagen;
+  final double? precioOferta;
+  final DateTime? ofertaHasta;
+  final bool esEspecialidad;
 
   const Producto({
     required this.id,
@@ -25,7 +28,22 @@ class Producto {
     this.estacion = '',
     this.estacionOrden = 0,
     this.urlImagen,
+    this.precioOferta,
+    this.ofertaHasta,
+    this.esEspecialidad = false,
   });
+
+  /// HU-21: la oferta vale mientras no llegue su fecha de término.
+  bool ofertaVigente(DateTime ahora) =>
+      precioOferta != null &&
+      ofertaHasta != null &&
+      ahora.isBefore(ofertaHasta!);
+
+  /// Precio que se cobra en este momento.
+  double precioEn(DateTime ahora) =>
+      ofertaVigente(ahora) ? precioOferta! : precio;
+
+  bool destacadoEn(DateTime ahora) => ofertaVigente(ahora) || esEspecialidad;
 
   /// Sección del menú: la estación si la hay, si no la categoría.
   String get seccion => estacion.isNotEmpty ? estacion : categoria;

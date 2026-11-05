@@ -56,6 +56,10 @@ type Producto @table {
   categoria: String! @default(value: "General")
   disponible: Boolean! @default(value: true)
   eliminado: Boolean! @default(value: false)
+  # HU-21: precio promocional vigente hasta ofertaHasta.
+  precioOferta: Float
+  ofertaHasta: Timestamp
+  esEspecialidad: Boolean! @default(value: false)
   puesto: Puesto!
 }
 
