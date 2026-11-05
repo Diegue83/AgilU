@@ -34,7 +34,14 @@ const CAFE_NO_DISPONIBLE = 'b0000000000040008000000000000005';
 const CAPUCHINO = 'b0000000000040008000000000000006';
 
 const sinGuiones = (uuid) => uuid.replaceAll('-', '');
-const enUnaHora = () => new Date(Date.now() + 60 * 60 * 1000).toISOString();
+// Las pruebas configuran la cafetería en UTC, abierta todo el día, sin
+// anticipación y con franjas de 1 minuto; "pronto" es el siguiente minuto exacto.
+const pronto = (minutos = 5) => {
+  const t = new Date(Date.now() + minutos * 60 * 1000);
+  t.setUTCSeconds(0, 0);
+  return t.toISOString();
+};
+const enUnaHora = () => pronto(5);
 
 async function alumno(nombre) {
   const app = initializeApp({ projectId: 'demo-agilu', apiKey: 'demo' }, nombre);
@@ -103,8 +110,18 @@ const adminDataConnect = {
 const sembrarCatalogo = () =>
   comoAdmin('../dataconnect/seed_data.gql', 'SembrarCatalogo');
 
+const CONFIG_PRUEBAS = `
+  mutation ConfigurarPruebas($id: UUID!) {
+    cafeteria_update(id: $id, data: {
+      zonaHoraria: "UTC", aperturaMinutos: 0, cierreMinutos: 1439,
+      anticipacionMinutos: 0, intervaloMinutos: 1, capacidadPorFranja: 100
+    })
+  }
+`;
+
 before(async () => {
   await sembrarCatalogo();
+  await adminDataConnect.executeGraphql(CONFIG_PRUEBAS, { variables: { id: 'c0000000-0000-4000-8000-000000000001' } });
   ana = await alumno('ana');
   beto = await alumno('beto');
   await ana.mutation('CrearPerfil', { nombre: 'Ana' });
@@ -600,8 +617,11 @@ describe('menú del día (HU-19)', () => {
   test('el alumno ve las cafeterías activas con su horario', async () => {
     const { data } = await ana.query('ListarCafeterias');
     const central = data.cafeterias.find((c) => c.id === CAFETERIA);
-    assert.equal(central.aperturaMinutos, 450);
-    assert.equal(central.anticipacionMinutos, 60);
+    for (const campo of ['aperturaMinutos', 'cierreMinutos', 'anticipacionMinutos',
+      'intervaloMinutos', 'capacidadPorFranja']) {
+      assert.equal(typeof central[campo], 'number', campo);
+    }
+    assert.equal(central.nombre, 'Cafetería central');
   });
 
   test('sin sesión no se ven las cafeterías', async () => {
@@ -667,6 +687,89 @@ describe('ofertas (HU-21)', () => {
     await beto.mutation('QuitarOferta', { id: TORTA });
     const { data } = await ana.query('ListarMenu');
     assert.equal(data.productos.find((p) => p.id === TORTA).precioOferta, null);
+  });
+});
+
+describe('pedido programado (HU-10)', () => {
+  const minutoUTC = (iso) => { const d = new Date(iso); return d.getUTCHours() * 60 + d.getUTCMinutes(); };
+  const configurar = (c) => adminDataConnect.executeGraphql(
+    `mutation C($id: UUID!, $a: Int!, $ci: Int!, $an: Int!, $i: Int!, $cap: Int!) {
+       cafeteria_update(id: $id, data: { aperturaMinutos: $a, cierreMinutos: $ci,
+         anticipacionMinutos: $an, intervaloMinutos: $i, capacidadPorFranja: $cap })
+     }`,
+    { variables: { id: CAFETERIA, a: 0, ci: 1439, an: 0, i: 1, cap: 100, ...c } },
+  );
+  const restaurar = () => configurar({});
+  const intentar = async (vars) => {
+    const r = await ana.mutation('CrearPedido', vars);
+    if (r.data._execute > 0) return null;
+    const d = await ana.query('DiagnosticarPedido', {
+      cafeteriaId: vars.cafeteriaId, recogerA: vars.recogerA, items: vars.items,
+    });
+    return d.data.diagnostico.motivo;
+  };
+
+  test('respeta la anticipación mínima configurada', async () => {
+    await configurar({ an: 60 });
+    assert.equal(await intentar(pedido({ recogerA: pronto(10) })),
+      'La hora elegida ya no cumple la anticipación mínima. Elige otra.');
+    await restaurar();
+  });
+
+  test('rechaza horas fuera del horario de la cafetería', async () => {
+    const m = minutoUTC(pronto(30));
+    await configurar({ a: 0, ci: Math.max(m - 20, 1) });
+    assert.equal(await intentar(pedido({ recogerA: pronto(30) })),
+      'La hora elegida está fuera del horario de la cafetería.');
+    await restaurar();
+  });
+
+  test('solo acepta horas alineadas a las franjas', async () => {
+    await configurar({ i: 15 });
+    const t = new Date(pronto(10));
+    const m = t.getUTCHours() * 60 + t.getUTCMinutes();
+    if (m % 15 === 0) t.setUTCMinutes(t.getUTCMinutes() + 1);
+    assert.notEqual(await intentar(pedido({ recogerA: t.toISOString() })), null);
+    await restaurar();
+  });
+
+  test('una franja llena ya no acepta pedidos y la ocupación lo refleja', async () => {
+    await configurar({ cap: 1 });
+    const hora = pronto(20);
+    assert.equal(await intentar(pedido({ recogerA: hora })), null);
+    assert.equal(await intentar(pedido({ recogerA: hora })), 'Esa hora ya se llenó. Elige otra.');
+    const { data } = await beto.query('OcupacionFranjas', { cafeteriaId: CAFETERIA });
+    const f = data.franjas.find((x) => new Date(x.recogerA).getTime() === new Date(hora).getTime());
+    assert.equal(f.pedidos, 1);
+    assert.ok(Object.keys(f).every((k) => ['recogerA', 'pedidos'].includes(k)));
+    await restaurar();
+  });
+
+  test('el diagnóstico explica productos no disponibles', async () => {
+    const vars = pedido({ items: [{ productoId: CAFE_NO_DISPONIBLE, cantidad: 1 }] });
+    assert.equal(await intentar(vars), 'Algún producto ya no está disponible. Revisa tu carrito.');
+  });
+
+  test('el encargado ajusta su cafetería y el servidor valida los valores', async () => {
+    await beto.mutation('EditarMiCafeteria', {
+      aperturaMinutos: 420, cierreMinutos: 1260, anticipacionMinutos: 30,
+      intervaloMinutos: 10, capacidadPorFranja: 15,
+    });
+    const { data } = await beto.query('MiCafeteria');
+    assert.equal(data.autenticacion.usuario.cafeteria.capacidadPorFranja, 15);
+    await assert.rejects(beto.mutation('EditarMiCafeteria', {
+      aperturaMinutos: 900, cierreMinutos: 600, anticipacionMinutos: 30,
+      intervaloMinutos: 10, capacidadPorFranja: 15,
+    }), /horario no es válido/);
+    await assert.rejects(beto.mutation('EditarMiCafeteria', {
+      aperturaMinutos: 420, cierreMinutos: 1260, anticipacionMinutos: 30,
+      intervaloMinutos: 10, capacidadPorFranja: 0,
+    }), /capacidad/);
+    await assert.rejects(ana.mutation('EditarMiCafeteria', {
+      aperturaMinutos: 420, cierreMinutos: 1260, anticipacionMinutos: 0,
+      intervaloMinutos: 10, capacidadPorFranja: 15,
+    }), /Solo el encargado/);
+    await restaurar();
   });
 });
 

@@ -17,22 +17,36 @@ import 'package:integration_test/integration_test.dart';
 // Corre contra los emuladores (ver README):
 // firebase emulators:exec --only auth,dataconnect --project demo-agilu
 //   "flutter test integration_test -d windows"
-Future<void> _sembrarCatalogo() async {
+Future<void> _comoAdmin(String query, [String? operationName]) async {
   final cliente = HttpClient();
   final req = await cliente.postUrl(Uri.parse(
       'http://127.0.0.1:9399/v1/projects/demo-agilu/locations/us-east4/'
       'services/agilu-a232a-service:executeGraphql'));
   req.headers.contentType = ContentType.json;
-  req.write(jsonEncode({
-    'query': File('dataconnect/seed_data.gql').readAsStringSync(),
-    'operationName': 'SembrarCatalogo',
-  }));
+  req.write(jsonEncode({'query': query, 'operationName': operationName}));
   final res = await req.close();
   final cuerpo = jsonDecode(await res.transform(utf8.decoder).join());
   cliente.close();
   if (res.statusCode != 200 || (cuerpo['errors'] as List).isNotEmpty) {
-    throw StateError('No se pudo sembrar el catálogo: $cuerpo');
+    throw StateError('Falló la operación de administrador: $cuerpo');
   }
+}
+
+/// Catálogo de prueba y la cafetería abierta todo el día, en UTC y sin
+/// anticipación, para que la prueba no dependa de la hora en que corre.
+Future<void> _sembrarCatalogo() async {
+  await _comoAdmin(File('dataconnect/seed_data.gql').readAsStringSync(),
+      'SembrarCatalogo');
+  await _comoAdmin('''
+    mutation { cafeteria_update(id: "c0000000-0000-4000-8000-000000000001", data: {
+      zonaHoraria: "UTC", aperturaMinutos: 0, cierreMinutos: 1439,
+      anticipacionMinutos: 0, intervaloMinutos: 1, capacidadPorFranja: 100 }) }
+  ''');
+}
+
+DateTime _pronto() {
+  final t = DateTime.now().toUtc().add(const Duration(minutes: 5));
+  return DateTime.utc(t.year, t.month, t.day, t.hour, t.minute);
 }
 
 void main() {
@@ -70,7 +84,7 @@ void main() {
         ItemCarrito(producto: horchata),
       ],
       total: 100,
-      recogerA: DateTime.now().add(const Duration(hours: 1)),
+      recogerA: _pronto(),
       notas: 'Sin cebolla',
     ));
     expect(folio, matches(RegExp(r'^AGU-\d{5}$')));
@@ -99,7 +113,7 @@ void main() {
         cafeteriaId: cafe.cafeteriaId,
         items: [ItemCarrito(producto: cafe)],
         total: cafe.precio,
-        recogerA: DateTime.now().add(const Duration(hours: 1)),
+        recogerA: _pronto(),
       )),
       throwsA(isA<Exception>()),
     );

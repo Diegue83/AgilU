@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/routes.dart';
 import '../../data/repositories/auth_repository.dart';
+import 'cafeteria/cafeteria_view.dart';
 import 'estaciones/estaciones_view.dart';
 import 'productos/productos_view.dart';
 
@@ -21,6 +22,7 @@ class _EncargadoViewState extends State<EncargadoView> {
   static const _secciones = <(String, IconData, Widget)>[
     ('Productos', Icons.restaurant_menu, ProductosView()),
     ('Estaciones', Icons.storefront, EstacionesView()),
+    ('Cafetería', Icons.tune, CafeteriaView()),
   ];
 
   @override

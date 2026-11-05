@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../core/reglas_pedido.dart';
+import '../../data/models/cafeteria.dart';
 import '../../data/models/item_carrito.dart';
 import '../../data/models/pedido.dart';
 import '../../data/models/producto.dart';
@@ -21,13 +22,58 @@ class CartViewModel extends ChangeNotifier {
   String? get cafeteriaId =>
       _items.isEmpty ? null : _items.values.first.producto.cafeteriaId;
 
+  /// Cafetería de los productos del carrito, con su horario y capacidad.
+  Cafeteria? cafeteria;
+  Map<DateTime, int> _ocupacion = {};
+
+  void configurarCafeteria(Cafeteria? c) {
+    if (c == null || c.id == cafeteria?.id) return;
+    if (_items.isNotEmpty && cafeteriaId != c.id) return;
+    cafeteria = c;
+    notifyListeners();
+  }
+
+  /// HU-10: carga cuántos pedidos tiene cada hora para marcar las llenas.
+  Future<void> cargarOcupacion(PedidoRepository repo) async {
+    final id = cafeteriaId;
+    if (id == null) return;
+    try {
+      _ocupacion = await repo.ocupacion(id);
+      notifyListeners();
+    } catch (_) {
+      _ocupacion = {};
+    }
+  }
+
   DateTime? recogerA;
   String notas = '';
   bool enviando = false;
   String? error;
 
-  List<DateTime> get horasDisponibles =>
-      ReglasPedido.horasDisponibles(_ahora());
+  List<DateTime> get horasDisponibles {
+    final c = cafeteria;
+    if (c == null) return ReglasPedido.horasDisponibles(_ahora());
+    return ReglasPedido.horasDisponibles(
+      _ahora(),
+      anticipacion: c.anticipacionMinutos,
+      intervalo: c.intervaloMinutos,
+      apertura: c.aperturaMinutos,
+      cierre: c.cierreMinutos,
+    );
+  }
+
+  /// Horas de hoy con la marca de las que ya se llenaron.
+  List<Franja> get franjas {
+    final capacidad = cafeteria?.capacidadPorFranja;
+    return [
+      for (final h in horasDisponibles)
+        Franja(h,
+            llena: capacidad != null && (_ocupacion[h] ?? 0) >= capacidad),
+    ];
+  }
+
+  bool _horaLibre(DateTime h) =>
+      franjas.any((f) => f.hora.isAtSameMomentAs(h) && !f.llena);
 
   bool agregar(Producto p) {
     if (_items.isNotEmpty && cafeteriaId != p.cafeteriaId) {
@@ -82,10 +128,15 @@ class CartViewModel extends ChangeNotifier {
   String? validar() {
     if (vacio) return 'Tu carrito está vacío.';
     if (recogerA == null) return 'Elige la hora a la que vas a recoger.';
-    if (!ReglasPedido.horaValida(recogerA!, _ahora())) {
+    if (!horasDisponibles.any((h) => h.isAtSameMomentAs(recogerA!))) {
       recogerA = null;
       notifyListeners();
       return 'Esa hora ya no cumple con 1 hora de anticipación. Elige otra.';
+    }
+    if (!_horaLibre(recogerA!)) {
+      recogerA = null;
+      notifyListeners();
+      return 'Esa hora ya se llenó. Elige otra.';
     }
     return null;
   }
@@ -125,6 +176,9 @@ class CartViewModel extends ChangeNotifier {
       recogerA = null;
       notas = '';
       return resultado;
+    } on PedidoRechazado catch (e) {
+      error = e.motivo;
+      return null;
     } catch (_) {
       error =
           'No se pudo enviar el pedido. Revisa tu conexión e intenta de nuevo.';
