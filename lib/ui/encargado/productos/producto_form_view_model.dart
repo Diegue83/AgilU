@@ -94,6 +94,69 @@ class ProductoFormViewModel extends ChangeNotifier {
 
   /// Guarda el producto. Si falla, los datos del formulario se conservan
   /// porque viven en la vista; aquí solo se informa el motivo.
+  static const _mensajesOferta = [
+    'El precio de oferta debe ser mayor a 0',
+    'La fecha de término ya pasó',
+    'La oferta debe costar menos que el precio normal',
+    'El producto no es de tu cafetería',
+  ];
+
+  /// HU-21: valida la oferta. Devuelve el problema o null.
+  String? validarOferta(String precioTexto, DateTime? hasta, DateTime ahora) {
+    final p = leerPrecio(precioTexto);
+    if (p == null || p <= 0) return 'Escribe un precio de oferta mayor a 0.';
+    if (actual != null && p >= actual!.precio) {
+      return 'La oferta debe costar menos que el precio normal.';
+    }
+    if (hasta == null || !hasta.isAfter(ahora)) {
+      return 'Elige una fecha de término futura.';
+    }
+    return null;
+  }
+
+  String? errorOferta;
+
+  Future<bool> publicarOferta(String precioTexto, DateTime? hasta,
+      bool esEspecialidad, DateTime ahora) async {
+    if (!editando || guardando) return false;
+    errorOferta = validarOferta(precioTexto, hasta, ahora);
+    if (errorOferta != null) {
+      notifyListeners();
+      return false;
+    }
+    guardando = true;
+    notifyListeners();
+    try {
+      await _repo.publicarOferta(
+          actual!.id, leerPrecio(precioTexto)!, hasta!, esEspecialidad);
+      return true;
+    } catch (e) {
+      errorOferta =
+          mensajeDeError(e, 'No se pudo publicar la oferta.', _mensajesOferta);
+      return false;
+    } finally {
+      guardando = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> quitarOferta() async {
+    if (!editando || guardando) return false;
+    guardando = true;
+    notifyListeners();
+    try {
+      await _repo.quitarOferta(actual!.id);
+      return true;
+    } catch (e) {
+      errorOferta =
+          mensajeDeError(e, 'No se pudo quitar la oferta.', _mensajesOferta);
+      return false;
+    } finally {
+      guardando = false;
+      notifyListeners();
+    }
+  }
+
   /// Elimina el producto que se edita. Devuelve true si se eliminó.
   Future<bool> eliminar() async {
     if (!editando || guardando) return false;

@@ -1095,3 +1095,102 @@ final ref = AgiluConnector.instance.eliminarMiProducto(
 ref.execute();
 ```
 
+
+### PublicarOferta
+#### Required Arguments
+```dart
+String id = ...;
+double precioOferta = ...;
+Timestamp hasta = ...;
+bool esEspecialidad = ...;
+AgiluConnector.instance.publicarOferta(
+  id: id,
+  precioOferta: precioOferta,
+  hasta: hasta,
+  esEspecialidad: esEspecialidad,
+).execute();
+```
+
+
+
+#### Return Type
+`execute()` returns a `OperationResult<PublicarOfertaData, PublicarOfertaVariables>`
+```dart
+/// Result of an Operation Request (query/mutation).
+class OperationResult<Data, Variables> {
+  OperationResult(this.dataConnect, this.data, this.ref);
+  Data data;
+  OperationRef<Data, Variables> ref;
+  FirebaseDataConnect dataConnect;
+}
+
+final result = await AgiluConnector.instance.publicarOferta(
+  id: id,
+  precioOferta: precioOferta,
+  hasta: hasta,
+  esEspecialidad: esEspecialidad,
+);
+PublicarOfertaData data = result.data;
+final ref = result.ref;
+```
+
+#### Getting the Ref
+Each builder returns an `execute` function, which is a helper function that creates a `Ref` object, and executes the underlying operation.
+An example of how to use the `Ref` object is shown below:
+```dart
+String id = ...;
+double precioOferta = ...;
+Timestamp hasta = ...;
+bool esEspecialidad = ...;
+
+final ref = AgiluConnector.instance.publicarOferta(
+  id: id,
+  precioOferta: precioOferta,
+  hasta: hasta,
+  esEspecialidad: esEspecialidad,
+).ref();
+ref.execute();
+```
+
+
+### QuitarOferta
+#### Required Arguments
+```dart
+String id = ...;
+AgiluConnector.instance.quitarOferta(
+  id: id,
+).execute();
+```
+
+
+
+#### Return Type
+`execute()` returns a `OperationResult<QuitarOfertaData, QuitarOfertaVariables>`
+```dart
+/// Result of an Operation Request (query/mutation).
+class OperationResult<Data, Variables> {
+  OperationResult(this.dataConnect, this.data, this.ref);
+  Data data;
+  OperationRef<Data, Variables> ref;
+  FirebaseDataConnect dataConnect;
+}
+
+final result = await AgiluConnector.instance.quitarOferta(
+  id: id,
+);
+QuitarOfertaData data = result.data;
+final ref = result.ref;
+```
+
+#### Getting the Ref
+Each builder returns an `execute` function, which is a helper function that creates a `Ref` object, and executes the underlying operation.
+An example of how to use the `Ref` object is shown below:
+```dart
+String id = ...;
+
+final ref = AgiluConnector.instance.quitarOferta(
+  id: id,
+).ref();
+ref.execute();
+```
+

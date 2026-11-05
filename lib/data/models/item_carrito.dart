@@ -6,12 +6,14 @@ class ItemCarrito {
 
   ItemCarrito({required this.producto, this.cantidad = 1});
 
-  double get subtotal => producto.precio * cantidad;
+  double get precioUnitario => producto.precioEn(DateTime.now());
+
+  double get subtotal => precioUnitario * cantidad;
 
   Map<String, dynamic> toMap() => {
         'productoId': producto.id,
         'nombre': producto.nombre,
-        'precioUnitario': producto.precio,
+        'precioUnitario': precioUnitario,
         'cantidad': cantidad,
       };
 }

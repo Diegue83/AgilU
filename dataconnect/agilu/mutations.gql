@@ -31,7 +31,9 @@ mutation CrearPedido(
         FROM jsonb_array_elements($6::jsonb) AS e
       ),
       lineas AS (
-        SELECT i.producto_id, i.cantidad, p.precio
+        SELECT i.producto_id, i.cantidad,
+               CASE WHEN p.precio_oferta IS NOT NULL AND p.oferta_hasta > now()
+                    THEN p.precio_oferta ELSE p.precio END AS precio
         FROM pedidos_items i
         JOIN producto p ON p.id = i.producto_id
         JOIN puesto e ON e.id = p.puesto_id
@@ -335,5 +337,62 @@ mutation EliminarMiProducto($id: UUID!) @auth(level: USER) @transaction {
       }
     }
     data: { eliminado: true, disponible: false }
+  ) @check(expr: "this != null", message: "El producto no es de tu cafetería")
+}
+
+# HU-21: destacar un producto propio con precio promocional hasta una fecha.
+mutation PublicarOferta(
+  $id: UUID!
+  $precioOferta: Float!
+  $hasta: Timestamp!
+  $esEspecialidad: Boolean!
+) @auth(level: USER) @transaction {
+  query @redact {
+    producto(id: $id)
+      @check(expr: "this != null", message: "El producto no existe")
+      @check(expr: "vars.precioOferta > 0.0", message: "El precio de oferta debe ser mayor a 0")
+      @check(expr: "vars.hasta > request.time", message: "La fecha de término ya pasó") {
+      precio @check(expr: "vars.precioOferta < this", message: "La oferta debe costar menos que el precio normal")
+    }
+  }
+  producto_update(
+    first: {
+      where: {
+        id: { eq: $id }
+        eliminado: { eq: false }
+        puesto: {
+          cafeteria: {
+            usuarios_on_cafeteria: {
+              exist: {
+                rol: { nombre: { eq: "encargado" } }
+                autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+              }
+            }
+          }
+        }
+      }
+    }
+    data: { precioOferta: $precioOferta, ofertaHasta: $hasta, esEspecialidad: $esEspecialidad }
+  ) @check(expr: "this != null", message: "El producto no es de tu cafetería")
+}
+
+mutation QuitarOferta($id: UUID!) @auth(level: USER) @transaction {
+  producto_update(
+    first: {
+      where: {
+        id: { eq: $id }
+        puesto: {
+          cafeteria: {
+            usuarios_on_cafeteria: {
+              exist: {
+                rol: { nombre: { eq: "encargado" } }
+                autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+              }
+            }
+          }
+        }
+      }
+    }
+    data: { precioOferta: null, ofertaHasta: null, esEspecialidad: false }
   ) @check(expr: "this != null", message: "El producto no es de tu cafetería")
 }
