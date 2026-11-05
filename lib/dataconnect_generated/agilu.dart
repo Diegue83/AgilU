@@ -33,6 +33,8 @@ part 'publicar_oferta.dart';
 
 part 'quitar_oferta.dart';
 
+part 'editar_mi_cafeteria.dart';
+
 part 'listar_menu.dart';
 
 part 'mi_perfil.dart';
@@ -46,6 +48,12 @@ part 'mis_estaciones.dart';
 part 'mis_productos.dart';
 
 part 'listar_cafeterias.dart';
+
+part 'ocupacion_franjas.dart';
+
+part 'diagnosticar_pedido.dart';
+
+part 'mi_cafeteria.dart';
 
 
 
@@ -131,6 +139,11 @@ class AgiluConnector {
   }
   
   
+  EditarMiCafeteriaVariablesBuilder editarMiCafeteria ({required int aperturaMinutos, required int cierreMinutos, required int anticipacionMinutos, required int intervaloMinutos, required int capacidadPorFranja, }) {
+    return EditarMiCafeteriaVariablesBuilder(dataConnect, aperturaMinutos: aperturaMinutos,cierreMinutos: cierreMinutos,anticipacionMinutos: anticipacionMinutos,intervaloMinutos: intervaloMinutos,capacidadPorFranja: capacidadPorFranja,);
+  }
+  
+  
   ListarMenuVariablesBuilder listarMenu () {
     return ListarMenuVariablesBuilder(dataConnect, );
   }
@@ -163,6 +176,21 @@ class AgiluConnector {
   
   ListarCafeteriasVariablesBuilder listarCafeterias () {
     return ListarCafeteriasVariablesBuilder(dataConnect, );
+  }
+  
+  
+  OcupacionFranjasVariablesBuilder ocupacionFranjas ({required String cafeteriaId, }) {
+    return OcupacionFranjasVariablesBuilder(dataConnect, cafeteriaId: cafeteriaId,);
+  }
+  
+  
+  DiagnosticarPedidoVariablesBuilder diagnosticarPedido ({required String cafeteriaId, required Timestamp recogerA, required dynamic items, }) {
+    return DiagnosticarPedidoVariablesBuilder(dataConnect, cafeteriaId: cafeteriaId,recogerA: recogerA,items: items,);
+  }
+  
+  
+  MiCafeteriaVariablesBuilder miCafeteria () {
+    return MiCafeteriaVariablesBuilder(dataConnect, );
   }
   
 

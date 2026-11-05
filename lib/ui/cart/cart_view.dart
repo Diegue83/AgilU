@@ -64,7 +64,8 @@ class CartView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<CartViewModel>();
-    final horas = vm.horasDisponibles;
+    final franjas = vm.franjas;
+    final libres = franjas.where((f) => !f.llena).map((f) => f.hora).toList();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Mi carrito')),
@@ -102,12 +103,12 @@ class CartView extends StatelessWidget {
                       const Divider(),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                        child: horas.isEmpty
+                        child: libres.isEmpty
                             ? const Text(
                                 'Ya no hay horarios disponibles para hoy. '
                                 'Los pedidos se hacen con 1 hora de anticipación.')
                             : DropdownButtonFormField<DateTime>(
-                                value: horas.contains(vm.recogerA)
+                                value: libres.contains(vm.recogerA)
                                     ? vm.recogerA
                                     : null,
                                 decoration: const InputDecoration(
@@ -115,11 +116,13 @@ class CartView extends StatelessWidget {
                                   border: OutlineInputBorder(),
                                 ),
                                 items: [
-                                  for (final h in horas)
+                                  for (final f in franjas)
                                     DropdownMenuItem(
-                                      value: h,
-                                      child:
-                                          Text(ReglasPedido.formatearHora(h)),
+                                      value: f.hora,
+                                      enabled: !f.llena,
+                                      child: Text(f.llena
+                                          ? '${ReglasPedido.formatearHora(f.hora)} (llena)'
+                                          : ReglasPedido.formatearHora(f.hora)),
                                     ),
                                 ],
                                 onChanged: vm.elegirHora,
@@ -163,7 +166,7 @@ class CartView extends StatelessWidget {
                       SizedBox(
                         width: double.infinity,
                         child: FilledButton(
-                          onPressed: vm.enviando || horas.isEmpty
+                          onPressed: vm.enviando || libres.isEmpty
                               ? null
                               : () => _confirmar(context, vm),
                           child: vm.enviando
