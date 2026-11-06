@@ -815,6 +815,56 @@ describe('anticipación mínima (HU-07)', () => {
   });
 });
 
+describe('panel operativo (HU-06)', () => {
+  const hoy = () => {
+    const d = new Date();
+    const desde = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+    return { desde: desde.toISOString(), hasta: new Date(desde.getTime() + 864e5).toISOString() };
+  };
+  let id;
+
+  test('el encargado ve los pedidos de hoy de su cafetería en orden de recogida', async () => {
+    const vars = pedido({ recogerA: pronto(3) });
+    await ana.mutation('CrearPedido', vars);
+    id = sinGuiones(vars.id);
+    const { data } = await beto.query('PanelPedidos', hoy());
+    assert.ok(data.pedidos.length > 0);
+    assert.ok(data.pedidos.some((p) => p.id === id));
+    assert.ok(data.pedidos.every((p) => ['pendiente', 'preparando', 'listo'].includes(p.estado)));
+    const horas = data.pedidos.map((p) => new Date(p.recogerA).getTime());
+    assert.deepEqual(horas, [...horas].sort((a, b) => a - b));
+    const p = data.pedidos.find((x) => x.id === id);
+    assert.equal(p.usuario.nombre, 'Ana');
+  });
+
+  test('un alumno no ve el panel', async () => {
+    const { data } = await ana.query('PanelPedidos', hoy());
+    assert.equal(data.pedidos.length, 0);
+  });
+
+  test('el pedido avanza un paso a la vez', async () => {
+    const saltar = await beto.mutation('AvanzarPedido', { id, estado: 'listo' });
+    assert.equal(saltar.data._execute, 0);
+    const a = await beto.mutation('AvanzarPedido', { id, estado: 'preparando' });
+    assert.equal(a.data._execute, 1);
+    const repetir = await beto.mutation('AvanzarPedido', { id, estado: 'preparando' });
+    assert.equal(repetir.data._execute, 0);
+    const b = await beto.mutation('AvanzarPedido', { id, estado: 'listo' });
+    assert.equal(b.data._execute, 1);
+    const res = await ana.query('MiPedido', { id });
+    assert.equal(res.data.pedidos[0].estado, 'listo');
+  });
+
+  test('no se aceptan otros estados ni pedidos ajenos', async () => {
+    await assert.rejects(beto.mutation('AvanzarPedido', { id, estado: 'entregado' }));
+    await assert.rejects(beto.mutation('AvanzarPedido', { id, estado: 'cancelado' }));
+    const otro = pedido({ recogerA: pronto(4) });
+    await ana.mutation('CrearPedido', otro);
+    const r = await ana.mutation('AvanzarPedido', { id: otro.id, estado: 'preparando' });
+    assert.equal(r.data._execute, 0);
+  });
+});
+
 describe('catálogo', () => {
   test('un alumno no puede crear productos ni puestos', async () => {
     await assert.rejects(
