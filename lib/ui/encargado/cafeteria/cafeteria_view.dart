@@ -94,6 +94,14 @@ class _Ajustes extends StatelessWidget {
             (v) => vm.cambiar(c.copiar(intervaloMinutos: v))),
         _numero('Pedidos por horario', c.capacidadPorFranja, 1, 200, 1,
             (v) => vm.cambiar(c.copiar(capacidadPorFranja: v))),
+        SwitchListTile(
+          title: const Text(
+              'Aceptar sin anticipación los pedidos de preparación inmediata'),
+          subtitle:
+              const Text('Solo si todo el pedido es de artículos inmediatos.'),
+          value: c.permitirInmediatos,
+          onChanged: (v) => vm.cambiar(c.copiar(permitirInmediatos: v)),
+        ),
         if (vm.error != null)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),

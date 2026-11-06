@@ -1019,6 +1019,10 @@ class CrearMiProductoVariablesBuilder {
    _descripcion.value = t;
    return this;
   }
+  CrearMiProductoVariablesBuilder preparacionInmediata(bool? t) {
+   _preparacionInmediata.value = t;
+   return this;
+  }
 
   ...
 }
@@ -1029,6 +1033,7 @@ AgiluConnector.instance.crearMiProducto(
   disponible: disponible,
 )
 .descripcion(descripcion)
+.preparacionInmediata(preparacionInmediata)
 .execute();
 ```
 
@@ -1099,6 +1104,10 @@ class EditarMiProductoVariablesBuilder {
    _descripcion.value = t;
    return this;
   }
+  EditarMiProductoVariablesBuilder preparacionInmediata(bool? t) {
+   _preparacionInmediata.value = t;
+   return this;
+  }
 
   ...
 }
@@ -1110,6 +1119,7 @@ AgiluConnector.instance.editarMiProducto(
   disponible: disponible,
 )
 .descripcion(descripcion)
+.preparacionInmediata(preparacionInmediata)
 .execute();
 ```
 
@@ -1352,12 +1362,14 @@ int cierreMinutos = ...;
 int anticipacionMinutos = ...;
 int intervaloMinutos = ...;
 int capacidadPorFranja = ...;
+bool permitirInmediatos = ...;
 AgiluConnector.instance.editarMiCafeteria(
   aperturaMinutos: aperturaMinutos,
   cierreMinutos: cierreMinutos,
   anticipacionMinutos: anticipacionMinutos,
   intervaloMinutos: intervaloMinutos,
   capacidadPorFranja: capacidadPorFranja,
+  permitirInmediatos: permitirInmediatos,
 ).execute();
 ```
 
@@ -1380,6 +1392,7 @@ final result = await AgiluConnector.instance.editarMiCafeteria(
   anticipacionMinutos: anticipacionMinutos,
   intervaloMinutos: intervaloMinutos,
   capacidadPorFranja: capacidadPorFranja,
+  permitirInmediatos: permitirInmediatos,
 );
 EditarMiCafeteriaData data = result.data;
 final ref = result.ref;
@@ -1394,6 +1407,7 @@ int cierreMinutos = ...;
 int anticipacionMinutos = ...;
 int intervaloMinutos = ...;
 int capacidadPorFranja = ...;
+bool permitirInmediatos = ...;
 
 final ref = AgiluConnector.instance.editarMiCafeteria(
   aperturaMinutos: aperturaMinutos,
@@ -1401,6 +1415,7 @@ final ref = AgiluConnector.instance.editarMiCafeteria(
   anticipacionMinutos: anticipacionMinutos,
   intervaloMinutos: intervaloMinutos,
   capacidadPorFranja: capacidadPorFranja,
+  permitirInmediatos: permitirInmediatos,
 ).ref();
 ref.execute();
 ```

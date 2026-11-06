@@ -41,6 +41,7 @@ class _FormularioState extends State<_Formulario> {
   final _precio = TextEditingController();
   String? _estacionId;
   bool _disponible = true;
+  bool _inmediato = false;
 
   @override
   void initState() {
@@ -52,6 +53,7 @@ class _FormularioState extends State<_Formulario> {
       _precio.text = p.precio.toStringAsFixed(2);
       _estacionId = p.estacionId;
       _disponible = p.disponible;
+      _inmediato = p.preparacionInmediata;
     }
   }
 
@@ -70,6 +72,7 @@ class _FormularioState extends State<_Formulario> {
       precio: _precio.text,
       estacionId: _estacionId,
       disponible: _disponible,
+      preparacionInmediata: _inmediato,
     );
     if (ok && mounted) Navigator.pop(context, true);
   }
@@ -202,6 +205,14 @@ class _FormularioState extends State<_Formulario> {
             title: const Text('Disponible hoy'),
             value: _disponible,
             onChanged: (v) => setState(() => _disponible = v),
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Preparación inmediata'),
+            subtitle: const Text(
+                'Se entrega al momento, como bebidas frías preempaquetadas.'),
+            value: _inmediato,
+            onChanged: (v) => setState(() => _inmediato = v),
           ),
           if (vm.error != null) ...[
             const SizedBox(height: 8),

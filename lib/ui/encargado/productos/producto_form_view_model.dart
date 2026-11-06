@@ -181,6 +181,7 @@ class ProductoFormViewModel extends ChangeNotifier {
     required String precio,
     required String? estacionId,
     required bool disponible,
+    bool preparacionInmediata = false,
   }) async {
     if (guardando) return false;
     errores = validar(nombre, precio, estacionId);
@@ -198,6 +199,7 @@ class ProductoFormViewModel extends ChangeNotifier {
         precio: leerPrecio(precio)!,
         estacionId: estacionId!,
         disponible: disponible,
+        preparacionInmediata: preparacionInmediata,
       );
       if (editando) {
         await _repo.editar(actual!.id, datos);

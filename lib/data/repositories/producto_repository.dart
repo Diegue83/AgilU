@@ -22,6 +22,7 @@ class DatosProducto {
   final double precio;
   final String estacionId;
   final bool disponible;
+  final bool preparacionInmediata;
 
   const DatosProducto({
     required this.nombre,
@@ -29,6 +30,7 @@ class DatosProducto {
     required this.precio,
     required this.estacionId,
     this.disponible = true,
+    this.preparacionInmediata = false,
   });
 }
 
@@ -52,6 +54,7 @@ class DataConnectProductoRepository implements ProductoRepository {
         disponible: d.disponible,
       )
       .descripcion(d.descripcion.isEmpty ? null : d.descripcion)
+      .preparacionInmediata(d.preparacionInmediata)
       .execute();
 
   @override
@@ -64,6 +67,7 @@ class DataConnectProductoRepository implements ProductoRepository {
         disponible: d.disponible,
       )
       .descripcion(d.descripcion.isEmpty ? null : d.descripcion)
+      .preparacionInmediata(d.preparacionInmediata)
       .execute();
 
   @override
@@ -106,6 +110,7 @@ class DataConnectProductoRepository implements ProductoRepository {
         precioOferta: p.precioOferta,
         ofertaHasta: p.ofertaHasta?.toDateTime().toLocal(),
         esEspecialidad: p.esEspecialidad,
+        preparacionInmediata: p.preparacionInmediata,
       );
 }
 
@@ -187,6 +192,7 @@ class MockProductoRepository implements ProductoRepository {
         precio: d.precio,
         categoria: 'General',
         disponible: d.disponible,
+        preparacionInmediata: d.preparacionInmediata,
         cafeteriaId: 'c1',
         estacionId: d.estacionId,
       ));
@@ -202,6 +208,7 @@ class MockProductoRepository implements ProductoRepository {
       precio: d.precio,
       categoria: actual.categoria,
       disponible: d.disponible,
+      preparacionInmediata: d.preparacionInmediata,
       cafeteriaId: actual.cafeteriaId,
       estacionId: d.estacionId,
       estacion: actual.estacionId == d.estacionId ? actual.estacion : '',

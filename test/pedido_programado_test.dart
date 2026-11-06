@@ -53,8 +53,10 @@ void main() {
     final once = DateTime(2026, 11, 10, 11);
     final vm = carrito();
     await vm.cargarOcupacion(MockPedidoRepository(ocupadas: {once: 2}));
-    expect(vm.franjas.first.llena, isTrue);
-    expect(vm.franjas[1].llena, isFalse);
+    final validas = vm.franjas.where((f) => !f.muyPronto).toList();
+    expect(validas.first.hora, once);
+    expect(validas.first.llena, isTrue);
+    expect(validas[1].llena, isFalse);
     vm.elegirHora(once);
     expect(vm.validar(), 'Esa hora ya se llenó. Elige otra.');
   });
