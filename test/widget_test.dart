@@ -6,6 +6,7 @@ import 'package:agilu/data/repositories/cafeteria_repository.dart';
 import 'package:agilu/data/repositories/estacion_repository.dart';
 import 'package:agilu/data/repositories/foto_repository.dart';
 import 'package:agilu/data/repositories/menu_repository.dart';
+import 'package:agilu/data/repositories/panel_repository.dart';
 import 'package:agilu/data/repositories/pedido_repository.dart';
 import 'package:agilu/data/repositories/perfil_repository.dart';
 import 'package:agilu/data/repositories/producto_repository.dart';
@@ -33,6 +34,7 @@ Widget _app(AuthRepository auth,
         Provider<ProductoRepository>(create: (_) => MockProductoRepository()),
         Provider<FotoRepository>(create: (_) => MockFotoRepository()),
         Provider<CafeteriaRepository>(create: (_) => MockCafeteriaRepository()),
+        Provider<PanelRepository>(create: (_) => MockPanelRepository()),
         Provider<MenuRepository>(create: (_) => MockMenuRepository()),
         Provider<PedidoRepository>(create: (_) => MockPedidoRepository()),
         ChangeNotifierProvider(create: (_) => CartViewModel()),
@@ -77,6 +79,9 @@ void main() {
     await tester.pumpWidget(_app(MockAuthRepository(),
         perfiles: MockPerfilRepository(perfil: _encargado)));
     await _iniciarSesion(tester);
+    expect(find.text('En espera (1)'), findsOneWidget);
+    await tester.tap(find.text('Productos'));
+    await tester.pumpAndSettle();
     expect(find.text('Molletes'), findsOneWidget);
     await tester.tap(find.text('Estaciones'));
     await tester.pumpAndSettle();
@@ -99,6 +104,8 @@ void main() {
     await tester.pumpWidget(_app(MockAuthRepository(),
         perfiles: MockPerfilRepository(perfil: _encargado)));
     await _iniciarSesion(tester);
+    await tester.tap(find.text('Productos'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Producto'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Guardar'), 200,
@@ -139,6 +146,8 @@ void main() {
     await tester.pumpWidget(_app(MockAuthRepository(),
         perfiles: MockPerfilRepository(perfil: _encargado)));
     await _iniciarSesion(tester);
+    await tester.tap(find.text('Productos'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Molletes'));
     await tester.pumpAndSettle();
     expect(find.text('Editar producto'), findsOneWidget);
@@ -178,6 +187,8 @@ void main() {
     await tester.pumpWidget(_app(MockAuthRepository(),
         perfiles: MockPerfilRepository(perfil: _encargado)));
     await _iniciarSesion(tester);
+    await tester.tap(find.text('Productos'));
+    await tester.pumpAndSettle();
     final fila = find.ancestor(
         of: find.text('Café americano'), matching: find.byType(ListTile));
     await tester.scrollUntilVisible(fila, 200,
@@ -192,6 +203,8 @@ void main() {
     await tester.pumpWidget(_app(MockAuthRepository(),
         perfiles: MockPerfilRepository(perfil: _encargado)));
     await _iniciarSesion(tester);
+    await tester.tap(find.text('Productos'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Molletes'));
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Eliminar producto'));
@@ -219,6 +232,8 @@ void main() {
     await tester.pumpWidget(_app(MockAuthRepository(),
         perfiles: MockPerfilRepository(perfil: _encargado)));
     await _iniciarSesion(tester);
+    await tester.tap(find.text('Productos'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Molletes'));
     await tester.pumpAndSettle();
     expect(find.text('Galería'), findsOneWidget);
@@ -238,5 +253,17 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Pedidos por horario'), findsOneWidget);
     expect(find.text('07:30'), findsOneWidget);
+  });
+
+  testWidgets('el panel avanza un pedido de en espera a preparando',
+      (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository(),
+        perfiles: MockPerfilRepository(perfil: _encargado)));
+    await _iniciarSesion(tester);
+    expect(find.text('AGU-00012'), findsOneWidget);
+    await tester.tap(find.text('Empezar a preparar'));
+    await tester.pumpAndSettle();
+    expect(find.text('En espera (0)'), findsOneWidget);
+    expect(find.text('Preparando (2)'), findsOneWidget);
   });
 }

@@ -464,3 +464,24 @@ mutation EditarMiCafeteria(
     }
   )
 }
+
+# HU-06: el encargado avanza un pedido de su cafetería un paso a la vez:
+# pendiente -> preparando -> listo. Si el pedido ya cambió, no se toca.
+mutation AvanzarPedido($id: UUID!, $estado: String!)
+  @auth(expr: "vars.estado in ['preparando', 'listo']") {
+  _execute(
+    sql: """
+    UPDATE pedido SET estado = $3
+    WHERE id = $2::uuid
+      AND estado = CASE $3 WHEN 'preparando' THEN 'pendiente' WHEN 'listo' THEN 'preparando' END
+      AND cafeteria_id IN (
+        SELECT u.cafeteria_id
+        FROM usuario u
+        JOIN autenticacion a ON a.usuario_id = u.id
+        JOIN rol r ON r.id = u.rol_id
+        WHERE a.firebase_auth_uid = $1 AND r.nombre = 'encargado'
+      )
+    """
+    params: [{ _expr: "auth.uid" }, $id, $estado]
+  )
+}

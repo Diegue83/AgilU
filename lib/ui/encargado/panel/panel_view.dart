@@ -1,0 +1,113 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../../core/reglas_pedido.dart';
+import '../../../data/models/pedido_panel.dart';
+import '../../../data/repositories/panel_repository.dart';
+import 'panel_view_model.dart';
+
+/// Panel operativo: pedidos de hoy por estado, en el orden en que se recogen.
+class PanelView extends StatelessWidget {
+  const PanelView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (ctx) => PanelViewModel(ctx.read<PanelRepository>()),
+      child: const _Panel(),
+    );
+  }
+}
+
+class _Panel extends StatelessWidget {
+  const _Panel();
+
+  static const _columnas = [
+    EstadoPedido.pendiente,
+    EstadoPedido.preparando,
+    EstadoPedido.listo,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final vm = context.watch<PanelViewModel>();
+    if (vm.cargando) return const Center(child: CircularProgressIndicator());
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 24),
+      children: [
+        if (vm.error != null)
+          MaterialBanner(
+            content: Text(vm.error!),
+            actions: const [SizedBox.shrink()],
+          ),
+        for (final estado in _columnas) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+            child: Text(
+              '${estado.etiqueta} (${vm.enEstado(estado).length})',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          if (vm.enEstado(estado).isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Text('Sin pedidos.'),
+            ),
+          for (final p in vm.enEstado(estado)) _Tarjeta(pedido: p),
+        ],
+      ],
+    );
+  }
+}
+
+class _Tarjeta extends StatelessWidget {
+  final PedidoPanel pedido;
+  const _Tarjeta({required this.pedido});
+
+  @override
+  Widget build(BuildContext context) {
+    final vm = context.read<PanelViewModel>();
+    final siguiente = pedido.estado.siguiente;
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(ReglasPedido.formatearFolio(pedido.folio),
+                    style: Theme.of(context).textTheme.titleSmall),
+                const Spacer(),
+                Text('Recoge ${ReglasPedido.formatearHora(pedido.recogerA)}'),
+              ],
+            ),
+            Text(pedido.alumno),
+            const SizedBox(height: 4),
+            for (final l in pedido.lineas)
+              Text('${l.cantidad} × ${l.producto}'),
+            if (pedido.notas != null && pedido.notas!.isNotEmpty)
+              Text('Nota: ${pedido.notas}',
+                  style: const TextStyle(fontStyle: FontStyle.italic)),
+            if (siguiente != null) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: FilledButton.tonal(
+                  style: FilledButton.styleFrom(minimumSize: const Size(0, 40)),
+                  onPressed: context.watch<PanelViewModel>().avanzando(pedido)
+                      ? null
+                      : () => vm.avanzar(pedido),
+                  child: Text(siguiente == EstadoPedido.preparando
+                      ? 'Empezar a preparar'
+                      : 'Marcar como listo'),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
