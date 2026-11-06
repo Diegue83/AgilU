@@ -25,6 +25,7 @@ class ListarCafeteriasCafeterias {
   final int anticipacionMinutos;
   final int intervaloMinutos;
   final int capacidadPorFranja;
+  final bool permitirInmediatos;
   final String zonaHoraria;
   final bool activa;
   ListarCafeteriasCafeterias.fromJson(dynamic json):
@@ -36,6 +37,7 @@ class ListarCafeteriasCafeterias {
   anticipacionMinutos = nativeFromJson<int>(json['anticipacionMinutos']),
   intervaloMinutos = nativeFromJson<int>(json['intervaloMinutos']),
   capacidadPorFranja = nativeFromJson<int>(json['capacidadPorFranja']),
+  permitirInmediatos = nativeFromJson<bool>(json['permitirInmediatos']),
   zonaHoraria = nativeFromJson<String>(json['zonaHoraria']),
   activa = nativeFromJson<bool>(json['activa']);
   @override
@@ -55,12 +57,13 @@ class ListarCafeteriasCafeterias {
     anticipacionMinutos == otherTyped.anticipacionMinutos && 
     intervaloMinutos == otherTyped.intervaloMinutos && 
     capacidadPorFranja == otherTyped.capacidadPorFranja && 
+    permitirInmediatos == otherTyped.permitirInmediatos && 
     zonaHoraria == otherTyped.zonaHoraria && 
     activa == otherTyped.activa;
     
   }
   @override
-  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, aperturaMinutos.hashCode, cierreMinutos.hashCode, anticipacionMinutos.hashCode, intervaloMinutos.hashCode, capacidadPorFranja.hashCode, zonaHoraria.hashCode, activa.hashCode]);
+  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, aperturaMinutos.hashCode, cierreMinutos.hashCode, anticipacionMinutos.hashCode, intervaloMinutos.hashCode, capacidadPorFranja.hashCode, permitirInmediatos.hashCode, zonaHoraria.hashCode, activa.hashCode]);
   
 
   Map<String, dynamic> toJson() {
@@ -72,6 +75,7 @@ class ListarCafeteriasCafeterias {
     json['anticipacionMinutos'] = nativeToJson<int>(anticipacionMinutos);
     json['intervaloMinutos'] = nativeToJson<int>(intervaloMinutos);
     json['capacidadPorFranja'] = nativeToJson<int>(capacidadPorFranja);
+    json['permitirInmediatos'] = nativeToJson<bool>(permitirInmediatos);
     json['zonaHoraria'] = nativeToJson<String>(zonaHoraria);
     json['activa'] = nativeToJson<bool>(activa);
     return json;
@@ -85,6 +89,7 @@ class ListarCafeteriasCafeterias {
     required this.anticipacionMinutos,
     required this.intervaloMinutos,
     required this.capacidadPorFranja,
+    required this.permitirInmediatos,
     required this.zonaHoraria,
     required this.activa,
   });

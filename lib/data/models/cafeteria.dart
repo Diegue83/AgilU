@@ -8,6 +8,7 @@ class Cafeteria {
   final int anticipacionMinutos;
   final int intervaloMinutos;
   final int capacidadPorFranja;
+  final bool permitirInmediatos;
   final bool activa;
 
   const Cafeteria({
@@ -18,6 +19,7 @@ class Cafeteria {
     this.anticipacionMinutos = AppConfig.anticipacionMinutos,
     this.intervaloMinutos = AppConfig.intervaloRecogidaMinutos,
     this.capacidadPorFranja = 20,
+    this.permitirInmediatos = false,
     this.activa = true,
   });
 
@@ -27,6 +29,7 @@ class Cafeteria {
     int? anticipacionMinutos,
     int? intervaloMinutos,
     int? capacidadPorFranja,
+    bool? permitirInmediatos,
   }) =>
       Cafeteria(
         id: id,
@@ -36,6 +39,7 @@ class Cafeteria {
         anticipacionMinutos: anticipacionMinutos ?? this.anticipacionMinutos,
         intervaloMinutos: intervaloMinutos ?? this.intervaloMinutos,
         capacidadPorFranja: capacidadPorFranja ?? this.capacidadPorFranja,
+        permitirInmediatos: permitirInmediatos ?? this.permitirInmediatos,
         activa: activa,
       );
 

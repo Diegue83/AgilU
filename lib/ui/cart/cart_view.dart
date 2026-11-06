@@ -65,7 +65,7 @@ class CartView extends StatelessWidget {
   Widget build(BuildContext context) {
     final vm = context.watch<CartViewModel>();
     final franjas = vm.franjas;
-    final libres = franjas.where((f) => !f.llena).map((f) => f.hora).toList();
+    final libres = franjas.where((f) => f.elegible).map((f) => f.hora).toList();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Mi carrito')),
@@ -119,15 +119,26 @@ class CartView extends StatelessWidget {
                                   for (final f in franjas)
                                     DropdownMenuItem(
                                       value: f.hora,
-                                      enabled: !f.llena,
-                                      child: Text(f.llena
-                                          ? '${ReglasPedido.formatearHora(f.hora)} (llena)'
-                                          : ReglasPedido.formatearHora(f.hora)),
+                                      enabled: f.elegible,
+                                      child: Text(f.muyPronto
+                                          ? '${ReglasPedido.formatearHora(f.hora)} (menos de ${vm.anticipacionMinutos} min)'
+                                          : f.llena
+                                              ? '${ReglasPedido.formatearHora(f.hora)} (llena)'
+                                              : ReglasPedido.formatearHora(
+                                                  f.hora)),
                                     ),
                                 ],
                                 onChanged: vm.elegirHora,
                               ),
                       ),
+                      if (vm.anticipacionMinutos > 0)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                          child: Text(
+                            'Los pedidos requieren un mínimo de ${vm.anticipacionMinutos} minutos de anticipación.',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
                       Padding(
                         padding: const EdgeInsets.all(16),
                         child: TextField(

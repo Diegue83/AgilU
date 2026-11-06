@@ -6,9 +6,10 @@ class EditarMiCafeteriaVariablesBuilder {
   int anticipacionMinutos;
   int intervaloMinutos;
   int capacidadPorFranja;
+  bool permitirInmediatos;
 
   final FirebaseDataConnect _dataConnect;
-  EditarMiCafeteriaVariablesBuilder(this._dataConnect, {required  this.aperturaMinutos,required  this.cierreMinutos,required  this.anticipacionMinutos,required  this.intervaloMinutos,required  this.capacidadPorFranja,});
+  EditarMiCafeteriaVariablesBuilder(this._dataConnect, {required  this.aperturaMinutos,required  this.cierreMinutos,required  this.anticipacionMinutos,required  this.intervaloMinutos,required  this.capacidadPorFranja,required  this.permitirInmediatos,});
   Deserializer<EditarMiCafeteriaData> dataDeserializer = (dynamic json)  => EditarMiCafeteriaData.fromJson(jsonDecode(json));
   Serializer<EditarMiCafeteriaVariables> varsSerializer = (EditarMiCafeteriaVariables vars) => jsonEncode(vars.toJson());
   Future<OperationResult<EditarMiCafeteriaData, EditarMiCafeteriaVariables>> execute() {
@@ -16,7 +17,7 @@ class EditarMiCafeteriaVariablesBuilder {
   }
 
   MutationRef<EditarMiCafeteriaData, EditarMiCafeteriaVariables> ref() {
-    EditarMiCafeteriaVariables vars= EditarMiCafeteriaVariables(aperturaMinutos: aperturaMinutos,cierreMinutos: cierreMinutos,anticipacionMinutos: anticipacionMinutos,intervaloMinutos: intervaloMinutos,capacidadPorFranja: capacidadPorFranja,);
+    EditarMiCafeteriaVariables vars= EditarMiCafeteriaVariables(aperturaMinutos: aperturaMinutos,cierreMinutos: cierreMinutos,anticipacionMinutos: anticipacionMinutos,intervaloMinutos: intervaloMinutos,capacidadPorFranja: capacidadPorFranja,permitirInmediatos: permitirInmediatos,);
     return _dataConnect.mutation("EditarMiCafeteria", dataDeserializer, varsSerializer, vars);
   }
 }
@@ -98,6 +99,7 @@ class EditarMiCafeteriaVariables {
   final int anticipacionMinutos;
   final int intervaloMinutos;
   final int capacidadPorFranja;
+  final bool permitirInmediatos;
   @Deprecated('fromJson is deprecated for Variable classes as they are no longer required for deserialization.')
   EditarMiCafeteriaVariables.fromJson(Map<String, dynamic> json):
   
@@ -105,7 +107,8 @@ class EditarMiCafeteriaVariables {
   cierreMinutos = nativeFromJson<int>(json['cierreMinutos']),
   anticipacionMinutos = nativeFromJson<int>(json['anticipacionMinutos']),
   intervaloMinutos = nativeFromJson<int>(json['intervaloMinutos']),
-  capacidadPorFranja = nativeFromJson<int>(json['capacidadPorFranja']);
+  capacidadPorFranja = nativeFromJson<int>(json['capacidadPorFranja']),
+  permitirInmediatos = nativeFromJson<bool>(json['permitirInmediatos']);
   @override
   bool operator ==(Object other) {
     if(identical(this, other)) {
@@ -120,11 +123,12 @@ class EditarMiCafeteriaVariables {
     cierreMinutos == otherTyped.cierreMinutos && 
     anticipacionMinutos == otherTyped.anticipacionMinutos && 
     intervaloMinutos == otherTyped.intervaloMinutos && 
-    capacidadPorFranja == otherTyped.capacidadPorFranja;
+    capacidadPorFranja == otherTyped.capacidadPorFranja && 
+    permitirInmediatos == otherTyped.permitirInmediatos;
     
   }
   @override
-  int get hashCode => Object.hashAll([aperturaMinutos.hashCode, cierreMinutos.hashCode, anticipacionMinutos.hashCode, intervaloMinutos.hashCode, capacidadPorFranja.hashCode]);
+  int get hashCode => Object.hashAll([aperturaMinutos.hashCode, cierreMinutos.hashCode, anticipacionMinutos.hashCode, intervaloMinutos.hashCode, capacidadPorFranja.hashCode, permitirInmediatos.hashCode]);
   
 
   Map<String, dynamic> toJson() {
@@ -134,6 +138,7 @@ class EditarMiCafeteriaVariables {
     json['anticipacionMinutos'] = nativeToJson<int>(anticipacionMinutos);
     json['intervaloMinutos'] = nativeToJson<int>(intervaloMinutos);
     json['capacidadPorFranja'] = nativeToJson<int>(capacidadPorFranja);
+    json['permitirInmediatos'] = nativeToJson<bool>(permitirInmediatos);
     return json;
   }
 
@@ -143,6 +148,7 @@ class EditarMiCafeteriaVariables {
     required this.anticipacionMinutos,
     required this.intervaloMinutos,
     required this.capacidadPorFranja,
+    required this.permitirInmediatos,
   });
 }
 

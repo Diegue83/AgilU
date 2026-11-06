@@ -4,7 +4,12 @@ import 'app_config.dart';
 class Franja {
   final DateTime hora;
   final bool llena;
-  const Franja(this.hora, {this.llena = false});
+
+  /// HU-07: no cumple la anticipación mínima; se muestra pero no se elige.
+  final bool muyPronto;
+  const Franja(this.hora, {this.llena = false, this.muyPronto = false});
+
+  bool get elegible => !llena && !muyPronto;
 }
 
 class ReglasPedido {

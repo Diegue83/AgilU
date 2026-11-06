@@ -136,6 +136,7 @@ class MiCafeteriaAutenticacionUsuarioCafeteria {
   final int anticipacionMinutos;
   final int intervaloMinutos;
   final int capacidadPorFranja;
+  final bool permitirInmediatos;
   MiCafeteriaAutenticacionUsuarioCafeteria.fromJson(dynamic json):
   
   id = nativeFromJson<String>(json['id']),
@@ -144,7 +145,8 @@ class MiCafeteriaAutenticacionUsuarioCafeteria {
   cierreMinutos = nativeFromJson<int>(json['cierreMinutos']),
   anticipacionMinutos = nativeFromJson<int>(json['anticipacionMinutos']),
   intervaloMinutos = nativeFromJson<int>(json['intervaloMinutos']),
-  capacidadPorFranja = nativeFromJson<int>(json['capacidadPorFranja']);
+  capacidadPorFranja = nativeFromJson<int>(json['capacidadPorFranja']),
+  permitirInmediatos = nativeFromJson<bool>(json['permitirInmediatos']);
   @override
   bool operator ==(Object other) {
     if(identical(this, other)) {
@@ -161,11 +163,12 @@ class MiCafeteriaAutenticacionUsuarioCafeteria {
     cierreMinutos == otherTyped.cierreMinutos && 
     anticipacionMinutos == otherTyped.anticipacionMinutos && 
     intervaloMinutos == otherTyped.intervaloMinutos && 
-    capacidadPorFranja == otherTyped.capacidadPorFranja;
+    capacidadPorFranja == otherTyped.capacidadPorFranja && 
+    permitirInmediatos == otherTyped.permitirInmediatos;
     
   }
   @override
-  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, aperturaMinutos.hashCode, cierreMinutos.hashCode, anticipacionMinutos.hashCode, intervaloMinutos.hashCode, capacidadPorFranja.hashCode]);
+  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, aperturaMinutos.hashCode, cierreMinutos.hashCode, anticipacionMinutos.hashCode, intervaloMinutos.hashCode, capacidadPorFranja.hashCode, permitirInmediatos.hashCode]);
   
 
   Map<String, dynamic> toJson() {
@@ -177,6 +180,7 @@ class MiCafeteriaAutenticacionUsuarioCafeteria {
     json['anticipacionMinutos'] = nativeToJson<int>(anticipacionMinutos);
     json['intervaloMinutos'] = nativeToJson<int>(intervaloMinutos);
     json['capacidadPorFranja'] = nativeToJson<int>(capacidadPorFranja);
+    json['permitirInmediatos'] = nativeToJson<bool>(permitirInmediatos);
     return json;
   }
 
@@ -188,6 +192,7 @@ class MiCafeteriaAutenticacionUsuarioCafeteria {
     required this.anticipacionMinutos,
     required this.intervaloMinutos,
     required this.capacidadPorFranja,
+    required this.permitirInmediatos,
   });
 }
 

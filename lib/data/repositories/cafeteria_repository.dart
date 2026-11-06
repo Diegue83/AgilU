@@ -25,6 +25,7 @@ class DataConnectCafeteriaRepository implements CafeteriaRepository {
       anticipacionMinutos: c.anticipacionMinutos,
       intervaloMinutos: c.intervaloMinutos,
       capacidadPorFranja: c.capacidadPorFranja,
+      permitirInmediatos: c.permitirInmediatos,
     );
   }
 
@@ -36,6 +37,7 @@ class DataConnectCafeteriaRepository implements CafeteriaRepository {
         anticipacionMinutos: c.anticipacionMinutos,
         intervaloMinutos: c.intervaloMinutos,
         capacidadPorFranja: c.capacidadPorFranja,
+        permitirInmediatos: c.permitirInmediatos,
       )
       .execute();
 }

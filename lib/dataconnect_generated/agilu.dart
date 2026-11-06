@@ -139,8 +139,8 @@ class AgiluConnector {
   }
   
   
-  EditarMiCafeteriaVariablesBuilder editarMiCafeteria ({required int aperturaMinutos, required int cierreMinutos, required int anticipacionMinutos, required int intervaloMinutos, required int capacidadPorFranja, }) {
-    return EditarMiCafeteriaVariablesBuilder(dataConnect, aperturaMinutos: aperturaMinutos,cierreMinutos: cierreMinutos,anticipacionMinutos: anticipacionMinutos,intervaloMinutos: intervaloMinutos,capacidadPorFranja: capacidadPorFranja,);
+  EditarMiCafeteriaVariablesBuilder editarMiCafeteria ({required int aperturaMinutos, required int cierreMinutos, required int anticipacionMinutos, required int intervaloMinutos, required int capacidadPorFranja, required bool permitirInmediatos, }) {
+    return EditarMiCafeteriaVariablesBuilder(dataConnect, aperturaMinutos: aperturaMinutos,cierreMinutos: cierreMinutos,anticipacionMinutos: anticipacionMinutos,intervaloMinutos: intervaloMinutos,capacidadPorFranja: capacidadPorFranja,permitirInmediatos: permitirInmediatos,);
   }
   
   
