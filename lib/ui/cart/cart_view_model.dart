@@ -193,9 +193,12 @@ class CartViewModel extends ChangeNotifier {
         recogerA: recogerA!,
         notas: notas,
       );
-      final folio = await repo.crearPedido(pedido);
+      final creado = await repo.crearPedido(pedido);
       final resultado = ResultadoPedido(
-          folio: folio, recogerA: pedido.recogerA, total: pedido.total);
+          id: creado.id,
+          folio: creado.folio,
+          recogerA: pedido.recogerA,
+          total: pedido.total);
       _items.clear();
       recogerA = null;
       notas = '';

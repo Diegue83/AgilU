@@ -30,9 +30,20 @@ class Pedido {
 }
 
 class ResultadoPedido {
+  final String id;
   final String folio;
   final DateTime recogerA;
   final double total;
   const ResultadoPedido(
-      {required this.folio, required this.recogerA, required this.total});
+      {this.id = '',
+      required this.folio,
+      required this.recogerA,
+      required this.total});
+}
+
+/// Lo que regresa el servidor al registrar un pedido.
+class PedidoCreado {
+  final String id;
+  final String folio;
+  const PedidoCreado(this.id, this.folio);
 }

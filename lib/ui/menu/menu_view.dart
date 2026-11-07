@@ -7,6 +7,7 @@ import '../../data/repositories/menu_repository.dart';
 import '../../data/repositories/pedido_repository.dart';
 import '../cart/cart_view_model.dart';
 import '../comun/foto_producto.dart';
+import '../pedido/mis_pedidos_view.dart';
 import 'menu_view_model.dart';
 
 class MenuView extends StatelessWidget {
@@ -33,6 +34,12 @@ class _MenuScaffold extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Menú de hoy'),
         actions: [
+          IconButton(
+            tooltip: 'Mis pedidos',
+            icon: const Icon(Icons.receipt_long),
+            onPressed: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const MisPedidosView())),
+          ),
           IconButton(
             tooltip: 'Cerrar sesión',
             icon: const Icon(Icons.logout),

@@ -1,13 +1,19 @@
 /// Estados por los que pasa un pedido en la cafetería.
 enum EstadoPedido {
-  pendiente,
-  preparando,
-  listo,
-  entregado,
-  cancelado;
+  porPagar('por_pagar'),
+  pagoEnRevision('pago_en_revision'),
+  pendiente('pendiente'),
+  preparando('preparando'),
+  listo('listo'),
+  entregado('entregado'),
+  cancelado('cancelado');
+
+  /// Nombre del estado en la base de datos.
+  final String clave;
+  const EstadoPedido(this.clave);
 
   static EstadoPedido desdeNombre(String nombre) =>
-      EstadoPedido.values.firstWhere((e) => e.name == nombre,
+      EstadoPedido.values.firstWhere((e) => e.clave == nombre,
           orElse: () => EstadoPedido.pendiente);
 
   /// Estado al que avanza desde el panel, o null si ya no avanza ahí.
@@ -18,6 +24,8 @@ enum EstadoPedido {
       };
 
   String get etiqueta => switch (this) {
+        EstadoPedido.porPagar => 'Por pagar',
+        EstadoPedido.pagoEnRevision => 'Pago en revisión',
         EstadoPedido.pendiente => 'En espera',
         EstadoPedido.preparando => 'Preparando',
         EstadoPedido.listo => 'Listo para entregar',
