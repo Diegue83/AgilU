@@ -91,6 +91,11 @@ type Pedido @table {
   comprobanteUrl: String
   motivoRechazoPago: String
   pagadoEn: Timestamp
+  # HU-09: PIN de 4 dígitos que se genera al aprobar el pago. Solo lo ve el
+  # alumno; el encargado lo captura para entregar. Tras 5 errores se bloquea.
+  codigoEntrega: String
+  intentosEntrega: Int! @default(value: 0)
+  entregadoEn: Timestamp
   esCredito: Boolean! @default(value: false)
   usuario: Usuario!
   cafeteria: Cafeteria!

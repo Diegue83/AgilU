@@ -66,6 +66,8 @@ query MiPedido($id: UUID!) @auth(level: USER) {
     comprobanteUrl
     motivoRechazoPago
     pagadoEn
+    codigoEntrega
+    entregadoEn
     cafeteria {
       nombre
       ubicacion
@@ -309,6 +311,7 @@ query PanelPedidos($desde: Timestamp!, $hasta: Timestamp!) @auth(level: USER) {
     recogerA
     notas
     montoTotal
+    intentosEntrega
     usuario {
       nombre
     }

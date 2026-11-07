@@ -86,6 +86,7 @@ class DataConnectPedidoRepository implements PedidoRepository {
       titular: p.cafeteria.titular,
       motivoRechazo: p.motivoRechazoPago,
       pagadoEn: p.pagadoEn?.toDateTime().toLocal(),
+      codigoEntrega: p.codigoEntrega,
       lineas: [
         for (final d in p.detallePedidos_on_pedido)
           LineaTicket(d.cantidad, d.producto.nombre, d.precioEnElMomento),
