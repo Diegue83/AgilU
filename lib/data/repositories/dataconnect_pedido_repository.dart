@@ -1,10 +1,15 @@
+import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_data_connect/firebase_data_connect.dart';
 
 import '../../core/reglas_pedido.dart';
 import '../../dataconnect_generated/agilu.dart';
 import '../models/pedido.dart';
+import '../models/pedido_panel.dart';
+import '../models/ticket.dart';
 import 'pedido_repository.dart';
 
 /// Envía el pedido con la operación CrearPedido. El servidor toma los precios
@@ -13,13 +18,16 @@ import 'pedido_repository.dart';
 class DataConnectPedidoRepository implements PedidoRepository {
   final AgiluConnector _conector;
   final Random _azar;
+  final FirebaseFunctions? _functions;
 
-  DataConnectPedidoRepository({AgiluConnector? conector, Random? azar})
+  DataConnectPedidoRepository(
+      {AgiluConnector? conector, Random? azar, FirebaseFunctions? functions})
       : _conector = conector ?? AgiluConnector.instance,
-        _azar = azar ?? Random.secure();
+        _azar = azar ?? Random.secure(),
+        _functions = functions;
 
   @override
-  Future<String> crearPedido(Pedido pedido) async {
+  Future<PedidoCreado> crearPedido(Pedido pedido) async {
     final id = _uuidV4();
     final notas = pedido.notas.trim();
     final res = await _conector
@@ -38,7 +46,67 @@ class DataConnectPedidoRepository implements PedidoRepository {
     }
 
     final consulta = await _conector.miPedido(id: id).execute();
-    return ReglasPedido.formatearFolio(consulta.data.pedidos.single.folio);
+    final creado = consulta.data.pedidos.single;
+    return PedidoCreado(creado.id, ReglasPedido.formatearFolio(creado.folio));
+  }
+
+  @override
+  Future<List<ResumenPedido>> misPedidos() async {
+    final res = await _conector.misPedidos().execute();
+    return res.data.pedidos
+        .map((p) => ResumenPedido(
+              id: p.id,
+              folio: ReglasPedido.formatearFolio(p.folio),
+              estado: EstadoPedido.desdeNombre(p.estado),
+              recogerA: p.recogerA.toDateTime().toLocal(),
+              total: p.montoTotal,
+              cafeteria: p.cafeteria.nombre,
+            ))
+        .toList();
+  }
+
+  @override
+  Future<TicketPedido?> ticket(String id) async {
+    final res = await _conector.miPedido(id: id).execute();
+    if (res.data.pedidos.isEmpty) return null;
+    final p = res.data.pedidos.single;
+    final folio = ReglasPedido.formatearFolio(p.folio);
+    return TicketPedido(
+      id: p.id,
+      folio: folio,
+      referencia: p.referenciaPago ?? folio,
+      estado: EstadoPedido.desdeNombre(p.estado),
+      recogerA: p.recogerA.toDateTime().toLocal(),
+      total: p.montoTotal,
+      notas: p.notas,
+      cafeteria: p.cafeteria.nombre,
+      ubicacion: p.cafeteria.ubicacion,
+      banco: p.cafeteria.banco,
+      clabe: p.cafeteria.clabe,
+      titular: p.cafeteria.titular,
+      motivoRechazo: p.motivoRechazoPago,
+      pagadoEn: p.pagadoEn?.toDateTime().toLocal(),
+      lineas: [
+        for (final d in p.detallePedidos_on_pedido)
+          LineaTicket(d.cantidad, d.producto.nombre, d.precioEnElMomento),
+      ],
+    );
+  }
+
+  @override
+  Future<void> subirComprobante(
+      String pedidoId, Uint8List bytes, String tipo) async {
+    final functions =
+        _functions ?? FirebaseFunctions.instanceFor(region: 'us-east4');
+    try {
+      await functions.httpsCallable('subirComprobantePago').call({
+        'pedidoId': pedidoId,
+        'imagenBase64': base64Encode(bytes),
+        'tipo': tipo,
+      });
+    } on FirebaseFunctionsException catch (e) {
+      throw Exception(e.message ?? 'No se pudo subir el comprobante.');
+    }
   }
 
   Future<String> _motivoDelRechazo(Pedido pedido) async {

@@ -27,7 +27,7 @@ const _torta = Producto(
 
 class _Rechaza extends MockPedidoRepository {
   @override
-  Future<String> crearPedido(Pedido pedido) async =>
+  Future<PedidoCreado> crearPedido(Pedido pedido) async =>
       throw const PedidoRechazado('Esa hora ya se llenó. Elige otra.');
 }
 
