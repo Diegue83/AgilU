@@ -40,6 +40,12 @@ class _Panel extends StatelessWidget {
             content: Text(vm.error!),
             actions: const [SizedBox.shrink()],
           ),
+        if (vm.mensaje != null && vm.error == null)
+          MaterialBanner(
+            leading: const Icon(Icons.check_circle),
+            content: Text(vm.mensaje!),
+            actions: const [SizedBox.shrink()],
+          ),
         for (final estado in _columnas) ...[
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
@@ -63,6 +69,32 @@ class _Panel extends StatelessWidget {
 class _Tarjeta extends StatelessWidget {
   final PedidoPanel pedido;
   const _Tarjeta({required this.pedido});
+
+  Future<void> _entregar(BuildContext context, PanelViewModel vm) async {
+    final ctrl = TextEditingController();
+    final codigo = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Entregar ${ReglasPedido.formatearFolio(pedido.folio)}'),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          keyboardType: TextInputType.number,
+          maxLength: 4,
+          decoration: const InputDecoration(labelText: 'Código del alumno'),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancelar')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, ctrl.text),
+              child: const Text('Entregar')),
+        ],
+      ),
+    );
+    if (codigo != null) await vm.entregar(pedido, codigo);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,6 +122,21 @@ class _Tarjeta extends StatelessWidget {
             if (pedido.notas != null && pedido.notas!.isNotEmpty)
               Text('Nota: ${pedido.notas}',
                   style: const TextStyle(fontStyle: FontStyle.italic)),
+            if (pedido.estado == EstadoPedido.listo) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(minimumSize: const Size(0, 40)),
+                  onPressed: pedido.entregaBloqueada
+                      ? null
+                      : () => _entregar(context, vm),
+                  child: Text(pedido.entregaBloqueada
+                      ? 'Bloqueado por intentos'
+                      : 'Entregar con código'),
+                ),
+              ),
+            ],
             if (siguiente != null) ...[
               const SizedBox(height: 8),
               Align(

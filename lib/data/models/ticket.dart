@@ -26,6 +26,7 @@ class TicketPedido {
   final String? titular;
   final String? motivoRechazo;
   final DateTime? pagadoEn;
+  final String? codigoEntrega;
   final List<LineaTicket> lineas;
 
   const TicketPedido({
@@ -43,8 +44,18 @@ class TicketPedido {
     this.titular,
     this.motivoRechazo,
     this.pagadoEn,
+    this.codigoEntrega,
     this.lineas = const [],
   });
+
+  /// HU-09: el código se muestra mientras el pedido espera entregarse.
+  bool get muestraCodigo =>
+      codigoEntrega != null &&
+      const [
+        EstadoPedido.pendiente,
+        EstadoPedido.preparando,
+        EstadoPedido.listo,
+      ].contains(estado);
 
   bool get pagado =>
       pagadoEn != null ||

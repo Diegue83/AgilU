@@ -498,7 +498,11 @@ mutation ValidarPago($id: UUID!, $aprobado: Boolean!, $motivo: String)
     UPDATE pedido
     SET estado = CASE WHEN $3::boolean THEN 'pendiente' ELSE 'por_pagar' END,
         pagado_en = CASE WHEN $3::boolean THEN now() ELSE NULL END,
-        motivo_rechazo_pago = CASE WHEN $3::boolean THEN NULL ELSE nullif(trim($4::text), '') END
+        motivo_rechazo_pago = CASE WHEN $3::boolean THEN NULL ELSE nullif(trim($4::text), '') END,
+        codigo_entrega = CASE WHEN $3::boolean
+                              THEN lpad((floor(random() * 10000))::int::text, 4, '0')
+                              ELSE NULL END,
+        intentos_entrega = 0
     WHERE id = $2::uuid
       AND estado = 'pago_en_revision'
       AND cafeteria_id IN (
@@ -510,5 +514,32 @@ mutation ValidarPago($id: UUID!, $aprobado: Boolean!, $motivo: String)
       )
     """
     params: [{ _expr: "auth.uid" }, $id, $aprobado, $motivo]
+  )
+}
+
+# HU-09: el encargado entrega un pedido listo de su cafetería con el código del
+# alumno. Un código equivocado suma un intento; con 5 intentos el pedido ya no
+# se puede entregar con código. Devuelve el estado y los intentos resultantes.
+mutation EntregarPedido($id: UUID!, $codigo: String!) @auth(level: USER) {
+  resultado: _executeReturningFirst(
+    sql: """
+    UPDATE pedido
+    SET estado = CASE WHEN codigo_entrega = $3 THEN 'entregado' ELSE estado END,
+        entregado_en = CASE WHEN codigo_entrega = $3 THEN now() ELSE entregado_en END,
+        intentos_entrega = CASE WHEN codigo_entrega = $3 THEN intentos_entrega
+                                ELSE intentos_entrega + 1 END
+    WHERE id = $2::uuid
+      AND estado = 'listo'
+      AND intentos_entrega < 5
+      AND cafeteria_id IN (
+        SELECT u.cafeteria_id
+        FROM usuario u
+        JOIN autenticacion a ON a.usuario_id = u.id
+        JOIN rol r ON r.id = u.rol_id
+        WHERE a.firebase_auth_uid = $1 AND r.nombre = 'encargado'
+      )
+    RETURNING estado, intentos_entrega AS "intentos"
+    """
+    params: [{ _expr: "auth.uid" }, $id, $codigo]
   )
 }

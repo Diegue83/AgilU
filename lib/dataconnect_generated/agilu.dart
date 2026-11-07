@@ -39,6 +39,8 @@ part 'avanzar_pedido.dart';
 
 part 'validar_pago.dart';
 
+part 'entregar_pedido.dart';
+
 part 'listar_menu.dart';
 
 part 'mi_perfil.dart';
@@ -159,6 +161,11 @@ class AgiluConnector {
   
   ValidarPagoVariablesBuilder validarPago ({required String id, required bool aprobado, }) {
     return ValidarPagoVariablesBuilder(dataConnect, id: id,aprobado: aprobado,);
+  }
+  
+  
+  EntregarPedidoVariablesBuilder entregarPedido ({required String id, required String codigo, }) {
+    return EntregarPedidoVariablesBuilder(dataConnect, id: id,codigo: codigo,);
   }
   
   
