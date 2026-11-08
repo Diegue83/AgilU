@@ -4,16 +4,24 @@ class MiPedidoVariablesBuilder {
   String id;
 
   final FirebaseDataConnect _dataConnect;
-  MiPedidoVariablesBuilder(this._dataConnect, {required  this.id,});
-  Deserializer<MiPedidoData> dataDeserializer = (dynamic json)  => MiPedidoData.fromJson(jsonDecode(json));
-  Serializer<MiPedidoVariables> varsSerializer = (MiPedidoVariables vars) => jsonEncode(vars.toJson());
+  MiPedidoVariablesBuilder(
+    this._dataConnect, {
+    required this.id,
+  });
+  Deserializer<MiPedidoData> dataDeserializer =
+      (dynamic json) => MiPedidoData.fromJson(jsonDecode(json));
+  Serializer<MiPedidoVariables> varsSerializer =
+      (MiPedidoVariables vars) => jsonEncode(vars.toJson());
   Future<QueryResult<MiPedidoData, MiPedidoVariables>> execute() {
     return ref().execute();
   }
 
   QueryRef<MiPedidoData, MiPedidoVariables> ref() {
-    MiPedidoVariables vars= MiPedidoVariables(id: id,);
-    return _dataConnect.query("MiPedido", dataDeserializer, varsSerializer, vars);
+    MiPedidoVariables vars = MiPedidoVariables(
+      id: id,
+    );
+    return _dataConnect.query(
+        "MiPedido", dataDeserializer, varsSerializer, vars);
   }
 }
 
@@ -33,53 +41,81 @@ class MiPedidoPedidos {
   final Timestamp? entregadoEn;
   final MiPedidoPedidosCafeteria cafeteria;
   final List<MiPedidoPedidosDetallePedidosOnPedido> detallePedidos_on_pedido;
-  MiPedidoPedidos.fromJson(dynamic json):
-  
-  id = nativeFromJson<String>(json['id']),
-  folio = nativeFromJson<int>(json['folio']),
-  montoTotal = nativeFromJson<double>(json['montoTotal']),
-  estado = nativeFromJson<String>(json['estado']),
-  recogerA = Timestamp.fromJson(json['recogerA']),
-  notas = json['notas'] == null ? null : nativeFromJson<String>(json['notas']),
-  referenciaPago = json['referenciaPago'] == null ? null : nativeFromJson<String>(json['referenciaPago']),
-  comprobanteUrl = json['comprobanteUrl'] == null ? null : nativeFromJson<String>(json['comprobanteUrl']),
-  motivoRechazoPago = json['motivoRechazoPago'] == null ? null : nativeFromJson<String>(json['motivoRechazoPago']),
-  pagadoEn = json['pagadoEn'] == null ? null : Timestamp.fromJson(json['pagadoEn']),
-  codigoEntrega = json['codigoEntrega'] == null ? null : nativeFromJson<String>(json['codigoEntrega']),
-  entregadoEn = json['entregadoEn'] == null ? null : Timestamp.fromJson(json['entregadoEn']),
-  cafeteria = MiPedidoPedidosCafeteria.fromJson(json['cafeteria']),
-  detallePedidos_on_pedido = (json['detallePedidos_on_pedido'] as List<dynamic>)
-        .map((e) => MiPedidoPedidosDetallePedidosOnPedido.fromJson(e))
-        .toList();
+  MiPedidoPedidos.fromJson(dynamic json)
+      : id = nativeFromJson<String>(json['id']),
+        folio = nativeFromJson<int>(json['folio']),
+        montoTotal = nativeFromJson<double>(json['montoTotal']),
+        estado = nativeFromJson<String>(json['estado']),
+        recogerA = Timestamp.fromJson(json['recogerA']),
+        notas = json['notas'] == null
+            ? null
+            : nativeFromJson<String>(json['notas']),
+        referenciaPago = json['referenciaPago'] == null
+            ? null
+            : nativeFromJson<String>(json['referenciaPago']),
+        comprobanteUrl = json['comprobanteUrl'] == null
+            ? null
+            : nativeFromJson<String>(json['comprobanteUrl']),
+        motivoRechazoPago = json['motivoRechazoPago'] == null
+            ? null
+            : nativeFromJson<String>(json['motivoRechazoPago']),
+        pagadoEn = json['pagadoEn'] == null
+            ? null
+            : Timestamp.fromJson(json['pagadoEn']),
+        codigoEntrega = json['codigoEntrega'] == null
+            ? null
+            : nativeFromJson<String>(json['codigoEntrega']),
+        entregadoEn = json['entregadoEn'] == null
+            ? null
+            : Timestamp.fromJson(json['entregadoEn']),
+        cafeteria = MiPedidoPedidosCafeteria.fromJson(json['cafeteria']),
+        detallePedidos_on_pedido =
+            (json['detallePedidos_on_pedido'] as List<dynamic>)
+                .map((e) => MiPedidoPedidosDetallePedidosOnPedido.fromJson(e))
+                .toList();
   @override
   bool operator ==(Object other) {
-    if(identical(this, other)) {
+    if (identical(this, other)) {
       return true;
     }
-    if(other.runtimeType != runtimeType) {
+    if (other.runtimeType != runtimeType) {
       return false;
     }
 
     final MiPedidoPedidos otherTyped = other as MiPedidoPedidos;
-    return id == otherTyped.id && 
-    folio == otherTyped.folio && 
-    montoTotal == otherTyped.montoTotal && 
-    estado == otherTyped.estado && 
-    recogerA == otherTyped.recogerA && 
-    notas == otherTyped.notas && 
-    referenciaPago == otherTyped.referenciaPago && 
-    comprobanteUrl == otherTyped.comprobanteUrl && 
-    motivoRechazoPago == otherTyped.motivoRechazoPago && 
-    pagadoEn == otherTyped.pagadoEn && 
-    codigoEntrega == otherTyped.codigoEntrega && 
-    entregadoEn == otherTyped.entregadoEn && 
-    cafeteria == otherTyped.cafeteria && 
-    detallePedidos_on_pedido == otherTyped.detallePedidos_on_pedido;
-    
+    return id == otherTyped.id &&
+        folio == otherTyped.folio &&
+        montoTotal == otherTyped.montoTotal &&
+        estado == otherTyped.estado &&
+        recogerA == otherTyped.recogerA &&
+        notas == otherTyped.notas &&
+        referenciaPago == otherTyped.referenciaPago &&
+        comprobanteUrl == otherTyped.comprobanteUrl &&
+        motivoRechazoPago == otherTyped.motivoRechazoPago &&
+        pagadoEn == otherTyped.pagadoEn &&
+        codigoEntrega == otherTyped.codigoEntrega &&
+        entregadoEn == otherTyped.entregadoEn &&
+        cafeteria == otherTyped.cafeteria &&
+        detallePedidos_on_pedido == otherTyped.detallePedidos_on_pedido;
   }
+
   @override
-  int get hashCode => Object.hashAll([id.hashCode, folio.hashCode, montoTotal.hashCode, estado.hashCode, recogerA.hashCode, notas.hashCode, referenciaPago.hashCode, comprobanteUrl.hashCode, motivoRechazoPago.hashCode, pagadoEn.hashCode, codigoEntrega.hashCode, entregadoEn.hashCode, cafeteria.hashCode, detallePedidos_on_pedido.hashCode]);
-  
+  int get hashCode => Object.hashAll([
+        id.hashCode,
+        folio.hashCode,
+        montoTotal.hashCode,
+        estado.hashCode,
+        recogerA.hashCode,
+        notas.hashCode,
+        referenciaPago.hashCode,
+        comprobanteUrl.hashCode,
+        motivoRechazoPago.hashCode,
+        pagadoEn.hashCode,
+        codigoEntrega.hashCode,
+        entregadoEn.hashCode,
+        cafeteria.hashCode,
+        detallePedidos_on_pedido.hashCode
+      ]);
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -110,7 +146,8 @@ class MiPedidoPedidos {
       json['entregadoEn'] = entregadoEn!.toJson();
     }
     json['cafeteria'] = cafeteria.toJson();
-    json['detallePedidos_on_pedido'] = detallePedidos_on_pedido.map((e) => e.toJson()).toList();
+    json['detallePedidos_on_pedido'] =
+        detallePedidos_on_pedido.map((e) => e.toJson()).toList();
     return json;
   }
 
@@ -139,33 +176,46 @@ class MiPedidoPedidosCafeteria {
   final String? banco;
   final String? clabe;
   final String? titular;
-  MiPedidoPedidosCafeteria.fromJson(dynamic json):
-  
-  nombre = nativeFromJson<String>(json['nombre']),
-  ubicacion = json['ubicacion'] == null ? null : nativeFromJson<String>(json['ubicacion']),
-  banco = json['banco'] == null ? null : nativeFromJson<String>(json['banco']),
-  clabe = json['clabe'] == null ? null : nativeFromJson<String>(json['clabe']),
-  titular = json['titular'] == null ? null : nativeFromJson<String>(json['titular']);
+  MiPedidoPedidosCafeteria.fromJson(dynamic json)
+      : nombre = nativeFromJson<String>(json['nombre']),
+        ubicacion = json['ubicacion'] == null
+            ? null
+            : nativeFromJson<String>(json['ubicacion']),
+        banco = json['banco'] == null
+            ? null
+            : nativeFromJson<String>(json['banco']),
+        clabe = json['clabe'] == null
+            ? null
+            : nativeFromJson<String>(json['clabe']),
+        titular = json['titular'] == null
+            ? null
+            : nativeFromJson<String>(json['titular']);
   @override
   bool operator ==(Object other) {
-    if(identical(this, other)) {
+    if (identical(this, other)) {
       return true;
     }
-    if(other.runtimeType != runtimeType) {
+    if (other.runtimeType != runtimeType) {
       return false;
     }
 
-    final MiPedidoPedidosCafeteria otherTyped = other as MiPedidoPedidosCafeteria;
-    return nombre == otherTyped.nombre && 
-    ubicacion == otherTyped.ubicacion && 
-    banco == otherTyped.banco && 
-    clabe == otherTyped.clabe && 
-    titular == otherTyped.titular;
-    
+    final MiPedidoPedidosCafeteria otherTyped =
+        other as MiPedidoPedidosCafeteria;
+    return nombre == otherTyped.nombre &&
+        ubicacion == otherTyped.ubicacion &&
+        banco == otherTyped.banco &&
+        clabe == otherTyped.clabe &&
+        titular == otherTyped.titular;
   }
+
   @override
-  int get hashCode => Object.hashAll([nombre.hashCode, ubicacion.hashCode, banco.hashCode, clabe.hashCode, titular.hashCode]);
-  
+  int get hashCode => Object.hashAll([
+        nombre.hashCode,
+        ubicacion.hashCode,
+        banco.hashCode,
+        clabe.hashCode,
+        titular.hashCode
+      ]);
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -199,29 +249,30 @@ class MiPedidoPedidosDetallePedidosOnPedido {
   final int cantidad;
   final double precioEnElMomento;
   final MiPedidoPedidosDetallePedidosOnPedidoProducto producto;
-  MiPedidoPedidosDetallePedidosOnPedido.fromJson(dynamic json):
-  
-  cantidad = nativeFromJson<int>(json['cantidad']),
-  precioEnElMomento = nativeFromJson<double>(json['precioEnElMomento']),
-  producto = MiPedidoPedidosDetallePedidosOnPedidoProducto.fromJson(json['producto']);
+  MiPedidoPedidosDetallePedidosOnPedido.fromJson(dynamic json)
+      : cantidad = nativeFromJson<int>(json['cantidad']),
+        precioEnElMomento = nativeFromJson<double>(json['precioEnElMomento']),
+        producto = MiPedidoPedidosDetallePedidosOnPedidoProducto.fromJson(
+            json['producto']);
   @override
   bool operator ==(Object other) {
-    if(identical(this, other)) {
+    if (identical(this, other)) {
       return true;
     }
-    if(other.runtimeType != runtimeType) {
+    if (other.runtimeType != runtimeType) {
       return false;
     }
 
-    final MiPedidoPedidosDetallePedidosOnPedido otherTyped = other as MiPedidoPedidosDetallePedidosOnPedido;
-    return cantidad == otherTyped.cantidad && 
-    precioEnElMomento == otherTyped.precioEnElMomento && 
-    producto == otherTyped.producto;
-    
+    final MiPedidoPedidosDetallePedidosOnPedido otherTyped =
+        other as MiPedidoPedidosDetallePedidosOnPedido;
+    return cantidad == otherTyped.cantidad &&
+        precioEnElMomento == otherTyped.precioEnElMomento &&
+        producto == otherTyped.producto;
   }
+
   @override
-  int get hashCode => Object.hashAll([cantidad.hashCode, precioEnElMomento.hashCode, producto.hashCode]);
-  
+  int get hashCode => Object.hashAll(
+      [cantidad.hashCode, precioEnElMomento.hashCode, producto.hashCode]);
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -241,25 +292,24 @@ class MiPedidoPedidosDetallePedidosOnPedido {
 @immutable
 class MiPedidoPedidosDetallePedidosOnPedidoProducto {
   final String nombre;
-  MiPedidoPedidosDetallePedidosOnPedidoProducto.fromJson(dynamic json):
-  
-  nombre = nativeFromJson<String>(json['nombre']);
+  MiPedidoPedidosDetallePedidosOnPedidoProducto.fromJson(dynamic json)
+      : nombre = nativeFromJson<String>(json['nombre']);
   @override
   bool operator ==(Object other) {
-    if(identical(this, other)) {
+    if (identical(this, other)) {
       return true;
     }
-    if(other.runtimeType != runtimeType) {
+    if (other.runtimeType != runtimeType) {
       return false;
     }
 
-    final MiPedidoPedidosDetallePedidosOnPedidoProducto otherTyped = other as MiPedidoPedidosDetallePedidosOnPedidoProducto;
+    final MiPedidoPedidosDetallePedidosOnPedidoProducto otherTyped =
+        other as MiPedidoPedidosDetallePedidosOnPedidoProducto;
     return nombre == otherTyped.nombre;
-    
   }
+
   @override
   int get hashCode => nombre.hashCode;
-  
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -275,27 +325,25 @@ class MiPedidoPedidosDetallePedidosOnPedidoProducto {
 @immutable
 class MiPedidoData {
   final List<MiPedidoPedidos> pedidos;
-  MiPedidoData.fromJson(dynamic json):
-  
-  pedidos = (json['pedidos'] as List<dynamic>)
-        .map((e) => MiPedidoPedidos.fromJson(e))
-        .toList();
+  MiPedidoData.fromJson(dynamic json)
+      : pedidos = (json['pedidos'] as List<dynamic>)
+            .map((e) => MiPedidoPedidos.fromJson(e))
+            .toList();
   @override
   bool operator ==(Object other) {
-    if(identical(this, other)) {
+    if (identical(this, other)) {
       return true;
     }
-    if(other.runtimeType != runtimeType) {
+    if (other.runtimeType != runtimeType) {
       return false;
     }
 
     final MiPedidoData otherTyped = other as MiPedidoData;
     return pedidos == otherTyped.pedidos;
-    
   }
+
   @override
   int get hashCode => pedidos.hashCode;
-  
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -311,26 +359,25 @@ class MiPedidoData {
 @immutable
 class MiPedidoVariables {
   final String id;
-  @Deprecated('fromJson is deprecated for Variable classes as they are no longer required for deserialization.')
-  MiPedidoVariables.fromJson(Map<String, dynamic> json):
-  
-  id = nativeFromJson<String>(json['id']);
+  @Deprecated(
+      'fromJson is deprecated for Variable classes as they are no longer required for deserialization.')
+  MiPedidoVariables.fromJson(Map<String, dynamic> json)
+      : id = nativeFromJson<String>(json['id']);
   @override
   bool operator ==(Object other) {
-    if(identical(this, other)) {
+    if (identical(this, other)) {
       return true;
     }
-    if(other.runtimeType != runtimeType) {
+    if (other.runtimeType != runtimeType) {
       return false;
     }
 
     final MiPedidoVariables otherTyped = other as MiPedidoVariables;
     return id == otherTyped.id;
-    
   }
+
   @override
   int get hashCode => id.hashCode;
-  
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -342,4 +389,3 @@ class MiPedidoVariables {
     required this.id,
   });
 }
-
