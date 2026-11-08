@@ -8,6 +8,7 @@ import 'app.dart';
 import 'core/app_config.dart';
 import 'core/routes.dart';
 import 'data/repositories/auth_repository.dart';
+import 'data/repositories/avisos_repository.dart';
 import 'data/repositories/cafeteria_repository.dart';
 import 'data/repositories/dataconnect_menu_repository.dart';
 import 'data/repositories/dataconnect_pedido_repository.dart';
@@ -57,6 +58,11 @@ Future<void> main() async {
       providers: [
         Provider<AuthRepository>.value(value: auth),
         Provider<PerfilRepository>.value(value: perfiles),
+        Provider<AvisosRepository>(
+          create: (_) => AppConfig.usarFirebase
+              ? FcmAvisosRepository()
+              : MockAvisosRepository(),
+        ),
         Provider<EstacionRepository>(
           create: (_) => AppConfig.usarFirebase
               ? DataConnectEstacionRepository()
