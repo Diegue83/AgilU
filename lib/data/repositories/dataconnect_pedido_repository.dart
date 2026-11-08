@@ -51,6 +51,13 @@ class DataConnectPedidoRepository implements PedidoRepository {
   }
 
   @override
+  Future<int> noRecogidos() async {
+    final res = await _conector.miConfianza().execute();
+    final fila = res.data.confianza as Map?;
+    return (fila?['noRecogidos'] as num?)?.toInt() ?? 0;
+  }
+
+  @override
   Future<List<ResumenPedido>> misPedidos() async {
     final res = await _conector.misPedidos().execute();
     return res.data.pedidos

@@ -6,6 +6,7 @@ enum EstadoPedido {
   preparando('preparando'),
   listo('listo'),
   entregado('entregado'),
+  noRecogido('no_recogido'),
   cancelado('cancelado');
 
   /// Nombre del estado en la base de datos.
@@ -30,6 +31,7 @@ enum EstadoPedido {
         EstadoPedido.preparando => 'Preparando',
         EstadoPedido.listo => 'Listo para entregar',
         EstadoPedido.entregado => 'Entregado',
+        EstadoPedido.noRecogido => 'No recogido',
         EstadoPedido.cancelado => 'Cancelado',
       };
 }

@@ -24,6 +24,9 @@ abstract class PedidoRepository {
   Future<List<ResumenPedido>> misPedidos();
   Future<TicketPedido?> ticket(String id);
 
+  /// HU-23: pedidos que el alumno no recogió en los últimos 30 días.
+  Future<int> noRecogidos();
+
   /// HU-08: sube el comprobante de la transferencia.
   Future<void> subirComprobante(String pedidoId, Uint8List bytes, String tipo);
 }
@@ -80,6 +83,11 @@ class MockPedidoRepository implements PedidoRepository {
 
   @override
   Future<TicketPedido?> ticket(String id) async => tickets[id];
+
+  int sinRecoger = 0;
+
+  @override
+  Future<int> noRecogidos() async => sinRecoger;
 
   @override
   Future<void> subirComprobante(
