@@ -4,15 +4,22 @@ import 'package:flutter/foundation.dart';
 
 import '../../data/models/cafeteria.dart';
 import '../../data/models/producto.dart';
+import '../../core/app_config.dart';
 import '../../data/repositories/menu_repository.dart';
+import '../../data/repositories/pedido_repository.dart';
 
 class MenuViewModel extends ChangeNotifier {
   final MenuRepository _repo;
   final DateTime Function() _ahora;
   StreamSubscription<List<Producto>>? _sub;
 
-  MenuViewModel(this._repo, {DateTime Function()? ahora})
+  MenuViewModel(this._repo,
+      {DateTime Function()? ahora, PedidoRepository? pedidos})
       : _ahora = ahora ?? DateTime.now {
+    pedidos?.noRecogidos().then((n) {
+      noRecogidos = n;
+      notifyListeners();
+    }, onError: (Object _) {});
     _repo.cafeterias().then((lista) {
       cafeterias = lista;
       cafeteriaSeleccionada ??= lista.isEmpty ? null : lista.first.id;
@@ -36,6 +43,21 @@ class MenuViewModel extends ChangeNotifier {
         _actualizarCargando();
       },
     );
+  }
+
+  /// HU-23: pedidos sin recoger en los últimos 30 días.
+  int noRecogidos = 0;
+
+  bool get bloqueadoPorConfianza => noRecogidos >= AppConfig.limiteNoRecogidos;
+
+  String? get avisoConfianza {
+    if (noRecogidos == 0) return null;
+    if (bloqueadoPorConfianza) {
+      return 'Tienes $noRecogidos pedidos sin recoger en los últimos 30 días; '
+          'por ahora no puedes hacer pedidos nuevos.';
+    }
+    return 'Tienes $noRecogidos pedido(s) sin recoger. Con '
+        '${AppConfig.limiteNoRecogidos} en 30 días se bloquean los pedidos nuevos.';
   }
 
   List<Producto> _productos = [];
@@ -92,6 +114,7 @@ class MenuViewModel extends ChangeNotifier {
   bool get puedePedir {
     final c = cafeteria;
     return c != null &&
+        !bloqueadoPorConfianza &&
         c.recibePedidosHoy(_ahora()) &&
         _deHoy.any((p) => p.disponible);
   }

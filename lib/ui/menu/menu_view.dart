@@ -16,7 +16,8 @@ class MenuView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (ctx) => MenuViewModel(ctx.read<MenuRepository>()),
+      create: (ctx) => MenuViewModel(ctx.read<MenuRepository>(),
+          pedidos: ctx.read<PedidoRepository>()),
       child: const _MenuScaffold(),
     );
   }
@@ -76,6 +77,12 @@ class _MenuScaffold extends StatelessWidget {
                     if (id != null) vm.seleccionarCafeteria(id);
                   },
                 ),
+              ),
+            if (vm.avisoConfianza != null)
+              MaterialBanner(
+                leading: const Icon(Icons.warning_amber),
+                content: Text(vm.avisoConfianza!),
+                actions: const [SizedBox.shrink()],
               ),
             if (vm.aviso != null)
               MaterialBanner(

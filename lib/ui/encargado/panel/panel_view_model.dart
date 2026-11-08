@@ -93,6 +93,24 @@ class PanelViewModel extends ChangeNotifier {
     return false;
   }
 
+  /// HU-23: registra que el alumno no se presentó.
+  Future<bool> marcarNoRecogido(PedidoPanel p) async {
+    try {
+      if (await _repo.marcarNoRecogido(p.id)) {
+        _pedidos.removeWhere((x) => x.id == p.id);
+        error = null;
+        mensaje = 'Pedido ${p.folio} marcado como no recogido.';
+        notifyListeners();
+        return true;
+      }
+      error = 'Solo se marca cuando ya pasó la hora de recogida.';
+    } catch (_) {
+      error = 'No se pudo registrar.';
+    }
+    notifyListeners();
+    return false;
+  }
+
   /// HU-12: entrega con el QR que muestra el alumno. Un QR de otro pedido, de
   /// otra cafetería o ya usado se rechaza.
   Future<bool> entregarConQr(String texto) async {

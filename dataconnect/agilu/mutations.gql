@@ -54,7 +54,11 @@ mutation CrearPedido(
       ),
       valido AS (
         SELECT 1 FROM cliente
-        WHERE (SELECT count(*) FROM lineas) = (SELECT count(*) FROM pedidos_items)
+        WHERE (SELECT count(*) FROM pedido o
+               WHERE o.usuario_id = cliente.usuario_id
+                 AND o.estado = 'no_recogido'
+                 AND o.recoger_a > now() - interval '30 days') < 3
+          AND (SELECT count(*) FROM lineas) = (SELECT count(*) FROM pedidos_items)
           AND (SELECT count(*) FROM pedidos_items) BETWEEN 1 AND 50
           AND coalesce(length($5::text), 0) <= 200
           AND EXISTS (
@@ -541,5 +545,26 @@ mutation EntregarPedido($id: UUID!, $codigo: String!) @auth(level: USER) {
     RETURNING estado, intentos_entrega AS "intentos"
     """
     params: [{ _expr: "auth.uid" }, $id, $codigo]
+  )
+}
+
+# HU-23: el encargado registra que el alumno no recogió un pedido listo cuya
+# hora ya pasó. Cuenta para el sistema de confianza.
+mutation MarcarNoRecogido($id: UUID!) @auth(level: USER) {
+  _execute(
+    sql: """
+    UPDATE pedido SET estado = 'no_recogido'
+    WHERE id = $2::uuid
+      AND estado = 'listo'
+      AND recoger_a < now()
+      AND cafeteria_id IN (
+        SELECT u.cafeteria_id
+        FROM usuario u
+        JOIN autenticacion a ON a.usuario_id = u.id
+        JOIN rol r ON r.id = u.rol_id
+        WHERE a.firebase_auth_uid = $1 AND r.nombre = 'encargado'
+      )
+    """
+    params: [{ _expr: "auth.uid" }, $id]
   )
 }

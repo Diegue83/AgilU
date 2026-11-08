@@ -21,6 +21,9 @@ abstract class PanelRepository {
 
   /// HU-09: entrega un pedido listo si el código coincide.
   Future<ResultadoEntrega> entregar(String pedidoId, String codigo);
+
+  /// HU-23: el alumno no se presentó por un pedido listo cuya hora ya pasó.
+  Future<bool> marcarNoRecogido(String pedidoId);
 }
 
 class DataConnectPanelRepository implements PanelRepository {
@@ -93,6 +96,12 @@ class DataConnectPanelRepository implements PanelRepository {
         .avanzarPedido(id: pedido.id, estado: siguiente.clave)
         .execute();
     if ((res.data.execute_ ?? 0) == 0) throw PedidoDesactualizado();
+  }
+
+  @override
+  Future<bool> marcarNoRecogido(String pedidoId) async {
+    final res = await _conector.marcarNoRecogido(id: pedidoId).execute();
+    return (res.data.execute_ ?? 0) > 0;
   }
 
   @override
@@ -190,5 +199,18 @@ class MockPanelRepository implements PanelRepository {
     pedidos[i] = pedidos[i].conEstado(EstadoPedido.entregado);
     _cambios.add(List.of(pedidos));
     return ResultadoEntrega.entregado;
+  }
+
+  @override
+  Future<bool> marcarNoRecogido(String pedidoId) async {
+    final i = pedidos.indexWhere((p) => p.id == pedidoId);
+    if (i < 0 ||
+        pedidos[i].estado != EstadoPedido.listo ||
+        !pedidos[i].recogerA.isBefore(DateTime.now())) {
+      return false;
+    }
+    pedidos[i] = pedidos[i].conEstado(EstadoPedido.noRecogido);
+    _cambios.add(List.of(pedidos));
+    return true;
   }
 }

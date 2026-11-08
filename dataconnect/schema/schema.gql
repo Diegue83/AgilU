@@ -80,7 +80,8 @@ type Pedido @table {
   folio: Int! @unique
   montoTotal: Float!
   # por_pagar -> pago_en_revision -> pendiente -> preparando -> listo -> entregado
-  # (o cancelado). "pendiente" es un pedido pagado que espera en cocina.
+  # (o cancelado, o no_recogido si el alumno no se presentó).
+  # "pendiente" es un pedido pagado que espera en cocina.
   estado: String! @default(value: "por_pagar")
   fechaCreacion: Timestamp! @default(expr: "request.time")
   recogerA: Timestamp!
