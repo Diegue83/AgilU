@@ -568,3 +568,36 @@ mutation MarcarNoRecogido($id: UUID!) @auth(level: USER) {
     params: [{ _expr: "auth.uid" }, $id]
   )
 }
+
+# HU-05: guarda el token de notificaciones del dispositivo del usuario con sesión.
+mutation RegistrarDispositivo($token: String!, $plataforma: String!)
+  @auth(expr: "auth != null && vars.plataforma in ['android', 'ios', 'web']")
+  @transaction {
+  query @redact {
+    autenticacion(key: { firebaseAuthUid_expr: "auth.uid" })
+      @check(expr: "this != null", message: "No tienes perfil")
+      @check(expr: "vars.token.size() > 20 && vars.token.size() < 4096", message: "Token inválido") {
+      usuario {
+        id
+      }
+    }
+  }
+  dispositivoToken_upsert(
+    data: {
+      token: $token
+      plataforma: $plataforma
+      actualizado_expr: "request.time"
+      usuarioId_expr: "response.query.autenticacion.usuario.id"
+    }
+  )
+}
+
+# HU-05: al cerrar sesión el dispositivo deja de recibir avisos de esa cuenta.
+mutation OlvidarDispositivo($token: String!) @auth(level: USER) {
+  dispositivoToken_deleteMany(
+    where: {
+      token: { eq: $token }
+      usuario: { autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } } }
+    }
+  )
+}

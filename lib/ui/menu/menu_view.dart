@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/routes.dart';
 import '../../data/repositories/auth_repository.dart';
+import '../../data/repositories/avisos_repository.dart';
 import '../../data/repositories/menu_repository.dart';
 import '../../data/repositories/pedido_repository.dart';
 import '../cart/cart_view_model.dart';
@@ -45,7 +46,12 @@ class _MenuScaffold extends StatelessWidget {
             tooltip: 'Cerrar sesión',
             icon: const Icon(Icons.logout),
             onPressed: () async {
-              await context.read<AuthRepository>().cerrarSesion();
+              final auth = context.read<AuthRepository>();
+              await context
+                  .read<AvisosRepository>()
+                  .olvidar()
+                  .then((_) {}, onError: (Object _) {});
+              await auth.cerrarSesion();
               carrito.limpiar();
               if (context.mounted) {
                 Navigator.pushReplacementNamed(context, Routes.login);
