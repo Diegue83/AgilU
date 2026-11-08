@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../../../core/codigo_qr.dart';
 import '../../../data/models/pedido_panel.dart';
 import '../../../data/repositories/panel_repository.dart';
 
@@ -90,6 +91,29 @@ class PanelViewModel extends ChangeNotifier {
     }
     notifyListeners();
     return false;
+  }
+
+  /// HU-12: entrega con el QR que muestra el alumno. Un QR de otro pedido, de
+  /// otra cafetería o ya usado se rechaza.
+  Future<bool> entregarConQr(String texto) async {
+    final qr = CodigoQr.leer(texto);
+    if (qr == null) {
+      error = 'Ese QR no es un código de entrega de ÁgilU.';
+      notifyListeners();
+      return false;
+    }
+    final id = CodigoQr.normalizarId(qr.pedidoId);
+    PedidoPanel? pedido;
+    for (final p in _pedidos) {
+      if (CodigoQr.normalizarId(p.id) == id) pedido = p;
+    }
+    if (pedido == null || pedido.estado != EstadoPedido.listo) {
+      error =
+          'Ese QR no corresponde a un pedido listo de tu cafetería o ya se usó.';
+      notifyListeners();
+      return false;
+    }
+    return entregar(pedido, qr.codigo);
   }
 
   @override
