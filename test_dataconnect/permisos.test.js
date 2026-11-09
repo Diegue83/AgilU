@@ -1178,6 +1178,55 @@ describe('aviso de pedido listo (HU-05)', () => {
   });
 });
 
+describe('reporte para la beneficiaria (HU-11)', () => {
+  let elena;
+  const periodo = () => ({
+    desde: new Date(Date.now() - 2 * 864e5).toISOString(),
+    hasta: new Date(Date.now() + 864e5).toISOString(),
+  });
+
+  before(async () => {
+    elena = await alumno('elena');
+    await elena.mutation('CrearPerfil', { nombre: 'Elena' });
+    await comoAdmin('../dataconnect/agilu/mutations.gql', 'AsignarRol', {
+      correo: 'elena@utng.edu.mx', rol: 'beneficiaria',
+    });
+  });
+
+  after(async () => {
+    await signOut(elena.auth);
+    await deleteApp(elena.app);
+  });
+
+  test('la beneficiaria ve pedidos, ingresos y no recogidos por cafetería', async () => {
+    const { data } = await elena.query('ReporteBeneficiaria', periodo());
+    const central = data.filas.find((f) => sinGuiones(f.cafeteriaId) === CAFETERIA);
+    assert.ok(central.pedidos > 0);
+    assert.ok(central.entregados >= 1);
+    assert.ok(central.noRecogidos >= 2);
+    assert.ok(central.cancelados >= 1);
+    assert.ok(central.ingresos > 0);
+    assert.ok(central.montoNoRecogido > 0);
+    const barra = data.filas.find((f) => sinGuiones(f.cafeteriaId) === BARRA);
+    assert.equal(barra.pedidos, 0);
+    assert.ok(data.filas.every((f) => Object.keys(f).every((k) => !/usuario|correo|nombre$/i.test(k))));
+  });
+
+  test('un periodo sin pedidos regresa ceros', async () => {
+    const { data } = await elena.query('ReporteBeneficiaria', {
+      desde: '2020-01-01T00:00:00Z', hasta: '2020-01-02T00:00:00Z',
+    });
+    assert.ok(data.filas.every((f) => f.pedidos === 0 && f.ingresos === 0));
+  });
+
+  test('alumnos y encargados no ven el reporte', async () => {
+    const a = await ana.query('ReporteBeneficiaria', periodo());
+    assert.equal(a.data.filas.length, 0);
+    const b = await beto.query('ReporteBeneficiaria', periodo());
+    assert.equal(b.data.filas.length, 0);
+  });
+});
+
 describe('catálogo', () => {
   test('un alumno no puede crear productos ni puestos', async () => {
     await assert.rejects(

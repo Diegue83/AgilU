@@ -21,6 +21,7 @@ import 'data/repositories/panel_repository.dart';
 import 'data/repositories/pedido_repository.dart';
 import 'data/repositories/producto_repository.dart';
 import 'data/repositories/perfil_repository.dart';
+import 'data/repositories/reporte_repository.dart';
 import 'dataconnect_generated/agilu.dart';
 import 'firebase_options.dart';
 import 'ui/cart/cart_view_model.dart';
@@ -58,6 +59,11 @@ Future<void> main() async {
       providers: [
         Provider<AuthRepository>.value(value: auth),
         Provider<PerfilRepository>.value(value: perfiles),
+        Provider<ReporteRepository>(
+          create: (_) => AppConfig.usarFirebase
+              ? DataConnectReporteRepository()
+              : MockReporteRepository(),
+        ),
         Provider<AvisosRepository>(
           create: (_) => AppConfig.usarFirebase
               ? FcmAvisosRepository()

@@ -6,10 +6,12 @@ class Routes {
   static const carrito = '/carrito';
   static const confirmacion = '/confirmacion';
   static const encargado = '/encargado';
+  static const reporte = '/reporte';
 
   /// Pantalla de inicio según el rol de quien inició sesión.
   static String inicioPara(Perfil? perfil) {
     if (perfil != null && perfil.esEncargado) return encargado;
+    if (perfil != null && perfil.esBeneficiaria) return reporte;
     return menu;
   }
 }

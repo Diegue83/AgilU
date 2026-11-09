@@ -27,4 +27,6 @@ class Perfil {
   });
 
   bool get esEncargado => rol == RolUsuario.encargado && cafeteriaId != null;
+
+  bool get esBeneficiaria => rol == RolUsuario.beneficiaria;
 }

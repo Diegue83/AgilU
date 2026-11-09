@@ -75,6 +75,8 @@ part 'mi_confianza.dart';
 
 part 'mis_notificaciones.dart';
 
+part 'reporte_beneficiaria.dart';
+
 
 
 
@@ -261,6 +263,11 @@ class AgiluConnector {
   
   MisNotificacionesVariablesBuilder misNotificaciones () {
     return MisNotificacionesVariablesBuilder(dataConnect, );
+  }
+  
+  
+  ReporteBeneficiariaVariablesBuilder reporteBeneficiaria ({required Timestamp desde, required Timestamp hasta, }) {
+    return ReporteBeneficiariaVariablesBuilder(dataConnect, desde: desde,hasta: hasta,);
   }
   
 
