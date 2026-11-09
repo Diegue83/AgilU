@@ -12,6 +12,7 @@ import 'ui/cart/cart_view.dart';
 import 'ui/encargado/encargado_view.dart';
 import 'ui/menu/menu_view.dart';
 import 'ui/pedido/confirmacion_view.dart';
+import 'ui/reporte/reporte_view.dart';
 
 class AgilUApp extends StatefulWidget {
   final String rutaInicial;
@@ -45,6 +46,7 @@ class _AgilUAppState extends State<AgilUApp> {
     Routes.menu: (_) => const MenuView(),
     Routes.carrito: (_) => const CartView(),
     Routes.encargado: (_) => const EncargadoView(),
+    Routes.reporte: (_) => const ReporteView(),
     Routes.confirmacion: (ctx) => ConfirmacionView(
           resultado: ModalRoute.of(ctx)!.settings.arguments as ResultadoPedido,
         ),
