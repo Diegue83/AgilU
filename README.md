@@ -1,119 +1,120 @@
 # ÁgilU
 
-App móvil para pre-ordenar alimentos en cafeterías universitarias.
-**Stack:** Flutter + Firebase · **Arquitectura:** MVVM · **Metodología:** Scrum
+App móvil para pre-ordenar alimentos en cafeterías universitarias: el alumno ve el
+menú del día, arma su pedido para una hora de recogida, paga por transferencia y
+recoge con un código o QR; el encargado administra el menú, valida pagos y prepara
+pedidos en un panel; la beneficiaria consulta el reporte del negocio.
+
+**Stack:** Flutter + Firebase (Auth, SQL Connect, Cloud Functions, Storage, Cloud Messaging)
+· **Arquitectura:** MVVM · **Metodología:** Scrum
+
+**Versión a revisar:** rama `main`. Cada historia de usuario se desarrolla en su
+propia rama `feature/hu-XX-…` y se une a `main` por pull request.
 
 ## Equipo
 - Banda López Mildred Mariana — Flutter / UI
 - Juarez Cruz Juan Diego — Firebase / Backend
 - Vargas Vargas Zayda Fernanda — Diseño de interfaces
 
-## Estructura (MVVM)
-```
-lib/
-├── core/          Tema, rutas y configuración (app_config.dart)
-├── data/
-│   ├── models/        Producto, ItemCarrito, Pedido
-│   └── repositories/  Interfaces + implementación Mock + implementación Firebase
-├── ui/            Una carpeta por pantalla: *_view.dart + *_view_model.dart
-│   ├── auth/  menu/  cart/  pedido/
-├── app.dart       MaterialApp y rutas
-└── main.dart      Inyección de dependencias (Provider)
-```
-Flujo implementado: Login/Registro → Menú → Carrito → Confirmación con folio.
+Tablero: https://trello.com/b/Hbim6YjX
 
-## Cómo correrlo
-Este repositorio contiene solo el código (`lib/`, `test/`, `pubspec.yaml`).
-Las carpetas de plataforma (android/ios) se generan una sola vez:
+## Requisitos
 
+| Herramienta | Versión probada |
+| --- | --- |
+| Flutter / Dart | 3.41.6 / 3.11 |
+| Node.js | 22 (funciones) — 24 funciona para las pruebas |
+| Java | 21 (emuladores de Firebase) |
+| Firebase CLI | 15.x (`npm install -g firebase-tools`) |
+| FlutterFire CLI | `dart pub global activate flutterfire_cli` |
+| Windows (opcional) | Visual Studio 2022 17.10 o superior con "Desarrollo para el escritorio con C++" |
+
+## Configuración
+
+1. Instalar dependencias:
+   ```bash
+   flutter pub get
+   ```
+2. Generar la configuración local de Firebase (no se versiona y no contiene secretos):
+   ```bash
+   flutterfire configure --project=agilu-a232a
+   ```
+   Crea `lib/firebase_options.dart` y `android/app/google-services.json`. Para solo
+   compilar o correr pruebas sin acceso al proyecto, copia el ejemplo con valores
+   ficticios: `cp tool/firebase_options.ejemplo.dart lib/firebase_options.dart`.
+3. Variables de compilación (`--dart-define`):
+
+   | Variable | Valores | Efecto |
+   | --- | --- | --- |
+   | `EMULADORES` | `true` / sin definir | Conecta Auth, SQL Connect y Functions a los emuladores locales |
+
+   No hay llaves ni contraseñas que configurar en la app. Las funciones usan las
+   credenciales por defecto del proyecto en Google Cloud.
+
+## Cómo ejecutar
+
+**Contra los emuladores (recomendado para revisar, con datos ficticios):**
 ```bash
-flutter create . --project-name agilu --org mx.edu.utng
-flutter pub get
-flutter run
+firebase emulators:start --only auth,dataconnect,functions --project demo-agilu
 ```
-La app usa **Firebase** (`AppConfig.usarFirebase = true`). Para correr sin Firebase,
-con datos de ejemplo, cámbialo a `false`: cualquier correo válido y contraseña de 6+ caracteres entra.
-
-## Configurar Firebase en tu máquina
-El proyecto de Firebase es `agilu-a232a`. Los archivos `google-services.json`,
-`GoogleService-Info.plist` y `firebase_options.dart` están en `.gitignore`, así que cada
-integrante los genera una vez:
-
-```bash
-dart pub global activate flutterfire_cli
-flutterfire configure --project=agilu-a232a
-```
-
-Sin `lib/firebase_options.dart` la app no compila.
-
-En la consola de Firebase debe estar activo Authentication (correo/contraseña).
-
-## Base de datos: SQL Connect (Data Connect)
-Los datos viven en PostgreSQL a través de SQL Connect (`agilu-a232a-service`, `us-east4`):
-
-```
-dataconnect/
-├── schema/schema.gql   Tablas (Usuario, Autenticacion, Puesto, Producto, Pedido, DetallePedido…)
-├── agilu/              Conector de la app: queries.gql, mutations.gql, connector.yaml
-└── seed_data.gql       Catálogo de prueba (solo emulador)
-```
-
-El SDK de Dart se genera en `lib/dataconnect_generated/` (no se edita a mano). Después de cambiar
-el esquema o las operaciones:
-```bash
-firebase dataconnect:sdk:generate
-```
-
-Publicar esquema y conector (migra la base de Cloud SQL; revisar el plan antes de aceptar):
-```bash
-firebase deploy --only dataconnect
-```
-
-El catálogo de producción se da de alta con las mutaciones `CrearPuesto` y `CrearProducto`, que solo
-se pueden ejecutar con privilegios de administrador (`firebase dataconnect:execute`).
-
-### Correr la app contra los emuladores
-```bash
-firebase emulators:start --only auth,dataconnect --project demo-agilu
-```
-En otra terminal, sembrar el catálogo de prueba y abrir la app:
+En otra terminal:
 ```bash
 node test_dataconnect/sembrar.js
 flutter run --dart-define=EMULADORES=true
 ```
+Para probar como encargado o beneficiaria, asigna el rol a una cuenta de prueba con
+la mutación de administrador `AsignarRol` (ver `docs/integracion-nube.md`).
+
+**Contra el proyecto real:** `flutter run`. Antes hay que publicar el backend:
+```bash
+firebase deploy --only dataconnect,functions,storage,firestore:rules
+```
+
+**Sin Firebase:** cambia `AppConfig.usarFirebase` a `false` en
+`lib/core/app_config.dart`; la app usa datos de ejemplo.
+
+## Estructura
+
+```
+lib/
+├── core/                 Configuración, rutas, tema, reglas de horario, QR, errores
+├── data/
+│   ├── models/           Producto, Pedido, Ticket, Cafeteria, Estacion, Perfil, Reporte…
+│   └── repositories/     Interfaz + implementación SQL Connect/Functions + Mock por cada área
+├── dataconnect_generated/ SDK generado de SQL Connect (no se edita a mano)
+├── ui/                   Una carpeta por pantalla: *_view.dart + *_view_model.dart
+│   ├── auth/ menu/ cart/ pedido/ reporte/
+│   └── encargado/        panel/ pagos/ productos/ estaciones/ cafeteria/
+├── app.dart              MaterialApp y rutas
+└── main.dart             Inyección de dependencias (Provider)
+dataconnect/              Esquema, conector `agilu` (queries.gql, mutations.gql) y datos de prueba
+functions/                Cloud Functions: fotos, comprobantes, cancelaciones, avisos, cierre del día
+test/                     Pruebas unitarias y de interfaz
+test_dataconnect/         Pruebas de permisos contra los emuladores
+integration_test/         Prueba de integración con plugins reales
+docs/                     Integración con la nube, pruebas, dependencias, evidencias
+```
+
+## Servicios en la nube
+
+Qué servicio se usa, para qué, qué datos recibe, cómo se configura y quién puede
+acceder: [`docs/integracion-nube.md`](docs/integracion-nube.md).
 
 ## Seguridad
-- **Permisos en SQL Connect** (`dataconnect/agilu/*.gql`): todas las operaciones piden sesión
-  (`@auth(level: USER)`) y filtran por `auth.uid`, así que un alumno solo ve su perfil y sus pedidos.
-  `CrearPedido` toma los precios de la tabla `producto`, calcula el total y asigna el folio en el
-  servidor; rechaza productos no disponibles, de otro puesto, cantidades inválidas y horas pasadas.
-  Las altas del catálogo son `NO_ACCESS` (solo administrador).
-- **Firestore** ya no se usa: `firestore.rules` niega todo el acceso. Publicarlas:
-  ```bash
-  firebase deploy --only firestore:rules
-  ```
-- **Transporte (Android)**: `android/app/src/main/res/xml/network_security_config.xml` bloquea HTTP
-  en claro, ignora certificados instalados por el usuario (salvo en debug) y fija las raíces de
-  Google Trust Services para `googleapis.com` y `firebaseio.com`. Los servidores de Firebase
-  negocian TLS 1.3 (Android 10+). Los pines expiran el **2027-11-01**: antes de esa fecha hay que revisarlos y renovar la expiración.
+
+Controles de autenticación, autorización, validación en servidor, permisos de
+recursos, comunicación segura y manejo de secretos: [`SECURITY.md`](SECURITY.md).
 
 ## Pruebas
+
 ```bash
 flutter test
+cd test_dataconnect && npm install && npm test
 ```
-
-Pruebas de permisos de SQL Connect (requieren Node.js y Firebase CLI; usan los emuladores):
-```bash
-cd test_dataconnect
-npm install
-npm test
-```
-
-Prueba de integración en Windows contra los emuladores (registro, menú y pedido con los plugins reales):
-```bash
-firebase emulators:exec --only auth,dataconnect --project demo-agilu "flutter test integration_test -d windows"
-```
+Detalle de lo que cubren y últimos resultados: [`docs/pruebas.md`](docs/pruebas.md).
+Dependencias y revisión de alertas: [`docs/dependencias.md`](docs/dependencias.md).
 
 ## Flujo de trabajo
-Ramas `feature/<nombre>` desde `main`, Pull Request y revisión de otro integrante antes de hacer merge.
-Tablero: https://trello.com/b/Hbim6YjX
+Ramas `feature/<nombre>` por historia o tarea, pull request y revisión de otro
+integrante antes de unir a `main`. GitHub Actions corre análisis y pruebas en
+cada push y pull request.
