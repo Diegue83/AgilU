@@ -21,7 +21,8 @@ void main() {
   test('filtra por estación', () async {
     final vm = await _vm();
     vm.seleccionarEstacion('e2');
-    expect(vm.visibles.map((p) => p.nombre), ['Chilaquiles verdes', 'Molletes']);
+    expect(
+        vm.visibles.map((p) => p.nombre), ['Chilaquiles verdes', 'Molletes']);
   });
 
   test('busca por nombre sin importar mayúsculas ni acentos', () async {

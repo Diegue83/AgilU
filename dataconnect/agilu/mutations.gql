@@ -232,3 +232,56 @@ mutation CrearMiProducto(
     }
   )
 }
+
+# HU-15: editar un producto propio. La nueva estación debe ser de la misma
+# cafetería; los pedidos anteriores conservan su precio en DetallePedido.
+mutation EditarMiProducto(
+  $id: UUID!
+  $nombre: String!
+  $descripcion: String
+  $precio: Float!
+  $puestoId: UUID!
+  $disponible: Boolean!
+) @auth(level: USER) @transaction {
+  query @redact {
+    producto(id: $id)
+      @check(expr: "this != null", message: "El producto no existe")
+      @check(expr: "vars.nombre.trim().size() > 0", message: "El nombre es obligatorio")
+      @check(expr: "vars.precio > 0.0", message: "El precio debe ser mayor a 0") {
+      puesto {
+        cafeteria {
+          usuarios_on_cafeteria(
+            where: {
+              rol: { nombre: { eq: "encargado" } }
+              autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+            }
+          ) @check(expr: "this.size() == 1", message: "El producto no es de tu cafetería") {
+            id
+          }
+        }
+      }
+    }
+    puesto(id: $puestoId) @check(expr: "this != null", message: "Elige una estación") {
+      cafeteria {
+        usuarios_on_cafeteria(
+          where: {
+            rol: { nombre: { eq: "encargado" } }
+            autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+          }
+        ) @check(expr: "this.size() == 1", message: "La estación no es de tu cafetería") {
+          id
+        }
+      }
+    }
+  }
+  producto_update(
+    id: $id
+    data: {
+      nombre: $nombre
+      descripcion: $descripcion
+      precio: $precio
+      disponible: $disponible
+      puesto: { id: $puestoId }
+    }
+  )
+}

@@ -18,7 +18,8 @@ void main() {
   test('valida nombre vacío o repetido', () async {
     final vm = await _vm();
     expect(vm.validarNombre('  '), 'Escribe el nombre de la estación.');
-    expect(vm.validarNombre('tiendita'), 'Ya existe una estación con ese nombre.');
+    expect(
+        vm.validarNombre('tiendita'), 'Ya existe una estación con ese nombre.');
     expect(vm.validarNombre('Tiendita', exceptoId: 'e3'), isNull);
     expect(vm.validarNombre('Tacos'), isNull);
   });
@@ -43,7 +44,8 @@ void main() {
     expect(vm.estaciones, hasLength(3));
   });
 
-  test('una estación con productos no se elimina y se explica por qué', () async {
+  test('una estación con productos no se elimina y se explica por qué',
+      () async {
     final vm = await _vm();
     expect(await vm.eliminar(vm.estaciones.first), isFalse);
     expect(vm.error,

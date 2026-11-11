@@ -111,4 +111,21 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Torta cubana'), findsOneWidget);
   });
+
+  testWidgets('el formulario de edición abre con los datos actuales',
+      (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository(),
+        perfiles: MockPerfilRepository(perfil: _encargado)));
+    await _iniciarSesion(tester);
+    await tester.tap(find.text('Molletes'));
+    await tester.pumpAndSettle();
+    expect(find.text('Editar producto'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Molletes'), findsOneWidget);
+    expect(find.widgetWithText(TextField, '40.00'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField).at(2), '42');
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+    expect(find.text('\$42.00'), findsOneWidget);
+  });
 }
