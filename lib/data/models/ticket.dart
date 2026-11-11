@@ -67,6 +67,16 @@ class TicketPedido {
       ].contains(estado);
 
   bool get esperaComprobante => estado == EstadoPedido.porPagar;
+
+  /// Etiqueta del ticket: mientras se prepara dice "Pagado"; al final, cómo
+  /// terminó el pedido.
+  String get etiquetaEstado => switch (estado) {
+        EstadoPedido.pendiente ||
+        EstadoPedido.preparando ||
+        EstadoPedido.listo =>
+          'Pagado',
+        _ => estado.etiqueta,
+      };
 }
 
 /// Pedido en la lista de "Mis pedidos".

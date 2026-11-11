@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../../core/codigo_qr.dart';
+import '../../../core/reglas_pedido.dart';
 import '../../../data/models/pedido_panel.dart';
 import '../../../data/repositories/panel_repository.dart';
 
@@ -76,7 +77,7 @@ class PanelViewModel extends ChangeNotifier {
         case ResultadoEntrega.entregado:
           _pedidos.removeWhere((x) => x.id == p.id);
           error = null;
-          mensaje = 'Pedido ${p.folio} entregado.';
+          mensaje = 'Pedido ${ReglasPedido.formatearFolio(p.folio)} entregado.';
           notifyListeners();
           return true;
         case ResultadoEntrega.codigoIncorrecto:
@@ -99,7 +100,8 @@ class PanelViewModel extends ChangeNotifier {
       if (await _repo.marcarNoRecogido(p.id)) {
         _pedidos.removeWhere((x) => x.id == p.id);
         error = null;
-        mensaje = 'Pedido ${p.folio} marcado como no recogido.';
+        mensaje =
+            'Pedido ${ReglasPedido.formatearFolio(p.folio)} marcado como no recogido.';
         notifyListeners();
         return true;
       }

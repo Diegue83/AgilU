@@ -302,7 +302,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.drag(find.byType(Scrollable).first, const Offset(0, 2000));
     await tester.pumpAndSettle();
-    expect(find.text('Pedido 14 entregado.'), findsOneWidget);
+    expect(find.text('Pedido AGU-00014 entregado.'), findsOneWidget);
   });
 
   testWidgets('el encargado aprueba un comprobante desde la pestaña Pagos',
