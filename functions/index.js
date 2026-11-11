@@ -7,6 +7,7 @@ const { getStorage } = require('firebase-admin/storage');
 
 const { cancelarSiQuedoAgotado } = require('./cancelaciones');
 const { subirFoto, ErrorDeFoto } = require('./fotos');
+const { subirComprobante } = require('./comprobantes');
 
 initializeApp();
 
@@ -61,6 +62,28 @@ exports.subirFotoProducto = onCall(
       if (e instanceof ErrorDeFoto) throw new HttpsError(e.codigo, e.message);
       logger.error('No se pudo guardar la foto', { error: e.message });
       throw new HttpsError('internal', 'No se pudo guardar la foto.');
+    }
+  },
+);
+
+// HU-08: el alumno sube el comprobante de su transferencia.
+exports.subirComprobantePago = onCall(
+  { region: SERVICIO.location, maxInstances: 5 },
+  async (req) => {
+    try {
+      return await subirComprobante(
+        {
+          uid: req.auth?.uid,
+          pedidoId: req.data?.pedidoId,
+          imagenBase64: req.data?.imagenBase64,
+          tipo: req.data?.tipo,
+        },
+        { dataConnect: getDataConnect(SERVICIO), bucket: getStorage().bucket() },
+      );
+    } catch (e) {
+      if (e instanceof ErrorDeFoto) throw new HttpsError(e.codigo, e.message);
+      logger.error('No se pudo guardar el comprobante', { error: e.message });
+      throw new HttpsError('internal', 'No se pudo guardar el comprobante.');
     }
   },
 );

@@ -8,8 +8,8 @@ mutation SembrarCatalogo @transaction {
   )
   cafeteria_insertMany(
     data: [
-      { id: "c0000000-0000-4000-8000-000000000001", nombre: "Cafetería central", ubicacion: "Edificio A" }
-      { id: "c0000000-0000-4000-8000-000000000002", nombre: "Barra de café", ubicacion: "Biblioteca" }
+      { id: "c0000000-0000-4000-8000-000000000001", nombre: "Cafetería central", ubicacion: "Edificio A", banco: "Banco Ejemplo", clabe: "000000000000000000", titular: "Cafetería Central (datos de prueba)" }
+      { id: "c0000000-0000-4000-8000-000000000002", nombre: "Barra de café", ubicacion: "Biblioteca", banco: "Banco Ejemplo", clabe: "000000000000000001", titular: "Barra de café (datos de prueba)" }
     ]
   )
   puesto_insertMany(

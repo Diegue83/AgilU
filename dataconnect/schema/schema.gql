@@ -41,6 +41,11 @@ type Cafeteria @table {
   # llevan artículos de preparación inmediata.
   permitirInmediatos: Boolean! @default(value: false)
   zonaHoraria: String! @default(value: "America/Mexico_City")
+  # HU-08: cuenta donde los alumnos transfieren. Son datos públicos de cobro
+  # de la cafetería, no credenciales.
+  banco: String
+  clabe: String
+  titular: String
   activa: Boolean! @default(value: true)
 }
 
@@ -74,10 +79,18 @@ type Producto @table {
 type Pedido @table {
   folio: Int! @unique
   montoTotal: Float!
-  estado: String! @default(value: "pendiente")
+  # por_pagar -> pago_en_revision -> pendiente -> preparando -> listo -> entregado
+  # (o cancelado). "pendiente" es un pedido pagado que espera en cocina.
+  estado: String! @default(value: "por_pagar")
   fechaCreacion: Timestamp! @default(expr: "request.time")
   recogerA: Timestamp!
   notas: String
+  # HU-08: el alumno transfiere con esta referencia como concepto y sube el
+  # comprobante; el encargado lo valida antes de que el pedido entre a cocina.
+  referenciaPago: String
+  comprobanteUrl: String
+  motivoRechazoPago: String
+  pagadoEn: Timestamp
   esCredito: Boolean! @default(value: false)
   usuario: Usuario!
   cafeteria: Cafeteria!

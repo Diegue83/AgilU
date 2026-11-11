@@ -83,7 +83,7 @@ class DataConnectPanelRepository implements PanelRepository {
     final siguiente = pedido.estado.siguiente;
     if (siguiente == null) return;
     final res = await _conector
-        .avanzarPedido(id: pedido.id, estado: siguiente.name)
+        .avanzarPedido(id: pedido.id, estado: siguiente.clave)
         .execute();
     if ((res.data.execute_ ?? 0) == 0) throw PedidoDesactualizado();
   }

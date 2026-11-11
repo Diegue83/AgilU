@@ -4,7 +4,7 @@ const CANCELAR_PEDIDOS_CON_PRODUCTO = `
   mutation CancelarPedidosConProducto($productoId: UUID!) {
     pedido_updateMany(
       where: {
-        estado: { eq: "pendiente" }
+        estado: { in: ["por_pagar", "pago_en_revision", "pendiente"] }
         detallePedidos_on_pedido: { exist: { productoId: { eq: $productoId } } }
       }
       data: { estado: "cancelado" }
@@ -13,8 +13,8 @@ const CANCELAR_PEDIDOS_CON_PRODUCTO = `
 `;
 
 /**
- * HU-16: si un producto quedó agotado, cancela los pedidos pendientes que lo
- * incluyen. Los pedidos que ya se preparan o se entregaron no se tocan.
+ * HU-16: si un producto quedó agotado, cancela los pedidos que todavía no se
+ * empiezan a preparar. Los que se preparan o se entregaron no se tocan.
  * Devuelve cuántos pedidos se cancelaron.
  */
 async function cancelarSiQuedoAgotado(event, dataConnect) {

@@ -95,4 +95,4 @@ async function subirFoto({ uid, productoId, imagenBase64, tipo }, { dataConnect,
   return { url };
 }
 
-module.exports = { subirFoto, ErrorDeFoto, TAMANO_MAXIMO };
+module.exports = { subirFoto, validarImagen, ErrorDeFoto, TAMANO_MAXIMO };

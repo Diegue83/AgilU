@@ -83,10 +83,12 @@ mutation CrearPedido(
       ),
       nuevo AS (
         INSERT INTO pedido (id, folio, monto_total, estado, fecha_creacion,
-                            recoger_a, notas, es_credito, usuario_id, cafeteria_id)
+                            recoger_a, notas, es_credito, usuario_id, cafeteria_id,
+                            referencia_pago)
         SELECT $2::uuid, folio.valor, (SELECT sum(precio * cantidad) FROM lineas),
-               'pendiente', now(), $4::timestamptz, nullif(trim($5::text), ''),
-               false, cliente.usuario_id, $3::uuid
+               'por_pagar', now(), $4::timestamptz, nullif(trim($5::text), ''),
+               false, cliente.usuario_id, $3::uuid,
+               'AGU-' || lpad(folio.valor::text, 5, '0')
         FROM folio, cliente
         RETURNING id
       )
@@ -483,5 +485,30 @@ mutation AvanzarPedido($id: UUID!, $estado: String!)
       )
     """
     params: [{ _expr: "auth.uid" }, $id, $estado]
+  )
+}
+
+# HU-08: el encargado valida el comprobante de transferencia. Al aprobarlo el
+# pedido pasa a "pendiente" (entra a cocina); al rechazarlo vuelve a
+# "por_pagar" con el motivo para el alumno.
+mutation ValidarPago($id: UUID!, $aprobado: Boolean!, $motivo: String)
+  @auth(expr: "auth != null && (vars.aprobado || (has(vars.motivo) && vars.motivo.trim().size() > 0))") {
+  _execute(
+    sql: """
+    UPDATE pedido
+    SET estado = CASE WHEN $3::boolean THEN 'pendiente' ELSE 'por_pagar' END,
+        pagado_en = CASE WHEN $3::boolean THEN now() ELSE NULL END,
+        motivo_rechazo_pago = CASE WHEN $3::boolean THEN NULL ELSE nullif(trim($4::text), '') END
+    WHERE id = $2::uuid
+      AND estado = 'pago_en_revision'
+      AND cafeteria_id IN (
+        SELECT u.cafeteria_id
+        FROM usuario u
+        JOIN autenticacion a ON a.usuario_id = u.id
+        JOIN rol r ON r.id = u.rol_id
+        WHERE a.firebase_auth_uid = $1 AND r.nombre = 'encargado'
+      )
+    """
+    params: [{ _expr: "auth.uid" }, $id, $aprobado, $motivo]
   )
 }

@@ -107,6 +107,17 @@ const adminDataConnect = {
   },
 };
 
+// HU-08: deja un pedido pagado (comprobante en revisión y aprobado por el
+// encargado) para las pruebas que necesitan pedidos ya en cocina.
+async function pagado(vars) {
+  await adminDataConnect.executeGraphql(
+    'mutation R($id: UUID!) { pedido_update(id: $id, data: { estado: "pago_en_revision" }) }',
+    { variables: { id: vars.id } },
+  );
+  const r = await beto.mutation('ValidarPago', { id: vars.id, aprobado: true });
+  assert.equal(r.data._execute, 1);
+}
+
 const sembrarCatalogo = () =>
   comoAdmin('../dataconnect/seed_data.gql', 'SembrarCatalogo');
 
@@ -173,7 +184,7 @@ describe('crear pedido', () => {
     const res = await ana.query('MiPedido', { id: vars.id });
     const [p] = res.data.pedidos;
     assert.equal(p.montoTotal, 2 * 40 + 20);
-    assert.equal(p.estado, 'pendiente');
+    assert.equal(p.estado, 'por_pagar');
     assert.ok(Number.isInteger(p.folio) && p.folio > 0);
     assert.equal(p.id, sinGuiones(vars.id));
     pedidoDeAna = { id: p.id, folio: p.folio };
@@ -496,7 +507,7 @@ describe('disponibilidad (HU-16)', () => {
     const res = await ana.query('MiPedido', { id: conProducto.id });
     assert.equal(res.data.pedidos[0].estado, 'cancelado');
     const otro = await ana.query('MiPedido', { id: sinProducto.id });
-    assert.equal(otro.data.pedidos[0].estado, 'pendiente');
+    assert.equal(otro.data.pedidos[0].estado, 'por_pagar');
     await beto.mutation('EstablecerDisponibilidad', { id: CHILAQUILES, disponible: true });
   });
 
@@ -826,6 +837,7 @@ describe('panel operativo (HU-06)', () => {
   test('el encargado ve los pedidos de hoy de su cafetería en orden de recogida', async () => {
     const vars = pedido({ recogerA: pronto(3) });
     await ana.mutation('CrearPedido', vars);
+    await pagado(vars);
     id = sinGuiones(vars.id);
     const { data } = await beto.query('PanelPedidos', hoy());
     assert.ok(data.pedidos.length > 0);
@@ -862,6 +874,89 @@ describe('panel operativo (HU-06)', () => {
     await ana.mutation('CrearPedido', otro);
     const r = await ana.mutation('AvanzarPedido', { id: otro.id, estado: 'preparando' });
     assert.equal(r.data._execute, 0);
+  });
+});
+
+describe('pago anticipado (HU-08)', () => {
+  const { subirComprobante } = createRequire(import.meta.url)('../functions/comprobantes.js');
+  const JPG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 9, 9]).toString('base64');
+  const guardados = new Map();
+  const bucket = {
+    name: 'demo-agilu.appspot.com',
+    file: (ruta) => ({ save: async (d) => guardados.set(ruta, d) }),
+  };
+  const deps = { dataConnect: adminDataConnect, bucket };
+  const uidDe = (a) => a.auth.currentUser.uid;
+  let vars;
+
+  test('el pedido nace por pagar con su referencia y no entra al panel', async () => {
+    vars = pedido({ recogerA: pronto(6) });
+    await ana.mutation('CrearPedido', vars);
+    const { data } = await ana.query('MiPedido', { id: vars.id });
+    const p = data.pedidos[0];
+    assert.equal(p.estado, 'por_pagar');
+    assert.equal(p.referenciaPago, `AGU-${String(p.folio).padStart(5, '0')}`);
+    assert.equal(p.cafeteria.clabe, '000000000000000000');
+    const hoy = new Date(); hoy.setUTCHours(0, 0, 0, 0);
+    const panel = await beto.query('PanelPedidos', {
+      desde: hoy.toISOString(), hasta: new Date(hoy.getTime() + 864e5).toISOString(),
+    });
+    assert.ok(panel.data.pedidos.every((x) => x.id !== sinGuiones(vars.id)));
+  });
+
+  test('otro alumno no puede subir el comprobante de un pedido ajeno', async () => {
+    await assert.rejects(
+      subirComprobante({ uid: uidDe(beto), pedidoId: vars.id, imagenBase64: JPG, tipo: 'image/jpeg' }, deps),
+      /no es tuyo/,
+    );
+  });
+
+  test('el alumno sube su comprobante y el pedido queda en revisión', async () => {
+    await subirComprobante({ uid: uidDe(ana), pedidoId: vars.id, imagenBase64: JPG, tipo: 'image/jpeg' }, deps);
+    assert.ok([...guardados.keys()].some((k) => k.startsWith(`comprobantes/${CAFETERIA}/`)));
+    const { data } = await ana.query('MiPedido', { id: vars.id });
+    assert.equal(data.pedidos[0].estado, 'pago_en_revision');
+    await assert.rejects(
+      subirComprobante({ uid: uidDe(ana), pedidoId: vars.id, imagenBase64: JPG, tipo: 'image/jpeg' }, deps),
+      /ya no espera comprobante/,
+    );
+  });
+
+  test('el encargado ve los pagos por validar; un alumno no', async () => {
+    const enc = await beto.query('PagosPorValidar');
+    assert.ok(enc.data.pagos === undefined);
+    assert.ok(enc.data.pedidos.some((p) => p.id === sinGuiones(vars.id)));
+    const alu = await ana.query('PagosPorValidar');
+    assert.equal(alu.data.pedidos.length, 0);
+  });
+
+  test('rechazar pide motivo y regresa el pedido a por pagar', async () => {
+    await assert.rejects(beto.mutation('ValidarPago', { id: vars.id, aprobado: false }));
+    await assert.rejects(beto.mutation('ValidarPago', { id: vars.id, aprobado: false, motivo: '   ' }));
+    const r = await beto.mutation('ValidarPago', {
+      id: vars.id, aprobado: false, motivo: 'La referencia no coincide',
+    });
+    assert.equal(r.data._execute, 1);
+    const { data } = await ana.query('MiPedido', { id: vars.id });
+    assert.equal(data.pedidos[0].estado, 'por_pagar');
+    assert.equal(data.pedidos[0].motivoRechazoPago, 'La referencia no coincide');
+  });
+
+  test('un alumno no puede aprobar pagos', async () => {
+    await subirComprobante({ uid: uidDe(ana), pedidoId: vars.id, imagenBase64: JPG, tipo: 'image/jpeg' }, deps);
+    const r = await ana.mutation('ValidarPago', { id: vars.id, aprobado: true });
+    assert.equal(r.data._execute, 0);
+  });
+
+  test('al aprobar, el pedido queda pagado y entra a cocina', async () => {
+    const r = await beto.mutation('ValidarPago', { id: vars.id, aprobado: true });
+    assert.equal(r.data._execute, 1);
+    const { data } = await ana.query('MiPedido', { id: vars.id });
+    assert.equal(data.pedidos[0].estado, 'pendiente');
+    assert.ok(data.pedidos[0].pagadoEn);
+    assert.equal(data.pedidos[0].motivoRechazoPago, null);
+    const otra = await beto.mutation('ValidarPago', { id: vars.id, aprobado: true });
+    assert.equal(otra.data._execute, 0);
   });
 });
 
