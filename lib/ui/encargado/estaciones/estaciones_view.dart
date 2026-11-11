@@ -103,7 +103,8 @@ class _Estaciones extends StatelessWidget {
                       content: Text(vm.error!),
                       actions: [
                         TextButton(
-                            onPressed: vm.cargar, child: const Text('Reintentar')),
+                            onPressed: vm.cargar,
+                            child: const Text('Reintentar')),
                       ],
                     ),
                   if (vm.estaciones.isEmpty && vm.error == null)

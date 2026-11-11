@@ -74,7 +74,8 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => CartViewModel()),
       ],
       child: AgilUApp(
-          rutaInicial: sesion == null ? Routes.login : Routes.inicioPara(perfil)),
+          rutaInicial:
+              sesion == null ? Routes.login : Routes.inicioPara(perfil)),
     ),
   );
 }

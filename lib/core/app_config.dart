@@ -8,8 +8,8 @@ class AppConfig {
   /// flutter run --dart-define=EMULADORES=true
   static const bool usarEmuladores = bool.fromEnvironment('EMULADORES');
   static const String cafeteriaPorDefecto = 'cafeteria-central';
-  static const int anticipacionMinutos = 60;        // regla del beneficiario
+  static const int anticipacionMinutos = 60; // regla del beneficiario
   static const int intervaloRecogidaMinutos = 15;
-  static const int aperturaMinutos = 7 * 60 + 30;   // 07:30
-  static const int cierreMinutos = 23 * 60;         // cambiar a la hora sugerida
+  static const int aperturaMinutos = 7 * 60 + 30; // 07:30
+  static const int cierreMinutos = 23 * 60; // cambiar a la hora sugerida
 }

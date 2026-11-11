@@ -46,4 +46,13 @@ void main() {
     expect(cafe.precio, 25);
     expect(cafe.disponible, isFalse);
   });
+
+  test('alterna la disponibilidad con un toque', () async {
+    final vm = await _vm();
+    final cafe = vm.visibles.firstWhere((p) => p.nombre == 'Café americano');
+    await vm.alternarDisponible(cafe);
+    expect(vm.visibles.firstWhere((p) => p.id == cafe.id).disponible, isTrue);
+    await vm.alternarDisponible(vm.visibles.firstWhere((p) => p.id == cafe.id));
+    expect(vm.visibles.firstWhere((p) => p.id == cafe.id).disponible, isFalse);
+  });
 }
