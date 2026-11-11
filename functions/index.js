@@ -8,6 +8,8 @@ const { getStorage } = require('firebase-admin/storage');
 const { cancelarSiQuedoAgotado } = require('./cancelaciones');
 const { subirFoto, ErrorDeFoto } = require('./fotos');
 const { subirComprobante } = require('./comprobantes');
+const { cerrarDia } = require('./cierre');
+const { onSchedule } = require('firebase-functions/scheduler');
 
 initializeApp();
 
@@ -85,5 +87,14 @@ exports.subirComprobantePago = onCall(
       logger.error('No se pudo guardar el comprobante', { error: e.message });
       throw new HttpsError('internal', 'No se pudo guardar el comprobante.');
     }
+  },
+);
+
+// HU-23: cierre del día a las 23:55 hora de la cafetería.
+exports.cerrarDia = onSchedule(
+  { schedule: '55 23 * * *', timeZone: 'America/Mexico_City', region: SERVICIO.location },
+  async () => {
+    const r = await cerrarDia(getDataConnect(SERVICIO));
+    logger.info('Cierre del día', r);
   },
 );

@@ -245,6 +245,9 @@ query DiagnosticarPedido($cafeteriaId: UUID!, $recogerA: Timestamp!, $items: Any
       )
     SELECT CASE
       WHEN NOT EXISTS (SELECT 1 FROM cliente) THEN 'Tu perfil no está listo. Cierra sesión y vuelve a entrar.'
+      WHEN (SELECT count(*) FROM pedido o JOIN cliente ON o.usuario_id = cliente.usuario_id
+            WHERE o.estado = 'no_recogido' AND o.recoger_a > now() - interval '30 days') >= 3
+        THEN 'Tienes 3 pedidos sin recoger en los últimos 30 días; por ahora no puedes hacer pedidos nuevos.'
       WHEN NOT EXISTS (SELECT 1 FROM caf WHERE activa) THEN 'La cafetería no está recibiendo pedidos.'
       WHEN (SELECT count(*) FROM validos) <> (SELECT count(*) FROM pedidos_items)
         THEN 'Algún producto ya no está disponible. Revisa tu carrito.'
@@ -350,4 +353,19 @@ query PagosPorValidar @auth(level: USER) {
       nombre
     }
   }
+}
+
+# HU-23: pedidos que el alumno con sesión no recogió en los últimos 30 días.
+query MiConfianza @auth(level: USER) {
+  confianza: _selectFirst(
+    sql: """
+    SELECT count(*)::int AS "noRecogidos"
+    FROM pedido o
+    JOIN autenticacion a ON a.usuario_id = o.usuario_id
+    WHERE a.firebase_auth_uid = $1
+      AND o.estado = 'no_recogido'
+      AND o.recoger_a > now() - interval '30 days'
+    """
+    params: [{ _expr: "auth.uid" }]
+  )
 }
