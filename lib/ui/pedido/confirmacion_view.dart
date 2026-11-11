@@ -192,8 +192,8 @@ class _Ticket extends StatelessWidget {
                     ],
                     const SizedBox(height: 24),
                     OutlinedButton(
-                      onPressed: () =>
-                          Navigator.pushReplacementNamed(context, Routes.menu),
+                      onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                          context, Routes.menu, (_) => false),
                       child: const Text('Volver al menú'),
                     ),
                   ],

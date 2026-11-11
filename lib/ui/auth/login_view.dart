@@ -49,7 +49,7 @@ class _LoginFormState extends State<_LoginForm> {
     final perfil =
         await perfiles.miPerfil().then((p) => p, onError: (_) => null);
     avisos.registrar().ignore();
-    nav.pushReplacementNamed(Routes.inicioPara(perfil));
+    nav.pushNamedAndRemoveUntil(Routes.inicioPara(perfil), (_) => false);
   }
 
   @override
