@@ -1,5 +1,5 @@
-type Autenticacion @table {
-  firebaseAuthUid: String!
+type Autenticacion @table(key: "firebaseAuthUid") {
+  firebaseAuthUid: String! @default(expr: "auth.uid")
   correoElectronico: String!
   usuario: Usuario! @unique
 }
@@ -37,15 +37,26 @@ type Producto @table {
   cantidadEnStock: Int!
   descripcion: String
   urlDeImagen: String
+  categoria: String! @default(value: "General")
+  disponible: Boolean! @default(value: true)
   puesto: Puesto!
 }
 
 type Pedido @table {
+  folio: Int! @unique
   montoTotal: Float!
-  estado: String!
-  fechaCreacion: Timestamp!
-  esCredito: Boolean!
+  estado: String! @default(value: "pendiente")
+  fechaCreacion: Timestamp! @default(expr: "request.time")
+  recogerA: Timestamp!
+  notas: String
+  esCredito: Boolean! @default(value: false)
   usuario: Usuario!
+  puesto: Puesto!
+}
+
+type ContadorFolio @table(key: "nombre") {
+  nombre: String!
+  valor: Int!
 }
 
 type DetallePedido @table {

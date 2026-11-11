@@ -1,57 +1,9 @@
 rules_version = '2';
 
+// La app ya no usa Firestore: los datos viven en SQL Connect (dataconnect/).
+// Se cierra todo el acceso para que nadie pueda escribir en la base vieja.
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    function autenticado() {
-      return request.auth != null;
-    }
-
-    function esDueno(uid) {
-      return autenticado() && request.auth.uid == uid;
-    }
-
-    function pedidoNuevoValido(p) {
-      return p.keys().hasAll(['usuarioId', 'cafeteriaId', 'items', 'total',
-                              'estado', 'folio', 'recogerA', 'creadoEn'])
-        && p.keys().hasOnly(['usuarioId', 'cafeteriaId', 'items', 'total',
-                             'estado', 'folio', 'recogerA', 'creadoEn', 'notas'])
-        && esDueno(p.usuarioId)
-        && p.cafeteriaId is string
-        && p.items is list && p.items.size() > 0 && p.items.size() <= 50
-        && p.total is number && p.total > 0
-        && p.estado == 'pendiente'
-        && p.folio is string
-        && p.recogerA is timestamp && p.recogerA > request.time
-        && p.creadoEn == request.time
-        && (!('notas' in p) || (p.notas is string && p.notas.size() <= 200));
-    }
-
-    match /productos/{productoId} {
-      allow read: if autenticado();
-      allow write: if false;
-    }
-
-    // Cada alumno solo puede leer y crear sus propios pedidos.
-    // Cambiar el estado le corresponde a la cafetería (panel operativo, HU-06).
-    match /pedidos/{pedidoId} {
-      allow read: if autenticado() && resource.data.usuarioId == request.auth.uid;
-      allow create: if pedidoNuevoValido(request.resource.data);
-      allow update, delete: if false;
-    }
-
-    // Contador del folio: solo puede avanzar de uno en uno.
-    match /contadores/folio {
-      allow read: if autenticado();
-      allow create: if autenticado()
-        && request.resource.data.keys().hasOnly(['valor'])
-        && request.resource.data.valor == 1;
-      allow update: if autenticado()
-        && request.resource.data.keys().hasOnly(['valor'])
-        && request.resource.data.valor == resource.data.valor + 1;
-      allow delete: if false;
-    }
-
     match /{documento=**} {
       allow read, write: if false;
     }

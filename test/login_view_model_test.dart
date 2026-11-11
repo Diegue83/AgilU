@@ -30,8 +30,29 @@ void main() {
 
   test('en registro exige contraseña de al menos 6 caracteres', () async {
     final vm = LoginViewModel(MockAuthRepository())..alternarModo();
-    expect(await vm.enviar('alumno@utng.edu.mx', '123'), isFalse);
+    expect(await vm.enviar('alumno@utng.edu.mx', '123', nombre: 'Ana'),
+        isFalse);
     expect(vm.error, 'La contraseña debe tener al menos 6 caracteres.');
+  });
+
+  test('en registro exige el nombre', () async {
+    final vm = LoginViewModel(MockAuthRepository())..alternarModo();
+    expect(await vm.enviar('alumno@utng.edu.mx', '123456', nombre: '  '),
+        isFalse);
+    expect(vm.error, 'Escribe tu nombre.');
+  });
+
+  test('registra con nombre y datos válidos', () async {
+    final auth = MockAuthRepository();
+    final vm = LoginViewModel(auth)..alternarModo();
+    expect(await vm.enviar('alumno@utng.edu.mx', '123456', nombre: 'Ana'),
+        isTrue);
+    expect(auth.uidActual, isNotNull);
+  });
+
+  test('el nombre de cuentas viejas sale del correo', () {
+    expect(FirebaseAuthRepository.nombreDesdeCorreo('ana.lopez@utng.edu.mx'),
+        'ana.lopez');
   });
 
   test('inicia sesión con datos válidos y recorta espacios', () async {

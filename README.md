@@ -46,14 +46,49 @@ flutterfire configure --project=agilu-a232a
 
 Sin `lib/firebase_options.dart` la app no compila.
 
-En la consola de Firebase deben estar activos Authentication (correo/contraseña) y Cloud Firestore,
-con la colección `productos` (`nombre`, `descripcion`, `precio` number, `categoria`, `disponible` bool,
-`cafeteriaId`).
+En la consola de Firebase debe estar activo Authentication (correo/contraseña).
+
+## Base de datos: SQL Connect (Data Connect)
+Los datos viven en PostgreSQL a través de SQL Connect (`agilu-a232a-service`, `us-east4`):
+
+```
+dataconnect/
+├── schema/schema.gql   Tablas (Usuario, Autenticacion, Puesto, Producto, Pedido, DetallePedido…)
+├── agilu/              Conector de la app: queries.gql, mutations.gql, connector.yaml
+└── seed_data.gql       Catálogo de prueba (solo emulador)
+```
+
+El SDK de Dart se genera en `lib/dataconnect_generated/` (no se edita a mano). Después de cambiar
+el esquema o las operaciones:
+```bash
+firebase dataconnect:sdk:generate
+```
+
+Publicar esquema y conector (migra la base de Cloud SQL; revisar el plan antes de aceptar):
+```bash
+firebase deploy --only dataconnect
+```
+
+El catálogo de producción se da de alta con las mutaciones `CrearPuesto` y `CrearProducto`, que solo
+se pueden ejecutar con privilegios de administrador (`firebase dataconnect:execute`).
+
+### Correr la app contra los emuladores
+```bash
+firebase emulators:start --only auth,dataconnect --project demo-agilu
+```
+En otra terminal, sembrar el catálogo de prueba y abrir la app:
+```bash
+node test_dataconnect/sembrar.js
+flutter run --dart-define=EMULADORES=true
+```
 
 ## Seguridad
-- **Reglas de Firestore** (`firestore.rules`): cada alumno solo puede leer y crear sus propios
-  pedidos; nadie puede modificarlos ni borrarlos desde la app; el contador de folios solo avanza
-  de uno en uno; el menú es de solo lectura y requiere sesión. Publicarlas:
+- **Permisos en SQL Connect** (`dataconnect/agilu/*.gql`): todas las operaciones piden sesión
+  (`@auth(level: USER)`) y filtran por `auth.uid`, así que un alumno solo ve su perfil y sus pedidos.
+  `CrearPedido` toma los precios de la tabla `producto`, calcula el total y asigna el folio en el
+  servidor; rechaza productos no disponibles, de otro puesto, cantidades inválidas y horas pasadas.
+  Las altas del catálogo son `NO_ACCESS` (solo administrador).
+- **Firestore** ya no se usa: `firestore.rules` niega todo el acceso. Publicarlas:
   ```bash
   firebase deploy --only firestore:rules
   ```
@@ -67,11 +102,16 @@ con la colección `productos` (`nombre`, `descripcion`, `precio` number, `catego
 flutter test
 ```
 
-Pruebas de las reglas de Firestore (requieren Node.js, Java y Firebase CLI; usan el emulador):
+Pruebas de permisos de SQL Connect (requieren Node.js y Firebase CLI; usan los emuladores):
 ```bash
-cd test_reglas
+cd test_dataconnect
 npm install
 npm test
+```
+
+Prueba de integración en Windows contra los emuladores (registro, menú y pedido con los plugins reales):
+```bash
+firebase emulators:exec --only auth,dataconnect --project demo-agilu "flutter test integration_test -d windows"
 ```
 
 ## Flujo de trabajo

@@ -1,0 +1,11 @@
+{
+  "name": "agilu-test-dataconnect",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "cd .. && firebase emulators:exec --only auth,dataconnect --project demo-agilu \"node --test test_dataconnect/permisos.test.js\""
+  },
+  "devDependencies": {
+    "firebase": "^11.0.0"
+  }
+}

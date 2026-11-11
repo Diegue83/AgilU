@@ -26,11 +26,11 @@
     "indexes": "firestore.indexes.json"
   },
   "emulators": {
-    "firestore": {
-      "port": 8085
+    "auth": {
+      "port": 9099
     },
     "dataconnect": {
-      "dataDir": "dataconnect/.dataconnect/pgliteData"
+      "port": 9399
     }
   },
   "dataconnect": {
