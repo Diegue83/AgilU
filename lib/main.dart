@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import 'app.dart';
 import 'core/app_config.dart';
+import 'core/conector.dart';
 import 'core/routes.dart';
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/avisos_repository.dart';
@@ -22,7 +23,6 @@ import 'data/repositories/pedido_repository.dart';
 import 'data/repositories/producto_repository.dart';
 import 'data/repositories/perfil_repository.dart';
 import 'data/repositories/reporte_repository.dart';
-import 'dataconnect_generated/agilu.dart';
 import 'firebase_options.dart';
 import 'ui/cart/cart_view_model.dart';
 
@@ -35,8 +35,7 @@ Future<void> main() async {
     );
     if (AppConfig.usarEmuladores) {
       await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
-      AgiluConnector.instance.dataConnect
-          .useDataConnectEmulator('localhost', 9399);
+      conectorAgilu.dataConnect.useDataConnectEmulator('localhost', 9399);
       FirebaseFunctions.instanceFor(region: 'us-east4')
           .useFunctionsEmulator('localhost', 5001);
     }

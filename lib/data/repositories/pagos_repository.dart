@@ -1,3 +1,4 @@
+import '../../core/conector.dart';
 import '../../core/reglas_pedido.dart';
 import '../../dataconnect_generated/agilu.dart';
 import '../models/ticket.dart';
@@ -17,7 +18,7 @@ abstract class PagosRepository {
 class DataConnectPagosRepository implements PagosRepository {
   final AgiluConnector _conector;
   DataConnectPagosRepository({AgiluConnector? conector})
-      : _conector = conector ?? AgiluConnector.instance;
+      : _conector = conector ?? conectorAgilu;
 
   @override
   Future<List<PagoPorValidar>> porValidar() async {

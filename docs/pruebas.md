@@ -54,8 +54,13 @@ Ejecución local del 2026-11-10 en la rama `feature/hu-11-reporte-beneficiaria`:
 | --- | --- |
 | `flutter test` | 112 pruebas aprobadas, 0 fallidas |
 | `test_dataconnect` (emuladores Auth y SQL Connect) | 102 pruebas aprobadas, 0 fallidas |
-| `integration_test` en Windows | **No ejecutada todavía**: el emulador de SQL Connect no arrancó en el intento anterior (puerto ocupado). Pendiente de correr. |
+| `integration_test` en Windows (2026-11-11) | 2 pruebas aprobadas tras corregir App Check en escritorio (ver abajo) |
 
 Limitación conocida: el emulador de Functions aún no ejecuta disparadores de SQL
 Connect (`onMutationExecuted`), por eso esos manejadores se prueban llamándolos
 con el mismo evento que enviaría el servicio.
+
+Hallazgo de la prueba de integración (2026-11-11): en Windows el SDK de SQL Connect
+creaba Firebase App Check, que no existe en escritorio, y la app no podía consultar
+la base (`MissingPluginException`). Se corrigió con `lib/core/conector.dart`, que en
+Windows y Linux arma la conexión sin App Check.

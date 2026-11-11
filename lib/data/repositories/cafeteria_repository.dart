@@ -1,3 +1,4 @@
+import '../../core/conector.dart';
 import '../../dataconnect_generated/agilu.dart';
 import '../models/cafeteria.dart';
 
@@ -10,7 +11,7 @@ abstract class CafeteriaRepository {
 class DataConnectCafeteriaRepository implements CafeteriaRepository {
   final AgiluConnector _conector;
   DataConnectCafeteriaRepository({AgiluConnector? conector})
-      : _conector = conector ?? AgiluConnector.instance;
+      : _conector = conector ?? conectorAgilu;
 
   @override
   Future<Cafeteria?> miCafeteria() async {

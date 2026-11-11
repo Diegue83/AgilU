@@ -1,3 +1,4 @@
+import '../../core/conector.dart';
 import '../../dataconnect_generated/agilu.dart';
 import '../models/perfil.dart';
 
@@ -12,7 +13,7 @@ abstract class PerfilRepository {
 class DataConnectPerfilRepository implements PerfilRepository {
   final AgiluConnector _conector;
   DataConnectPerfilRepository({AgiluConnector? conector})
-      : _conector = conector ?? AgiluConnector.instance;
+      : _conector = conector ?? conectorAgilu;
 
   @override
   Future<void> asegurarPerfil(String nombre) async {

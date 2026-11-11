@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_data_connect/firebase_data_connect.dart';
 
+import '../../core/conector.dart';
 import '../../dataconnect_generated/agilu.dart';
 import '../models/pedido_panel.dart';
 
@@ -35,7 +36,7 @@ class DataConnectPanelRepository implements PanelRepository {
     AgiluConnector? conector,
     this.intervalo = const Duration(seconds: 10),
     DateTime Function()? ahora,
-  })  : _conector = conector ?? AgiluConnector.instance,
+  })  : _conector = conector ?? conectorAgilu,
         _ahora = ahora ?? DateTime.now;
 
   static Timestamp _ts(DateTime t) =>

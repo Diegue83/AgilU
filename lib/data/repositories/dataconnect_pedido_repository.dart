@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_data_connect/firebase_data_connect.dart';
 
+import '../../core/conector.dart';
 import '../../core/reglas_pedido.dart';
 import '../../dataconnect_generated/agilu.dart';
 import '../models/pedido.dart';
@@ -22,7 +23,7 @@ class DataConnectPedidoRepository implements PedidoRepository {
 
   DataConnectPedidoRepository(
       {AgiluConnector? conector, Random? azar, FirebaseFunctions? functions})
-      : _conector = conector ?? AgiluConnector.instance,
+      : _conector = conector ?? conectorAgilu,
         _azar = azar ?? Random.secure(),
         _functions = functions;
 
