@@ -2,6 +2,7 @@ import 'package:agilu/app.dart';
 import 'package:agilu/core/routes.dart';
 import 'package:agilu/data/models/perfil.dart';
 import 'package:agilu/data/repositories/auth_repository.dart';
+import 'package:agilu/data/repositories/cafeteria_repository.dart';
 import 'package:agilu/data/repositories/estacion_repository.dart';
 import 'package:agilu/data/repositories/foto_repository.dart';
 import 'package:agilu/data/repositories/menu_repository.dart';
@@ -31,6 +32,7 @@ Widget _app(AuthRepository auth,
         Provider<EstacionRepository>(create: (_) => MockEstacionRepository()),
         Provider<ProductoRepository>(create: (_) => MockProductoRepository()),
         Provider<FotoRepository>(create: (_) => MockFotoRepository()),
+        Provider<CafeteriaRepository>(create: (_) => MockCafeteriaRepository()),
         Provider<MenuRepository>(create: (_) => MockMenuRepository()),
         Provider<PedidoRepository>(create: (_) => MockPedidoRepository()),
         ChangeNotifierProvider(create: (_) => CartViewModel()),
@@ -218,5 +220,15 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Podrás agregar la foto después de guardar el producto.'),
         findsOneWidget);
+  });
+
+  testWidgets('el encargado ve los ajustes de su cafetería', (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository(),
+        perfiles: MockPerfilRepository(perfil: _encargado)));
+    await _iniciarSesion(tester);
+    await tester.tap(find.text('Cafetería'));
+    await tester.pumpAndSettle();
+    expect(find.text('Pedidos por horario'), findsOneWidget);
+    expect(find.text('07:30'), findsOneWidget);
   });
 }

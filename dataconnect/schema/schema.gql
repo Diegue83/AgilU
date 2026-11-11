@@ -35,6 +35,9 @@ type Cafeteria @table {
   cierreMinutos: Int! @default(value: 1380)
   anticipacionMinutos: Int! @default(value: 60)
   intervaloMinutos: Int! @default(value: 15)
+  # HU-10: pedidos que se aceptan por cada hora de recogida.
+  capacidadPorFranja: Int! @default(value: 20)
+  zonaHoraria: String! @default(value: "America/Mexico_City")
   activa: Boolean! @default(value: true)
 }
 

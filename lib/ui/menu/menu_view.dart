@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/routes.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/menu_repository.dart';
+import '../../data/repositories/pedido_repository.dart';
 import '../cart/cart_view_model.dart';
 import '../comun/foto_producto.dart';
 import 'menu_view_model.dart';
@@ -152,6 +153,7 @@ class _MenuScaffold extends StatelessWidget {
                           icon: const Icon(Icons.add_circle_outline),
                           onPressed: p.disponible && vm.puedePedir
                               ? () {
+                                  carrito.configurarCafeteria(vm.cafeteria);
                                   if (!carrito.agregar(p)) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
@@ -172,7 +174,10 @@ class _MenuScaffold extends StatelessWidget {
       floatingActionButton: carrito.cantidadTotal == 0
           ? null
           : FloatingActionButton.extended(
-              onPressed: () => Navigator.pushNamed(context, Routes.carrito),
+              onPressed: () {
+                carrito.cargarOcupacion(context.read<PedidoRepository>());
+                Navigator.pushNamed(context, Routes.carrito);
+              },
               icon: const Icon(Icons.shopping_cart),
               label: Text(
                   'Carrito (${carrito.cantidadTotal}) · \$${carrito.total.toStringAsFixed(2)}'),

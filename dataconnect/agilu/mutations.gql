@@ -25,6 +25,15 @@ mutation CrearPedido(
       cliente AS (
         SELECT usuario_id FROM autenticacion WHERE firebase_auth_uid = $1
       ),
+      caf AS (
+        SELECT * FROM cafeteria WHERE id = $3::uuid AND activa FOR UPDATE
+      ),
+      franja AS (
+        SELECT caf.*,
+               ($4::timestamptz AT TIME ZONE caf.zona_horaria) AS local,
+               (now() AT TIME ZONE caf.zona_horaria) AS ahora_local
+        FROM caf
+      ),
       pedidos_items AS (
         SELECT (e->>'productoId')::uuid AS producto_id,
                (e->>'cantidad')::int AS cantidad
@@ -47,8 +56,21 @@ mutation CrearPedido(
         SELECT 1 FROM cliente
         WHERE (SELECT count(*) FROM lineas) = (SELECT count(*) FROM pedidos_items)
           AND (SELECT count(*) FROM pedidos_items) BETWEEN 1 AND 50
-          AND $4::timestamptz > now()
           AND coalesce(length($5::text), 0) <= 200
+          AND EXISTS (
+            SELECT 1 FROM franja f
+            WHERE f.local::date = f.ahora_local::date
+              AND extract(second FROM f.local) = 0
+              AND (extract(hour FROM f.local) * 60 + extract(minute FROM f.local))
+                  BETWEEN f.apertura_minutos AND f.cierre_minutos
+              AND ((extract(hour FROM f.local) * 60 + extract(minute FROM f.local))::int
+                   - f.apertura_minutos) % f.intervalo_minutos = 0
+              AND $4::timestamptz >= now() + make_interval(mins => greatest(f.anticipacion_minutos - 5, 0))
+              AND $4::timestamptz > now()
+              AND (SELECT count(*) FROM pedido o
+                   WHERE o.cafeteria_id = f.id AND o.recoger_a = $4::timestamptz
+                     AND o.estado <> 'cancelado') < f.capacidad_por_franja
+          )
       ),
       folio AS (
         INSERT INTO contador_folio (nombre, valor)
@@ -395,4 +417,41 @@ mutation QuitarOferta($id: UUID!) @auth(level: USER) @transaction {
     }
     data: { precioOferta: null, ofertaHasta: null, esEspecialidad: false }
   ) @check(expr: "this != null", message: "El producto no es de tu cafetería")
+}
+
+# HU-10: el encargado ajusta horario, anticipación, intervalo y capacidad de su cafetería.
+mutation EditarMiCafeteria(
+  $aperturaMinutos: Int!
+  $cierreMinutos: Int!
+  $anticipacionMinutos: Int!
+  $intervaloMinutos: Int!
+  $capacidadPorFranja: Int!
+) @auth(level: USER) @transaction {
+  query @redact {
+    autenticacion(key: { firebaseAuthUid_expr: "auth.uid" })
+      @check(expr: "this != null", message: "No tienes perfil")
+      @check(expr: "vars.aperturaMinutos >= 0 && vars.cierreMinutos <= 1439 && vars.aperturaMinutos < vars.cierreMinutos", message: "El horario no es válido")
+      @check(expr: "vars.anticipacionMinutos >= 0 && vars.anticipacionMinutos <= 240", message: "La anticipación debe estar entre 0 y 240 minutos")
+      @check(expr: "vars.intervaloMinutos >= 5 && vars.intervaloMinutos <= 60", message: "El intervalo debe estar entre 5 y 60 minutos")
+      @check(expr: "vars.capacidadPorFranja >= 1 && vars.capacidadPorFranja <= 200", message: "La capacidad debe estar entre 1 y 200 pedidos") {
+      usuario {
+        rol @check(expr: "this != null && this.nombre == 'encargado'", message: "Solo el encargado puede hacer esto") {
+          nombre
+        }
+        cafeteria @check(expr: "this != null", message: "No tienes cafetería asignada") {
+          id
+        }
+      }
+    }
+  }
+  cafeteria_update(
+    key: { id_expr: "response.query.autenticacion.usuario.cafeteria.id" }
+    data: {
+      aperturaMinutos: $aperturaMinutos
+      cierreMinutos: $cierreMinutos
+      anticipacionMinutos: $anticipacionMinutos
+      intervaloMinutos: $intervaloMinutos
+      capacidadPorFranja: $capacidadPorFranja
+    }
+  )
 }
