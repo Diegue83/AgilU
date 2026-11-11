@@ -613,6 +613,63 @@ describe('menú del día (HU-19)', () => {
   });
 });
 
+describe('ofertas (HU-21)', () => {
+  const TORTA = 'b0000000000040008000000000000003';
+  const manana = () => new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+
+  test('el encargado publica una oferta y el pedido cobra el precio promocional', async () => {
+    await beto.mutation('PublicarOferta', {
+      id: TORTA, precioOferta: 35, hasta: manana(), esEspecialidad: true,
+    });
+    const { data } = await ana.query('ListarMenu');
+    const torta = data.productos.find((p) => p.id === TORTA);
+    assert.equal(torta.precioOferta, 35);
+    assert.equal(torta.esEspecialidad, true);
+
+    const vars = pedido({ items: [{ productoId: TORTA, cantidad: 2 }] });
+    await ana.mutation('CrearPedido', vars);
+    const res = await ana.query('MiPedido', { id: vars.id });
+    assert.equal(res.data.pedidos[0].montoTotal, 70);
+  });
+
+  test('una oferta vencida ya no se cobra', async () => {
+    await comoAdmin('../dataconnect/agilu/mutations.gql', 'QuitarOferta', { id: TORTA }).catch(() => {});
+    await adminDataConnect.executeGraphql(
+      'mutation V($id: UUID!, $h: Timestamp!) { producto_update(id: $id, data: { precioOferta: 10, ofertaHasta: $h }) }',
+      { variables: { id: TORTA, h: new Date(Date.now() - 60000).toISOString() } },
+    );
+    const vars = pedido({ items: [{ productoId: TORTA, cantidad: 1 }] });
+    await ana.mutation('CrearPedido', vars);
+    const res = await ana.query('MiPedido', { id: vars.id });
+    assert.equal(res.data.pedidos[0].montoTotal, 50);
+  });
+
+  test('el servidor valida precio y fecha de la oferta', async () => {
+    await assert.rejects(beto.mutation('PublicarOferta', {
+      id: TORTA, precioOferta: 60, hasta: manana(), esEspecialidad: false,
+    }), /menos que el precio normal/);
+    await assert.rejects(beto.mutation('PublicarOferta', {
+      id: TORTA, precioOferta: 30, hasta: new Date(Date.now() - 1000).toISOString(), esEspecialidad: false,
+    }), /ya pasó/);
+    await assert.rejects(beto.mutation('PublicarOferta', {
+      id: TORTA, precioOferta: 0, hasta: manana(), esEspecialidad: false,
+    }), /mayor a 0/);
+  });
+
+  test('solo el encargado de esa cafetería publica o quita ofertas', async () => {
+    await assert.rejects(ana.mutation('PublicarOferta', {
+      id: TORTA, precioOferta: 30, hasta: manana(), esEspecialidad: false,
+    }), /no es de tu cafetería/);
+    await assert.rejects(beto.mutation('PublicarOferta', {
+      id: CAPUCHINO, precioOferta: 30, hasta: manana(), esEspecialidad: false,
+    }), /no es de tu cafetería/);
+    await assert.rejects(ana.mutation('QuitarOferta', { id: TORTA }), /no es de tu cafetería/);
+    await beto.mutation('QuitarOferta', { id: TORTA });
+    const { data } = await ana.query('ListarMenu');
+    assert.equal(data.productos.find((p) => p.id === TORTA).precioOferta, null);
+  });
+});
+
 describe('catálogo', () => {
   test('un alumno no puede crear productos ni puestos', async () => {
     await assert.rejects(

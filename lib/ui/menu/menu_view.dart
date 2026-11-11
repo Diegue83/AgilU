@@ -75,6 +75,42 @@ class _MenuScaffold extends StatelessWidget {
                 content: Text(vm.aviso!),
                 actions: const [SizedBox.shrink()],
               ),
+            if (vm.destacados.isNotEmpty)
+              SizedBox(
+                height: 92,
+                child: ListView(
+                  key: const Key('destacados'),
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                  children: [
+                    for (final p in vm.destacados)
+                      Card(
+                        color: Theme.of(context).colorScheme.secondaryContainer,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                  p.ofertaVigente(vm.ahora)
+                                      ? 'Oferta'
+                                      : 'Especialidad',
+                                  style:
+                                      Theme.of(context).textTheme.labelSmall),
+                              Text(p.nombre,
+                                  style:
+                                      Theme.of(context).textTheme.titleSmall),
+                              Text(
+                                  '\$${p.precioEn(vm.ahora).toStringAsFixed(2)}'),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             SizedBox(
               height: 56,
               child: ListView(
@@ -106,7 +142,12 @@ class _MenuScaffold extends StatelessWidget {
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('\$${p.precio.toStringAsFixed(2)}'),
+                        if (p.ofertaVigente(vm.ahora))
+                          Text('\$${p.precio.toStringAsFixed(2)} ',
+                              style: const TextStyle(
+                                  decoration: TextDecoration.lineThrough,
+                                  color: Colors.grey)),
+                        Text('\$${p.precioEn(vm.ahora).toStringAsFixed(2)}'),
                         IconButton(
                           icon: const Icon(Icons.add_circle_outline),
                           onPressed: p.disponible && vm.puedePedir

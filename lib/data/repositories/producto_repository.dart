@@ -1,3 +1,5 @@
+import 'package:firebase_data_connect/firebase_data_connect.dart';
+
 import '../../dataconnect_generated/agilu.dart';
 import '../models/producto.dart';
 
@@ -8,6 +10,9 @@ abstract class ProductoRepository {
   Future<void> editar(String id, DatosProducto datos);
   Future<void> establecerDisponibilidad(String id, bool disponible);
   Future<void> eliminar(String id);
+  Future<void> publicarOferta(
+      String id, double precioOferta, DateTime hasta, bool esEspecialidad);
+  Future<void> quitarOferta(String id);
 }
 
 /// Lo que captura el encargado en el formulario de producto.
@@ -70,6 +75,22 @@ class DataConnectProductoRepository implements ProductoRepository {
   Future<void> eliminar(String id) =>
       _conector.eliminarMiProducto(id: id).execute();
 
+  @override
+  Future<void> publicarOferta(String id, double precioOferta, DateTime hasta,
+          bool esEspecialidad) =>
+      _conector
+          .publicarOferta(
+            id: id,
+            precioOferta: precioOferta,
+            hasta: Timestamp(0, hasta.millisecondsSinceEpoch ~/ 1000),
+            esEspecialidad: esEspecialidad,
+          )
+          .execute();
+
+  @override
+  Future<void> quitarOferta(String id) =>
+      _conector.quitarOferta(id: id).execute();
+
   static Producto aProducto(MisProductosProductos p) => Producto(
         id: p.id,
         nombre: p.nombre,
@@ -82,6 +103,9 @@ class DataConnectProductoRepository implements ProductoRepository {
         estacion: p.puesto.nombre,
         estacionOrden: p.puesto.orden,
         urlImagen: p.urlDeImagen,
+        precioOferta: p.precioOferta,
+        ofertaHasta: p.ofertaHasta?.toDateTime().toLocal(),
+        esEspecialidad: p.esEspecialidad,
       );
 }
 
@@ -207,4 +231,48 @@ class MockProductoRepository implements ProductoRepository {
   @override
   Future<void> eliminar(String id) async =>
       productos.removeWhere((p) => p.id == id);
+
+  void _reemplazar(String id, Producto Function(Producto) cambio) {
+    final i = productos.indexWhere((p) => p.id == id);
+    productos[i] = cambio(productos[i]);
+  }
+
+  @override
+  Future<void> publicarOferta(String id, double precioOferta, DateTime hasta,
+          bool esEspecialidad) async =>
+      _reemplazar(
+          id,
+          (p) => Producto(
+                id: p.id,
+                nombre: p.nombre,
+                descripcion: p.descripcion,
+                precio: p.precio,
+                categoria: p.categoria,
+                disponible: p.disponible,
+                cafeteriaId: p.cafeteriaId,
+                estacionId: p.estacionId,
+                estacion: p.estacion,
+                estacionOrden: p.estacionOrden,
+                urlImagen: p.urlImagen,
+                precioOferta: precioOferta,
+                ofertaHasta: hasta,
+                esEspecialidad: esEspecialidad,
+              ));
+
+  @override
+  Future<void> quitarOferta(String id) async => _reemplazar(
+      id,
+      (p) => Producto(
+            id: p.id,
+            nombre: p.nombre,
+            descripcion: p.descripcion,
+            precio: p.precio,
+            categoria: p.categoria,
+            disponible: p.disponible,
+            cafeteriaId: p.cafeteriaId,
+            estacionId: p.estacionId,
+            estacion: p.estacion,
+            estacionOrden: p.estacionOrden,
+            urlImagen: p.urlImagen,
+          ));
 }

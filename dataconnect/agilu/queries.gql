@@ -15,6 +15,9 @@ query ListarMenu
     categoria
     disponible
     urlDeImagen
+    precioOferta
+    ofertaHasta
+    esEspecialidad
     puesto {
       id
       nombre
@@ -137,6 +140,9 @@ query MisProductos @auth(level: USER) {
     disponible
     cantidadEnStock
     urlDeImagen
+    precioOferta
+    ofertaHasta
+    esEspecialidad
     puesto {
       id
       nombre

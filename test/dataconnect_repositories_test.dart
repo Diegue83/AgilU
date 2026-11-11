@@ -18,6 +18,10 @@ void main() {
       'precio': 40,
       'categoria': 'Desayunos',
       'disponible': false,
+      'urlDeImagen': null,
+      'precioOferta': null,
+      'ofertaHasta': null,
+      'esEspecialidad': false,
       'puesto': {
         'id': 'a0000000000040008000000000000001',
         'nombre': 'Guisados',
