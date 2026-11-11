@@ -17,8 +17,11 @@ class AppTheme {
           foregroundColor: Colors.white,
         ),
         filledButtonTheme: FilledButtonThemeData(
+          // El color del texto se fija junto con el fondo: los botones
+          // FilledButton.tonal toman este fondo y sin él quedaban ilegibles.
           style: FilledButton.styleFrom(
             backgroundColor: navy,
+            foregroundColor: Colors.white,
             minimumSize: const Size.fromHeight(48),
           ),
         ),
