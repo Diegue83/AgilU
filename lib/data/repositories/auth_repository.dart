@@ -1,5 +1,8 @@
 abstract class AuthRepository {
   String? get uidActual;
+
+  /// uid de la sesión que quedó abierta en el dispositivo, o null.
+  Future<String?> sesionGuardada();
   Future<String> iniciarSesion(String correo, String contrasena);
   Future<String> registrar(String correo, String contrasena);
   Future<void> cerrarSesion();
@@ -11,6 +14,9 @@ class MockAuthRepository implements AuthRepository {
 
   @override
   String? get uidActual => _uid;
+
+  @override
+  Future<String?> sesionGuardada() async => _uid;
 
   Future<String> _simular(String correo, String contrasena) async {
     await Future<void>.delayed(const Duration(milliseconds: 400));
