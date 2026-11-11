@@ -6,6 +6,6 @@
     "test": "node correr.mjs"
   },
   "devDependencies": {
-    "firebase": "^11.0.0"
+    "firebase": "^13.2.0"
   }
 }
