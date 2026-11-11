@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../core/app_config.dart';
 import '../../core/reglas_pedido.dart';
 import '../../data/models/cafeteria.dart';
 import '../../data/models/item_carrito.dart';
@@ -50,30 +51,53 @@ class CartViewModel extends ChangeNotifier {
   bool enviando = false;
   String? error;
 
+  /// HU-07: minutos de anticipación que aplican a este carrito. Si la cocina
+  /// lo permite y todo es de preparación inmediata, no se pide anticipación.
+  int get anticipacionMinutos {
+    final c = cafeteria;
+    if (c == null) return AppConfig.anticipacionMinutos;
+    final soloInmediatos = _items.isNotEmpty &&
+        _items.values.every((i) => i.producto.preparacionInmediata);
+    return c.permitirInmediatos && soloInmediatos ? 0 : c.anticipacionMinutos;
+  }
+
   List<DateTime> get horasDisponibles {
     final c = cafeteria;
     if (c == null) return ReglasPedido.horasDisponibles(_ahora());
     return ReglasPedido.horasDisponibles(
       _ahora(),
-      anticipacion: c.anticipacionMinutos,
+      anticipacion: anticipacionMinutos,
       intervalo: c.intervaloMinutos,
       apertura: c.aperturaMinutos,
       cierre: c.cierreMinutos,
     );
   }
 
-  /// Horas de hoy con la marca de las que ya se llenaron.
+  /// Horas de hoy: las que no cumplen la anticipación aparecen antes,
+  /// deshabilitadas, y las que ya se llenaron quedan marcadas.
   List<Franja> get franjas {
-    final capacidad = cafeteria?.capacidadPorFranja;
+    final c = cafeteria;
+    final capacidad = c?.capacidadPorFranja;
+    final validas = horasDisponibles;
+    final cercanas = c == null
+        ? const <DateTime>[]
+        : ReglasPedido.horasDisponibles(
+            _ahora(),
+            anticipacion: 0,
+            intervalo: c.intervaloMinutos,
+            apertura: c.aperturaMinutos,
+            cierre: c.cierreMinutos,
+          ).where((h) => !validas.contains(h)).toList();
     return [
-      for (final h in horasDisponibles)
+      for (final h in cercanas) Franja(h, muyPronto: true),
+      for (final h in validas)
         Franja(h,
             llena: capacidad != null && (_ocupacion[h] ?? 0) >= capacidad),
     ];
   }
 
   bool _horaLibre(DateTime h) =>
-      franjas.any((f) => f.hora.isAtSameMomentAs(h) && !f.llena);
+      franjas.any((f) => f.hora.isAtSameMomentAs(h) && f.elegible);
 
   bool agregar(Producto p) {
     if (_items.isNotEmpty && cafeteriaId != p.cafeteriaId) {
@@ -131,7 +155,7 @@ class CartViewModel extends ChangeNotifier {
     if (!horasDisponibles.any((h) => h.isAtSameMomentAs(recogerA!))) {
       recogerA = null;
       notifyListeners();
-      return 'Esa hora ya no cumple con 1 hora de anticipación. Elige otra.';
+      return 'Los pedidos requieren $anticipacionMinutos minutos de anticipación. Elige otra hora.';
     }
     if (!_horaLibre(recogerA!)) {
       recogerA = null;

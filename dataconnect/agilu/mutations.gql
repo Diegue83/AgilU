@@ -40,7 +40,7 @@ mutation CrearPedido(
         FROM jsonb_array_elements($6::jsonb) AS e
       ),
       lineas AS (
-        SELECT i.producto_id, i.cantidad,
+        SELECT i.producto_id, i.cantidad, p.preparacion_inmediata,
                CASE WHEN p.precio_oferta IS NOT NULL AND p.oferta_hasta > now()
                     THEN p.precio_oferta ELSE p.precio END AS precio
         FROM pedidos_items i
@@ -65,7 +65,10 @@ mutation CrearPedido(
                   BETWEEN f.apertura_minutos AND f.cierre_minutos
               AND ((extract(hour FROM f.local) * 60 + extract(minute FROM f.local))::int
                    - f.apertura_minutos) % f.intervalo_minutos = 0
-              AND $4::timestamptz >= now() + make_interval(mins => greatest(f.anticipacion_minutos - 5, 0))
+              AND $4::timestamptz >= now() + make_interval(mins =>
+                    CASE WHEN f.permitir_inmediatos
+                              AND NOT EXISTS (SELECT 1 FROM lineas WHERE NOT preparacion_inmediata)
+                         THEN 0 ELSE greatest(f.anticipacion_minutos - 5, 0) END)
               AND $4::timestamptz > now()
               AND (SELECT count(*) FROM pedido o
                    WHERE o.cafeteria_id = f.id AND o.recoger_a = $4::timestamptz
@@ -230,6 +233,7 @@ mutation CrearMiProducto(
   $precio: Float!
   $puestoId: UUID!
   $disponible: Boolean!
+  $preparacionInmediata: Boolean
 ) @auth(level: USER) @transaction {
   query @redact {
     puesto(id: $puestoId)
@@ -253,6 +257,7 @@ mutation CrearMiProducto(
       nombre: $nombre
       descripcion: $descripcion
       precio: $precio
+      preparacionInmediata: $preparacionInmediata
       disponible: $disponible
       puesto: { id: $puestoId }
     }
@@ -268,6 +273,7 @@ mutation EditarMiProducto(
   $precio: Float!
   $puestoId: UUID!
   $disponible: Boolean!
+  $preparacionInmediata: Boolean
 ) @auth(level: USER) @transaction {
   query @redact {
     producto(id: $id)
@@ -306,6 +312,7 @@ mutation EditarMiProducto(
       nombre: $nombre
       descripcion: $descripcion
       precio: $precio
+      preparacionInmediata: $preparacionInmediata
       disponible: $disponible
       puesto: { id: $puestoId }
     }
@@ -426,6 +433,7 @@ mutation EditarMiCafeteria(
   $anticipacionMinutos: Int!
   $intervaloMinutos: Int!
   $capacidadPorFranja: Int!
+  $permitirInmediatos: Boolean!
 ) @auth(level: USER) @transaction {
   query @redact {
     autenticacion(key: { firebaseAuthUid_expr: "auth.uid" })
@@ -452,6 +460,7 @@ mutation EditarMiCafeteria(
       anticipacionMinutos: $anticipacionMinutos
       intervaloMinutos: $intervaloMinutos
       capacidadPorFranja: $capacidadPorFranja
+      permitirInmediatos: $permitirInmediatos
     }
   )
 }

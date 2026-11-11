@@ -15,6 +15,7 @@ class Producto {
   final double? precioOferta;
   final DateTime? ofertaHasta;
   final bool esEspecialidad;
+  final bool preparacionInmediata;
 
   const Producto({
     required this.id,
@@ -31,6 +32,7 @@ class Producto {
     this.precioOferta,
     this.ofertaHasta,
     this.esEspecialidad = false,
+    this.preparacionInmediata = false,
   });
 
   /// HU-21: la oferta vale mientras no llegue su fecha de término.

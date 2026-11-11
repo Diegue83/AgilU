@@ -712,7 +712,7 @@ describe('pedido programado (HU-10)', () => {
   test('respeta la anticipación mínima configurada', async () => {
     await configurar({ an: 60 });
     assert.equal(await intentar(pedido({ recogerA: pronto(10) })),
-      'La hora elegida ya no cumple la anticipación mínima. Elige otra.');
+      'Los pedidos requieren 60 minutos de anticipación. Elige otra hora.');
     await restaurar();
   });
 
@@ -753,23 +753,65 @@ describe('pedido programado (HU-10)', () => {
   test('el encargado ajusta su cafetería y el servidor valida los valores', async () => {
     await beto.mutation('EditarMiCafeteria', {
       aperturaMinutos: 420, cierreMinutos: 1260, anticipacionMinutos: 30,
-      intervaloMinutos: 10, capacidadPorFranja: 15,
+      intervaloMinutos: 10, capacidadPorFranja: 15, permitirInmediatos: false,
     });
     const { data } = await beto.query('MiCafeteria');
     assert.equal(data.autenticacion.usuario.cafeteria.capacidadPorFranja, 15);
     await assert.rejects(beto.mutation('EditarMiCafeteria', {
       aperturaMinutos: 900, cierreMinutos: 600, anticipacionMinutos: 30,
-      intervaloMinutos: 10, capacidadPorFranja: 15,
+      intervaloMinutos: 10, capacidadPorFranja: 15, permitirInmediatos: false,
     }), /horario no es válido/);
     await assert.rejects(beto.mutation('EditarMiCafeteria', {
       aperturaMinutos: 420, cierreMinutos: 1260, anticipacionMinutos: 30,
-      intervaloMinutos: 10, capacidadPorFranja: 0,
+      intervaloMinutos: 10, capacidadPorFranja: 0, permitirInmediatos: false,
     }), /capacidad/);
     await assert.rejects(ana.mutation('EditarMiCafeteria', {
       aperturaMinutos: 420, cierreMinutos: 1260, anticipacionMinutos: 0,
-      intervaloMinutos: 10, capacidadPorFranja: 15,
+      intervaloMinutos: 10, capacidadPorFranja: 15, permitirInmediatos: false,
     }), /Solo el encargado/);
     await restaurar();
+  });
+});
+
+describe('anticipación mínima (HU-07)', () => {
+  const HORCHATA_ID = HORCHATA;
+  const configurar = (an, inmediatos) => adminDataConnect.executeGraphql(
+    `mutation C($id: UUID!, $an: Int!, $inm: Boolean!) {
+       cafeteria_update(id: $id, data: { anticipacionMinutos: $an, permitirInmediatos: $inm })
+     }`,
+    { variables: { id: CAFETERIA, an, inm: inmediatos } },
+  );
+  const marcarInmediato = (id, valor) => adminDataConnect.executeGraphql(
+    'mutation M($id: UUID!, $v: Boolean!) { producto_update(id: $id, data: { preparacionInmediata: $v }) }',
+    { variables: { id, v: valor } },
+  );
+
+  test('sin la opción habilitada, ni las bebidas se aceptan antes de la anticipación', async () => {
+    await configurar(60, false);
+    await marcarInmediato(HORCHATA_ID, true);
+    const r = await ana.mutation('CrearPedido', pedido({ recogerA: pronto(10), items: [{ productoId: HORCHATA_ID, cantidad: 1 }] }));
+    assert.equal(r.data._execute, 0);
+  });
+
+  test('con la opción habilitada, un pedido solo de inmediatos se acepta sin anticipación', async () => {
+    await configurar(60, true);
+    const r = await ana.mutation('CrearPedido', pedido({ recogerA: pronto(10), items: [{ productoId: HORCHATA_ID, cantidad: 1 }] }));
+    assert.equal(r.data._execute, 1);
+  });
+
+  test('si el pedido mezcla un platillo, vuelve a pedir la anticipación', async () => {
+    const r = await ana.mutation('CrearPedido', pedido({
+      recogerA: pronto(10),
+      items: [{ productoId: HORCHATA_ID, cantidad: 1 }, { productoId: MOLLETES, cantidad: 1 }],
+    }));
+    assert.equal(r.data._execute, 0);
+    const d = await ana.query('DiagnosticarPedido', {
+      cafeteriaId: CAFETERIA, recogerA: pronto(10),
+      items: [{ productoId: HORCHATA_ID, cantidad: 1 }, { productoId: MOLLETES, cantidad: 1 }],
+    });
+    assert.equal(d.data.diagnostico.motivo, 'Los pedidos requieren 60 minutos de anticipación. Elige otra hora.');
+    await configurar(0, false);
+    await marcarInmediato(HORCHATA_ID, false);
   });
 });
 

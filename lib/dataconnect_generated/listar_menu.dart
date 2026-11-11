@@ -28,6 +28,7 @@ class ListarMenuProductos {
   final double? precioOferta;
   final Timestamp? ofertaHasta;
   final bool esEspecialidad;
+  final bool preparacionInmediata;
   final ListarMenuProductosPuesto puesto;
   ListarMenuProductos.fromJson(dynamic json):
   
@@ -41,6 +42,7 @@ class ListarMenuProductos {
   precioOferta = json['precioOferta'] == null ? null : nativeFromJson<double>(json['precioOferta']),
   ofertaHasta = json['ofertaHasta'] == null ? null : Timestamp.fromJson(json['ofertaHasta']),
   esEspecialidad = nativeFromJson<bool>(json['esEspecialidad']),
+  preparacionInmediata = nativeFromJson<bool>(json['preparacionInmediata']),
   puesto = ListarMenuProductosPuesto.fromJson(json['puesto']);
   @override
   bool operator ==(Object other) {
@@ -62,11 +64,12 @@ class ListarMenuProductos {
     precioOferta == otherTyped.precioOferta && 
     ofertaHasta == otherTyped.ofertaHasta && 
     esEspecialidad == otherTyped.esEspecialidad && 
+    preparacionInmediata == otherTyped.preparacionInmediata && 
     puesto == otherTyped.puesto;
     
   }
   @override
-  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, descripcion.hashCode, precio.hashCode, categoria.hashCode, disponible.hashCode, urlDeImagen.hashCode, precioOferta.hashCode, ofertaHasta.hashCode, esEspecialidad.hashCode, puesto.hashCode]);
+  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, descripcion.hashCode, precio.hashCode, categoria.hashCode, disponible.hashCode, urlDeImagen.hashCode, precioOferta.hashCode, ofertaHasta.hashCode, esEspecialidad.hashCode, preparacionInmediata.hashCode, puesto.hashCode]);
   
 
   Map<String, dynamic> toJson() {
@@ -89,6 +92,7 @@ class ListarMenuProductos {
       json['ofertaHasta'] = ofertaHasta!.toJson();
     }
     json['esEspecialidad'] = nativeToJson<bool>(esEspecialidad);
+    json['preparacionInmediata'] = nativeToJson<bool>(preparacionInmediata);
     json['puesto'] = puesto.toJson();
     return json;
   }
@@ -104,6 +108,7 @@ class ListarMenuProductos {
     this.precioOferta,
     this.ofertaHasta,
     required this.esEspecialidad,
+    required this.preparacionInmediata,
     required this.puesto,
   });
 }

@@ -18,6 +18,7 @@ query ListarMenu
     precioOferta
     ofertaHasta
     esEspecialidad
+    preparacionInmediata
     puesto {
       id
       nombre
@@ -143,6 +144,7 @@ query MisProductos @auth(level: USER) {
     precioOferta
     ofertaHasta
     esEspecialidad
+    preparacionInmediata
     puesto {
       id
       nombre
@@ -165,6 +167,7 @@ query ListarCafeterias
     anticipacionMinutos
     intervaloMinutos
     capacidadPorFranja
+    permitirInmediatos
     zonaHoraria
     activa
   }
@@ -207,7 +210,7 @@ query DiagnosticarPedido($cafeteriaId: UUID!, $recogerA: Timestamp!, $items: Any
         FROM jsonb_array_elements($4::jsonb) AS e
       ),
       validos AS (
-        SELECT i.producto_id FROM pedidos_items i
+        SELECT i.producto_id, p.preparacion_inmediata FROM pedidos_items i
         JOIN producto p ON p.id = i.producto_id
         JOIN puesto e ON e.id = p.puesto_id
         WHERE p.disponible AND NOT p.eliminado AND e.activo
@@ -225,8 +228,11 @@ query DiagnosticarPedido($cafeteriaId: UUID!, $recogerA: Timestamp!, $items: Any
       WHEN (SELECT local::date <> ahora_local::date FROM m) THEN 'Solo se pueden hacer pedidos para hoy.'
       WHEN (SELECT minuto < apertura_minutos OR minuto > cierre_minutos FROM m)
         THEN 'La hora elegida está fuera del horario de la cafetería.'
-      WHEN (SELECT $3::timestamptz < now() + make_interval(mins => greatest(anticipacion_minutos - 5, 0)) FROM m)
-        THEN 'La hora elegida ya no cumple la anticipación mínima. Elige otra.'
+      WHEN (SELECT $3::timestamptz < now() + make_interval(mins =>
+              CASE WHEN permitir_inmediatos
+                        AND NOT EXISTS (SELECT 1 FROM validos WHERE NOT preparacion_inmediata)
+                   THEN 0 ELSE greatest(anticipacion_minutos - 5, 0) END) FROM m)
+        THEN 'Los pedidos requieren ' || (SELECT anticipacion_minutos FROM caf) || ' minutos de anticipación. Elige otra hora.'
       WHEN (SELECT count(*) FROM pedido o WHERE o.cafeteria_id = $2::uuid
               AND o.recoger_a = $3::timestamptz AND o.estado <> 'cancelado')
            >= (SELECT capacidad_por_franja FROM caf)
@@ -253,6 +259,7 @@ query MiCafeteria @auth(level: USER) {
         anticipacionMinutos
         intervaloMinutos
         capacidadPorFranja
+        permitirInmediatos
       }
     }
   }
