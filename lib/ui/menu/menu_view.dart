@@ -5,6 +5,7 @@ import '../../core/routes.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/menu_repository.dart';
 import '../cart/cart_view_model.dart';
+import '../comun/foto_producto.dart';
 import 'menu_view_model.dart';
 
 class MenuView extends StatelessWidget {
@@ -76,6 +77,7 @@ class _MenuScaffold extends StatelessWidget {
                   final p = vm.productosVisibles[i];
                   return ListTile(
                     enabled: p.disponible,
+                    leading: FotoProducto(url: p.urlImagen),
                     title: Text(p.nombre),
                     subtitle: Text(p.disponible
                         ? p.descripcion

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../../../core/errores.dart';
 import '../../../data/models/estacion.dart';
 import '../../../data/models/producto.dart';
+import '../../../data/repositories/foto_repository.dart';
 import '../../../data/repositories/producto_repository.dart';
 
 /// Errores de validación del formulario, por campo.
@@ -22,10 +23,43 @@ class ProductoFormViewModel extends ChangeNotifier {
   /// Producto que se edita; null cuando es un alta.
   final Producto? actual;
 
-  ProductoFormViewModel(this._repo, List<Estacion> estaciones, {this.actual})
-      : estaciones = estaciones
+  final FotoRepository? _fotos;
+
+  ProductoFormViewModel(this._repo, List<Estacion> estaciones,
+      {this.actual, FotoRepository? fotos})
+      : _fotos = fotos,
+        urlImagen = actual?.urlImagen,
+        estaciones = estaciones
             .where((e) => e.activo || e.id == actual?.estacionId)
             .toList();
+
+  String? urlImagen;
+  bool subiendoFoto = false;
+
+  /// La foto se puede cambiar una vez que el producto existe.
+  bool get puedeTenerFoto => editando && _fotos != null;
+
+  Future<bool> subirFoto(Uint8List bytes, String tipo) async {
+    if (!puedeTenerFoto || subiendoFoto) return false;
+    subiendoFoto = true;
+    error = null;
+    notifyListeners();
+    try {
+      urlImagen = await _fotos!.subir(actual!.id, bytes, tipo);
+      return true;
+    } catch (e) {
+      error = mensajeDeError(e, 'No se pudo guardar la foto.', const [
+        'La foto pesa más de 1 MB.',
+        'La foto debe ser JPG o PNG.',
+        'El archivo no es una imagen válida.',
+        'El producto no es de tu cafetería.',
+      ]);
+      return false;
+    } finally {
+      subiendoFoto = false;
+      notifyListeners();
+    }
+  }
 
   bool get editando => actual != null;
 

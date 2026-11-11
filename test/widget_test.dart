@@ -3,6 +3,7 @@ import 'package:agilu/core/routes.dart';
 import 'package:agilu/data/models/perfil.dart';
 import 'package:agilu/data/repositories/auth_repository.dart';
 import 'package:agilu/data/repositories/estacion_repository.dart';
+import 'package:agilu/data/repositories/foto_repository.dart';
 import 'package:agilu/data/repositories/menu_repository.dart';
 import 'package:agilu/data/repositories/pedido_repository.dart';
 import 'package:agilu/data/repositories/perfil_repository.dart';
@@ -29,6 +30,7 @@ Widget _app(AuthRepository auth,
             value: perfiles ?? MockPerfilRepository()),
         Provider<EstacionRepository>(create: (_) => MockEstacionRepository()),
         Provider<ProductoRepository>(create: (_) => MockProductoRepository()),
+        Provider<FotoRepository>(create: (_) => MockFotoRepository()),
         Provider<MenuRepository>(create: (_) => MockMenuRepository()),
         Provider<PedidoRepository>(create: (_) => MockPedidoRepository()),
         ChangeNotifierProvider(create: (_) => CartViewModel()),
@@ -97,6 +99,12 @@ void main() {
     await _iniciarSesion(tester);
     await tester.tap(find.text('Producto'));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Guardar'), 200,
+        scrollable: find
+            .ancestor(
+                of: find.byType(TextField).first,
+                matching: find.byType(Scrollable))
+            .first);
     await tester.tap(find.text('Guardar'));
     await tester.pump();
     expect(find.text('El nombre es obligatorio.'), findsOneWidget);
@@ -107,6 +115,12 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Guisados').last);
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Guardar'), 200,
+        scrollable: find
+            .ancestor(
+                of: find.byType(TextField).first,
+                matching: find.byType(Scrollable))
+            .first);
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
     expect(find.text('Torta cubana'), findsOneWidget);
@@ -124,6 +138,12 @@ void main() {
     expect(find.widgetWithText(TextField, '40.00'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField).at(2), '42');
+    await tester.scrollUntilVisible(find.text('Guardar'), 200,
+        scrollable: find
+            .ancestor(
+                of: find.byType(TextField).first,
+                matching: find.byType(Scrollable))
+            .first);
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
     expect(find.text('\$42.00'), findsOneWidget);
@@ -176,5 +196,27 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Eliminar'));
     await tester.pumpAndSettle();
     expect(find.text('Molletes'), findsNothing);
+  });
+
+  testWidgets('sin foto se muestra la imagen genérica', (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository(), ruta: Routes.menu));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('foto-generica')), findsWidgets);
+  });
+
+  testWidgets('la edición ofrece cambiar la foto y el alta lo explica',
+      (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository(),
+        perfiles: MockPerfilRepository(perfil: _encargado)));
+    await _iniciarSesion(tester);
+    await tester.tap(find.text('Molletes'));
+    await tester.pumpAndSettle();
+    expect(find.text('Galería'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Producto'));
+    await tester.pumpAndSettle();
+    expect(find.text('Podrás agregar la foto después de guardar el producto.'),
+        findsOneWidget);
   });
 }
