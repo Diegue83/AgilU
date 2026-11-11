@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/reglas_pedido.dart';
 import '../../../data/models/pedido_panel.dart';
 import '../../../data/repositories/panel_repository.dart';
+import 'escaner_view.dart';
 import 'panel_view_model.dart';
 
 /// Panel operativo: pedidos de hoy por estado, en el orden en que se recogen.
@@ -28,40 +30,59 @@ class _Panel extends StatelessWidget {
     EstadoPedido.listo,
   ];
 
+  /// El escáner usa la cámara del teléfono; en escritorio se entrega con PIN.
+  static bool get _hayCamara =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
+
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<PanelViewModel>();
     if (vm.cargando) return const Center(child: CircularProgressIndicator());
-    return ListView(
-      padding: const EdgeInsets.only(bottom: 24),
-      children: [
-        if (vm.error != null)
-          MaterialBanner(
-            content: Text(vm.error!),
-            actions: const [SizedBox.shrink()],
-          ),
-        if (vm.mensaje != null && vm.error == null)
-          MaterialBanner(
-            leading: const Icon(Icons.check_circle),
-            content: Text(vm.mensaje!),
-            actions: const [SizedBox.shrink()],
-          ),
-        for (final estado in _columnas) ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-            child: Text(
-              '${estado.etiqueta} (${vm.enEstado(estado).length})',
-              style: Theme.of(context).textTheme.titleMedium,
+    return Scaffold(
+      floatingActionButton: _hayCamara
+          ? FloatingActionButton.extended(
+              onPressed: () async {
+                final texto = await Navigator.push<String>(context,
+                    MaterialPageRoute(builder: (_) => const EscanerView()));
+                if (texto != null) await vm.entregarConQr(texto);
+              },
+              icon: const Icon(Icons.qr_code_scanner),
+              label: const Text('Escanear QR'),
+            )
+          : null,
+      body: ListView(
+        padding: const EdgeInsets.only(bottom: 96),
+        children: [
+          if (vm.error != null)
+            MaterialBanner(
+              content: Text(vm.error!),
+              actions: const [SizedBox.shrink()],
             ),
-          ),
-          if (vm.enEstado(estado).isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Text('Sin pedidos.'),
+          if (vm.mensaje != null && vm.error == null)
+            MaterialBanner(
+              leading: const Icon(Icons.check_circle),
+              content: Text(vm.mensaje!),
+              actions: const [SizedBox.shrink()],
             ),
-          for (final p in vm.enEstado(estado)) _Tarjeta(pedido: p),
+          for (final estado in _columnas) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+              child: Text(
+                '${estado.etiqueta} (${vm.enEstado(estado).length})',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            if (vm.enEstado(estado).isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Text('Sin pedidos.'),
+              ),
+            for (final p in vm.enEstado(estado)) _Tarjeta(pedido: p),
+          ],
         ],
-      ],
+      ),
     );
   }
 }

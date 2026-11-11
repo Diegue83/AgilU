@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../core/codigo_qr.dart';
 import '../../core/reglas_pedido.dart';
 import '../../core/routes.dart';
 import '../../data/models/pedido.dart';
@@ -125,6 +127,13 @@ class _Ticket extends StatelessWidget {
                           padding: const EdgeInsets.all(16),
                           child: Column(
                             children: [
+                              QrImageView(
+                                key: const Key('qr-entrega'),
+                                data: CodigoQr(t.id, t.codigoEntrega!).texto,
+                                size: 180,
+                                backgroundColor: Colors.white,
+                              ),
+                              const SizedBox(height: 8),
                               const Text('Código de entrega'),
                               Text(
                                 t.codigoEntrega!,
