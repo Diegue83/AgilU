@@ -111,4 +111,17 @@ void main() {
     expect(editado.descripcion, 'Con frijoles');
     expect(editado.cafeteriaId, original.cafeteriaId);
   });
+
+  test('eliminar quita el producto que se edita', () async {
+    final repo = MockProductoRepository();
+    final original = repo.productos.firstWhere((p) => p.id == '2');
+    final vm = ProductoFormViewModel(repo, _estaciones, actual: original);
+    expect(await vm.eliminar(), isTrue);
+    expect(repo.productos.any((p) => p.id == '2'), isFalse);
+  });
+
+  test('en un alta no hay nada que eliminar', () async {
+    final vm = ProductoFormViewModel(MockProductoRepository(), _estaciones);
+    expect(await vm.eliminar(), isFalse);
+  });
 }
