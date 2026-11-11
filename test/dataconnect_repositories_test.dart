@@ -22,6 +22,7 @@ void main() {
       'precioOferta': null,
       'ofertaHasta': null,
       'esEspecialidad': false,
+      'preparacionInmediata': false,
       'puesto': {
         'id': 'a0000000000040008000000000000001',
         'nombre': 'Guisados',

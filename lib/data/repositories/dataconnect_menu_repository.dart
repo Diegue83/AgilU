@@ -53,6 +53,7 @@ class DataConnectMenuRepository implements MenuRepository {
               anticipacionMinutos: c.anticipacionMinutos,
               intervaloMinutos: c.intervaloMinutos,
               capacidadPorFranja: c.capacidadPorFranja,
+              permitirInmediatos: c.permitirInmediatos,
               activa: c.activa,
             ))
         .toList();
@@ -73,5 +74,6 @@ class DataConnectMenuRepository implements MenuRepository {
         precioOferta: p.precioOferta,
         ofertaHasta: p.ofertaHasta?.toDateTime().toLocal(),
         esEspecialidad: p.esEspecialidad,
+        preparacionInmediata: p.preparacionInmediata,
       );
 }

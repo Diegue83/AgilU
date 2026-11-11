@@ -37,6 +37,9 @@ type Cafeteria @table {
   intervaloMinutos: Int! @default(value: 15)
   # HU-10: pedidos que se aceptan por cada hora de recogida.
   capacidadPorFranja: Int! @default(value: 20)
+  # HU-07: la cocina puede aceptar sin anticipación los pedidos que solo
+  # llevan artículos de preparación inmediata.
+  permitirInmediatos: Boolean! @default(value: false)
   zonaHoraria: String! @default(value: "America/Mexico_City")
   activa: Boolean! @default(value: true)
 }
@@ -63,6 +66,8 @@ type Producto @table {
   precioOferta: Float
   ofertaHasta: Timestamp
   esEspecialidad: Boolean! @default(value: false)
+  # HU-07: se entrega al momento (ej. bebidas frías preempaquetadas).
+  preparacionInmediata: Boolean! @default(value: false)
   puesto: Puesto!
 }
 

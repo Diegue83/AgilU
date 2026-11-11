@@ -6,9 +6,14 @@ class CrearMiProductoVariablesBuilder {
   double precio;
   String puestoId;
   bool disponible;
+  Optional<bool> _preparacionInmediata = Optional.optional(nativeFromJson, nativeToJson);
 
   final FirebaseDataConnect _dataConnect;  CrearMiProductoVariablesBuilder descripcion(String? t) {
    _descripcion.value = t;
+   return this;
+  }
+  CrearMiProductoVariablesBuilder preparacionInmediata(bool? t) {
+   _preparacionInmediata.value = t;
    return this;
   }
 
@@ -20,7 +25,7 @@ class CrearMiProductoVariablesBuilder {
   }
 
   MutationRef<CrearMiProductoData, CrearMiProductoVariables> ref() {
-    CrearMiProductoVariables vars= CrearMiProductoVariables(nombre: nombre,descripcion: _descripcion,precio: precio,puestoId: puestoId,disponible: disponible,);
+    CrearMiProductoVariables vars= CrearMiProductoVariables(nombre: nombre,descripcion: _descripcion,precio: precio,puestoId: puestoId,disponible: disponible,preparacionInmediata: _preparacionInmediata,);
     return _dataConnect.mutation("CrearMiProducto", dataDeserializer, varsSerializer, vars);
   }
 }
@@ -100,6 +105,7 @@ class CrearMiProductoVariables {
   final double precio;
   final String puestoId;
   final bool disponible;
+  late final Optional<bool>preparacionInmediata;
   @Deprecated('fromJson is deprecated for Variable classes as they are no longer required for deserialization.')
   CrearMiProductoVariables.fromJson(Map<String, dynamic> json):
   
@@ -116,6 +122,10 @@ class CrearMiProductoVariables {
   
   
   
+  
+    preparacionInmediata = Optional.optional(nativeFromJson, nativeToJson);
+    preparacionInmediata.value = json['preparacionInmediata'] == null ? null : nativeFromJson<bool>(json['preparacionInmediata']);
+  
   }
   @override
   bool operator ==(Object other) {
@@ -131,11 +141,12 @@ class CrearMiProductoVariables {
     descripcion == otherTyped.descripcion && 
     precio == otherTyped.precio && 
     puestoId == otherTyped.puestoId && 
-    disponible == otherTyped.disponible;
+    disponible == otherTyped.disponible && 
+    preparacionInmediata == otherTyped.preparacionInmediata;
     
   }
   @override
-  int get hashCode => Object.hashAll([nombre.hashCode, descripcion.hashCode, precio.hashCode, puestoId.hashCode, disponible.hashCode]);
+  int get hashCode => Object.hashAll([nombre.hashCode, descripcion.hashCode, precio.hashCode, puestoId.hashCode, disponible.hashCode, preparacionInmediata.hashCode]);
   
 
   Map<String, dynamic> toJson() {
@@ -147,6 +158,9 @@ class CrearMiProductoVariables {
     json['precio'] = nativeToJson<double>(precio);
     json['puestoId'] = nativeToJson<String>(puestoId);
     json['disponible'] = nativeToJson<bool>(disponible);
+    if(preparacionInmediata.state == OptionalState.set) {
+      json['preparacionInmediata'] = preparacionInmediata.toJson();
+    }
     return json;
   }
 
@@ -156,6 +170,7 @@ class CrearMiProductoVariables {
     required this.precio,
     required this.puestoId,
     required this.disponible,
+    required this.preparacionInmediata,
   });
 }
 

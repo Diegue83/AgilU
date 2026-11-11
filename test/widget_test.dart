@@ -107,8 +107,12 @@ void main() {
                 of: find.byType(TextField).first,
                 matching: find.byType(Scrollable))
             .first);
+    await tester.ensureVisible(find.text('Guardar'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Guardar'));
     await tester.pump();
+    await tester.drag(find.byType(ListView).last, const Offset(0, 2000));
+    await tester.pumpAndSettle();
     expect(find.text('El nombre es obligatorio.'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField).at(0), 'Torta cubana');
@@ -123,6 +127,8 @@ void main() {
                 of: find.byType(TextField).first,
                 matching: find.byType(Scrollable))
             .first);
+    await tester.ensureVisible(find.text('Guardar'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
     expect(find.text('Torta cubana'), findsOneWidget);
@@ -146,6 +152,8 @@ void main() {
                 of: find.byType(TextField).first,
                 matching: find.byType(Scrollable))
             .first);
+    await tester.ensureVisible(find.text('Guardar'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Guardar'));
     await tester.pumpAndSettle();
     expect(find.text('\$42.00'), findsOneWidget);
