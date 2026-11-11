@@ -1,13 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:agilu/core/conector.dart';
 import 'package:agilu/data/models/item_carrito.dart';
 import 'package:agilu/data/models/pedido.dart';
 import 'package:agilu/data/repositories/dataconnect_menu_repository.dart';
 import 'package:agilu/data/repositories/dataconnect_pedido_repository.dart';
 import 'package:agilu/data/repositories/firebase_auth_repository.dart';
 import 'package:agilu/data/repositories/perfil_repository.dart';
-import 'package:agilu/dataconnect_generated/agilu.dart';
 import 'package:agilu/firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -60,15 +60,14 @@ void main() {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
-    AgiluConnector.instance.dataConnect
-        .useDataConnectEmulator('localhost', 9399);
+    conectorAgilu.dataConnect.useDataConnectEmulator('localhost', 9399);
     await _sembrarCatalogo();
     auth = FirebaseAuthRepository(perfil: DataConnectPerfilRepository());
   });
 
   testWidgets('registro, menú y pedido contra SQL Connect', (tester) async {
     await auth.registrar(correo, '123456', 'Alumno de prueba');
-    final perfil = await AgiluConnector.instance.miPerfil().execute();
+    final perfil = await conectorAgilu.miPerfil().execute();
     expect(perfil.data.autenticacion?.usuario.nombre, 'Alumno de prueba');
 
     final menu = await DataConnectMenuRepository().observarMenu().first;
@@ -89,14 +88,14 @@ void main() {
     ));
     expect(creado.folio, matches(RegExp(r'^AGU-\d{5}$')));
 
-    final mios = await AgiluConnector.instance.misPedidos().execute();
+    final mios = await conectorAgilu.misPedidos().execute();
     expect(mios.data.pedidos, hasLength(1));
     expect(mios.data.pedidos.single.montoTotal, 100);
     expect(mios.data.pedidos.single.notas, 'Sin cebolla');
 
     await auth.cerrarSesion();
     await auth.iniciarSesion(correo, '123456');
-    final otraVez = await AgiluConnector.instance.misPedidos().execute();
+    final otraVez = await conectorAgilu.misPedidos().execute();
     expect(otraVez.data.pedidos, hasLength(1));
     await auth.cerrarSesion();
   });
@@ -117,7 +116,7 @@ void main() {
       )),
       throwsA(isA<Exception>()),
     );
-    final mios = await AgiluConnector.instance.misPedidos().execute();
+    final mios = await conectorAgilu.misPedidos().execute();
     expect(mios.data.pedidos, isEmpty);
     await auth.cerrarSesion();
   });

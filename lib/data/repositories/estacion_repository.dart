@@ -1,3 +1,4 @@
+import '../../core/conector.dart';
 import '../../dataconnect_generated/agilu.dart';
 import '../models/estacion.dart';
 
@@ -12,7 +13,7 @@ abstract class EstacionRepository {
 class DataConnectEstacionRepository implements EstacionRepository {
   final AgiluConnector _conector;
   DataConnectEstacionRepository({AgiluConnector? conector})
-      : _conector = conector ?? AgiluConnector.instance;
+      : _conector = conector ?? conectorAgilu;
 
   @override
   Future<List<Estacion>> misEstaciones() async {

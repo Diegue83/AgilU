@@ -1,6 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../core/conector.dart';
 import '../../dataconnect_generated/agilu.dart';
 
 /// HU-05: registra el dispositivo para recibir el aviso "pedido listo".
@@ -24,7 +25,7 @@ bool get pushDisponible =>
 class FcmAvisosRepository implements AvisosRepository {
   final AgiluConnector _conector;
   FcmAvisosRepository({AgiluConnector? conector})
-      : _conector = conector ?? AgiluConnector.instance;
+      : _conector = conector ?? conectorAgilu;
 
   String get _plataforma => kIsWeb
       ? 'web'

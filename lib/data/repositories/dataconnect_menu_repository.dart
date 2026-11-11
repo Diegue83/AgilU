@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../../core/conector.dart';
 import '../../dataconnect_generated/agilu.dart';
 import '../models/cafeteria.dart';
 import '../models/producto.dart';
@@ -14,7 +15,7 @@ class DataConnectMenuRepository implements MenuRepository {
   DataConnectMenuRepository({
     AgiluConnector? conector,
     this.intervalo = const Duration(seconds: 30),
-  }) : _conector = conector ?? AgiluConnector.instance;
+  }) : _conector = conector ?? conectorAgilu;
 
   @override
   Stream<List<Producto>> observarMenu() {

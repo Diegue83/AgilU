@@ -1,5 +1,6 @@
 import 'package:firebase_data_connect/firebase_data_connect.dart';
 
+import '../../core/conector.dart';
 import '../../dataconnect_generated/agilu.dart';
 import '../models/producto.dart';
 
@@ -37,7 +38,7 @@ class DatosProducto {
 class DataConnectProductoRepository implements ProductoRepository {
   final AgiluConnector _conector;
   DataConnectProductoRepository({AgiluConnector? conector})
-      : _conector = conector ?? AgiluConnector.instance;
+      : _conector = conector ?? conectorAgilu;
 
   @override
   Future<List<Producto>> misProductos() async {

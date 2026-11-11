@@ -1,5 +1,6 @@
 import 'package:firebase_data_connect/firebase_data_connect.dart';
 
+import '../../core/conector.dart';
 import '../../dataconnect_generated/agilu.dart';
 import '../models/reporte.dart';
 
@@ -10,7 +11,7 @@ abstract class ReporteRepository {
 class DataConnectReporteRepository implements ReporteRepository {
   final AgiluConnector _conector;
   DataConnectReporteRepository({AgiluConnector? conector})
-      : _conector = conector ?? AgiluConnector.instance;
+      : _conector = conector ?? conectorAgilu;
 
   static Timestamp _ts(DateTime t) =>
       Timestamp(0, t.millisecondsSinceEpoch ~/ 1000);
