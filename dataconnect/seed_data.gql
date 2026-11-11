@@ -1,8 +1,22 @@
 mutation SembrarCatalogo @transaction {
+  rol_insertMany(
+    data: [
+      { id: "d0000000-0000-4000-8000-000000000001", nombre: "alumno", descripcion: "Pide en la app" }
+      { id: "d0000000-0000-4000-8000-000000000002", nombre: "encargado", descripcion: "Administra el menú y los pedidos de su cafetería" }
+      { id: "d0000000-0000-4000-8000-000000000003", nombre: "beneficiaria", descripcion: "Consulta los reportes" }
+    ]
+  )
+  cafeteria_insertMany(
+    data: [
+      { id: "c0000000-0000-4000-8000-000000000001", nombre: "Cafetería central", ubicacion: "Edificio A" }
+      { id: "c0000000-0000-4000-8000-000000000002", nombre: "Barra de café", ubicacion: "Biblioteca" }
+    ]
+  )
   puesto_insertMany(
     data: [
-      { id: "a0000000-0000-4000-8000-000000000001", nombre: "Cafetería central", ubicacion: "Edificio A" }
-      { id: "a0000000-0000-4000-8000-000000000002", nombre: "Barra de café", ubicacion: "Biblioteca" }
+      { id: "a0000000-0000-4000-8000-000000000001", nombre: "Guisados", orden: 1, cafeteria: { id: "c0000000-0000-4000-8000-000000000001" } }
+      { id: "a0000000-0000-4000-8000-000000000003", nombre: "Tiendita", orden: 2, cafeteria: { id: "c0000000-0000-4000-8000-000000000001" } }
+      { id: "a0000000-0000-4000-8000-000000000002", nombre: "Barra", orden: 1, cafeteria: { id: "c0000000-0000-4000-8000-000000000002" } }
     ]
   )
   producto_insertMany(
@@ -10,8 +24,8 @@ mutation SembrarCatalogo @transaction {
       { id: "b0000000-0000-4000-8000-000000000001", nombre: "Chilaquiles verdes", descripcion: "Con pollo y crema", precio: 55, cantidadEnStock: 20, categoria: "Desayunos", disponible: true, puesto: { id: "a0000000-0000-4000-8000-000000000001" } }
       { id: "b0000000-0000-4000-8000-000000000002", nombre: "Molletes", descripcion: "Con pico de gallo", precio: 40, cantidadEnStock: 20, categoria: "Desayunos", disponible: true, puesto: { id: "a0000000-0000-4000-8000-000000000001" } }
       { id: "b0000000-0000-4000-8000-000000000003", nombre: "Torta de milanesa", descripcion: "Con aguacate", precio: 50, cantidadEnStock: 15, categoria: "Comidas", disponible: true, puesto: { id: "a0000000-0000-4000-8000-000000000001" } }
-      { id: "b0000000-0000-4000-8000-000000000004", nombre: "Agua de horchata", descripcion: "500 ml", precio: 20, cantidadEnStock: 30, categoria: "Bebidas", disponible: true, puesto: { id: "a0000000-0000-4000-8000-000000000001" } }
-      { id: "b0000000-0000-4000-8000-000000000005", nombre: "Café americano", descripcion: "12 oz", precio: 25, cantidadEnStock: 0, categoria: "Bebidas", disponible: false, puesto: { id: "a0000000-0000-4000-8000-000000000001" } }
+      { id: "b0000000-0000-4000-8000-000000000004", nombre: "Agua de horchata", descripcion: "500 ml", precio: 20, cantidadEnStock: 30, categoria: "Bebidas", disponible: true, puesto: { id: "a0000000-0000-4000-8000-000000000003" } }
+      { id: "b0000000-0000-4000-8000-000000000005", nombre: "Café americano", descripcion: "12 oz", precio: 25, cantidadEnStock: 0, categoria: "Bebidas", disponible: false, puesto: { id: "a0000000-0000-4000-8000-000000000003" } }
       { id: "b0000000-0000-4000-8000-000000000006", nombre: "Capuchino", descripcion: "12 oz", precio: 35, cantidadEnStock: 25, categoria: "Bebidas", disponible: true, puesto: { id: "a0000000-0000-4000-8000-000000000002" } }
     ]
   )

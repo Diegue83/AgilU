@@ -11,10 +11,10 @@ mutation CrearPerfil($nombre: String!) @auth(level: USER) @transaction {
 
 # El precio y el total salen de la tabla producto, nunca del cliente.
 # El folio avanza en la misma sentencia, así que dos pedidos no comparten folio.
-# Si un producto no existe, no está disponible o es de otro puesto, no se inserta nada.
+# Si un producto no existe, no está disponible o es de otra cafetería, no se inserta nada.
 mutation CrearPedido(
   $id: UUID!
-  $puestoId: UUID!
+  $cafeteriaId: UUID!
   $recogerA: Timestamp!
   $notas: String
   $items: Any!
@@ -34,8 +34,10 @@ mutation CrearPedido(
         SELECT i.producto_id, i.cantidad, p.precio
         FROM pedidos_items i
         JOIN producto p ON p.id = i.producto_id
+        JOIN puesto e ON e.id = p.puesto_id
         WHERE p.disponible
-          AND p.puesto_id = $3::uuid
+          AND e.activo
+          AND e.cafeteria_id = $3::uuid
           AND i.cantidad BETWEEN 1 AND 50
       ),
       valido AS (
@@ -53,7 +55,7 @@ mutation CrearPedido(
       ),
       nuevo AS (
         INSERT INTO pedido (id, folio, monto_total, estado, fecha_creacion,
-                            recoger_a, notas, es_credito, usuario_id, puesto_id)
+                            recoger_a, notas, es_credito, usuario_id, cafeteria_id)
         SELECT $2::uuid, folio.valor, (SELECT sum(precio * cantidad) FROM lineas),
                'pendiente', now(), $4::timestamptz, nullif(trim($5::text), ''),
                false, cliente.usuario_id, $3::uuid
@@ -64,14 +66,42 @@ mutation CrearPedido(
     SELECT gen_random_uuid(), lineas.cantidad, lineas.precio, nuevo.id, lineas.producto_id
     FROM lineas, nuevo
     """
-    params: [{ _expr: "auth.uid" }, $id, $puestoId, $recogerA, $notas, $items]
+    params: [{ _expr: "auth.uid" }, $id, $cafeteriaId, $recogerA, $notas, $items]
   )
 }
 
-# Altas del catálogo: solo con privilegios de administrador
-# (firebase dataconnect:execute). Las pantallas de HU-13 y HU-18 las reemplazarán.
-mutation CrearPuesto($nombre: String!, $ubicacion: String!) @auth(level: NO_ACCESS) {
-  puesto_insert(data: { nombre: $nombre, ubicacion: $ubicacion })
+# Operaciones de administrador (firebase dataconnect:execute o Admin SDK).
+mutation CrearCafeteria($nombre: String!, $ubicacion: String) @auth(level: NO_ACCESS) {
+  cafeteria_insert(data: { nombre: $nombre, ubicacion: $ubicacion })
+}
+
+mutation CrearPuesto($nombre: String!, $cafeteriaId: UUID!) @auth(level: NO_ACCESS) {
+  puesto_insert(data: { nombre: $nombre, cafeteria: { id: $cafeteriaId } })
+}
+
+# Asigna un rol (encargado, beneficiaria) y su cafetería al usuario con ese correo.
+mutation AsignarRol($correo: String!, $rol: String!, $cafeteriaId: UUID)
+  @auth(level: NO_ACCESS)
+  @transaction {
+  query @redact {
+    autenticacions(where: { correoElectronico: { eq: $correo } }, limit: 1)
+      @check(expr: "this.size() == 1", message: "No hay un usuario con ese correo") {
+      usuario {
+        id
+      }
+    }
+    rols(where: { nombre: { eq: $rol } }, limit: 1)
+      @check(expr: "this.size() == 1", message: "Rol desconocido") {
+      id
+    }
+  }
+  usuario_update(
+    key: { id_expr: "response.query.autenticacions[0].usuario.id" }
+    data: {
+      rolId_expr: "response.query.rols[0].id"
+      cafeteria: { id: $cafeteriaId }
+    }
+  )
 }
 
 mutation CrearProducto(

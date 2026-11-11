@@ -24,7 +24,7 @@ class MisPedidosPedidos {
   final String estado;
   final Timestamp recogerA;
   final String? notas;
-  final MisPedidosPedidosPuesto puesto;
+  final MisPedidosPedidosCafeteria cafeteria;
   final List<MisPedidosPedidosDetallePedidosOnPedido> detallePedidos_on_pedido;
   MisPedidosPedidos.fromJson(dynamic json):
   
@@ -34,7 +34,7 @@ class MisPedidosPedidos {
   estado = nativeFromJson<String>(json['estado']),
   recogerA = Timestamp.fromJson(json['recogerA']),
   notas = json['notas'] == null ? null : nativeFromJson<String>(json['notas']),
-  puesto = MisPedidosPedidosPuesto.fromJson(json['puesto']),
+  cafeteria = MisPedidosPedidosCafeteria.fromJson(json['cafeteria']),
   detallePedidos_on_pedido = (json['detallePedidos_on_pedido'] as List<dynamic>)
         .map((e) => MisPedidosPedidosDetallePedidosOnPedido.fromJson(e))
         .toList();
@@ -54,12 +54,12 @@ class MisPedidosPedidos {
     estado == otherTyped.estado && 
     recogerA == otherTyped.recogerA && 
     notas == otherTyped.notas && 
-    puesto == otherTyped.puesto && 
+    cafeteria == otherTyped.cafeteria && 
     detallePedidos_on_pedido == otherTyped.detallePedidos_on_pedido;
     
   }
   @override
-  int get hashCode => Object.hashAll([id.hashCode, folio.hashCode, montoTotal.hashCode, estado.hashCode, recogerA.hashCode, notas.hashCode, puesto.hashCode, detallePedidos_on_pedido.hashCode]);
+  int get hashCode => Object.hashAll([id.hashCode, folio.hashCode, montoTotal.hashCode, estado.hashCode, recogerA.hashCode, notas.hashCode, cafeteria.hashCode, detallePedidos_on_pedido.hashCode]);
   
 
   Map<String, dynamic> toJson() {
@@ -72,7 +72,7 @@ class MisPedidosPedidos {
     if (notas != null) {
       json['notas'] = nativeToJson<String?>(notas);
     }
-    json['puesto'] = puesto.toJson();
+    json['cafeteria'] = cafeteria.toJson();
     json['detallePedidos_on_pedido'] = detallePedidos_on_pedido.map((e) => e.toJson()).toList();
     return json;
   }
@@ -84,15 +84,15 @@ class MisPedidosPedidos {
     required this.estado,
     required this.recogerA,
     this.notas,
-    required this.puesto,
+    required this.cafeteria,
     required this.detallePedidos_on_pedido,
   });
 }
 
 @immutable
-class MisPedidosPedidosPuesto {
+class MisPedidosPedidosCafeteria {
   final String nombre;
-  MisPedidosPedidosPuesto.fromJson(dynamic json):
+  MisPedidosPedidosCafeteria.fromJson(dynamic json):
   
   nombre = nativeFromJson<String>(json['nombre']);
   @override
@@ -104,7 +104,7 @@ class MisPedidosPedidosPuesto {
       return false;
     }
 
-    final MisPedidosPedidosPuesto otherTyped = other as MisPedidosPedidosPuesto;
+    final MisPedidosPedidosCafeteria otherTyped = other as MisPedidosPedidosCafeteria;
     return nombre == otherTyped.nombre;
     
   }
@@ -118,7 +118,7 @@ class MisPedidosPedidosPuesto {
     return json;
   }
 
-  MisPedidosPedidosPuesto({
+  MisPedidosPedidosCafeteria({
     required this.nombre,
   });
 }

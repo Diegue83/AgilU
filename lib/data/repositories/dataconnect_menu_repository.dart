@@ -47,6 +47,8 @@ class DataConnectMenuRepository implements MenuRepository {
         precio: p.precio,
         categoria: p.categoria,
         disponible: p.disponible,
-        cafeteriaId: p.puesto.id,
+        cafeteriaId: p.puesto.cafeteria.id,
+        estacionId: p.puesto.id,
+        estacion: p.puesto.nombre,
       );
 }

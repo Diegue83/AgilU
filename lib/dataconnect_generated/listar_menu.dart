@@ -86,7 +86,56 @@ class ListarMenuProductos {
 class ListarMenuProductosPuesto {
   final String id;
   final String nombre;
+  final int orden;
+  final ListarMenuProductosPuestoCafeteria cafeteria;
   ListarMenuProductosPuesto.fromJson(dynamic json):
+  
+  id = nativeFromJson<String>(json['id']),
+  nombre = nativeFromJson<String>(json['nombre']),
+  orden = nativeFromJson<int>(json['orden']),
+  cafeteria = ListarMenuProductosPuestoCafeteria.fromJson(json['cafeteria']);
+  @override
+  bool operator ==(Object other) {
+    if(identical(this, other)) {
+      return true;
+    }
+    if(other.runtimeType != runtimeType) {
+      return false;
+    }
+
+    final ListarMenuProductosPuesto otherTyped = other as ListarMenuProductosPuesto;
+    return id == otherTyped.id && 
+    nombre == otherTyped.nombre && 
+    orden == otherTyped.orden && 
+    cafeteria == otherTyped.cafeteria;
+    
+  }
+  @override
+  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, orden.hashCode, cafeteria.hashCode]);
+  
+
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> json = {};
+    json['id'] = nativeToJson<String>(id);
+    json['nombre'] = nativeToJson<String>(nombre);
+    json['orden'] = nativeToJson<int>(orden);
+    json['cafeteria'] = cafeteria.toJson();
+    return json;
+  }
+
+  ListarMenuProductosPuesto({
+    required this.id,
+    required this.nombre,
+    required this.orden,
+    required this.cafeteria,
+  });
+}
+
+@immutable
+class ListarMenuProductosPuestoCafeteria {
+  final String id;
+  final String nombre;
+  ListarMenuProductosPuestoCafeteria.fromJson(dynamic json):
   
   id = nativeFromJson<String>(json['id']),
   nombre = nativeFromJson<String>(json['nombre']);
@@ -99,7 +148,7 @@ class ListarMenuProductosPuesto {
       return false;
     }
 
-    final ListarMenuProductosPuesto otherTyped = other as ListarMenuProductosPuesto;
+    final ListarMenuProductosPuestoCafeteria otherTyped = other as ListarMenuProductosPuestoCafeteria;
     return id == otherTyped.id && 
     nombre == otherTyped.nombre;
     
@@ -115,7 +164,7 @@ class ListarMenuProductosPuesto {
     return json;
   }
 
-  ListarMenuProductosPuesto({
+  ListarMenuProductosPuestoCafeteria({
     required this.id,
     required this.nombre,
   });

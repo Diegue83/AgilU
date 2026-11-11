@@ -2,7 +2,7 @@ part of 'agilu.dart';
 
 class CrearPedidoVariablesBuilder {
   String id;
-  String puestoId;
+  String cafeteriaId;
   Timestamp recogerA;
   Optional<String> _notas = Optional.optional(nativeFromJson, nativeToJson);
   AnyValue items;
@@ -12,7 +12,7 @@ class CrearPedidoVariablesBuilder {
    return this;
   }
 
-  CrearPedidoVariablesBuilder(this._dataConnect, {required  this.id,required  this.puestoId,required  this.recogerA,required  this.items,});
+  CrearPedidoVariablesBuilder(this._dataConnect, {required  this.id,required  this.cafeteriaId,required  this.recogerA,required  this.items,});
   Deserializer<CrearPedidoData> dataDeserializer = (dynamic json)  => CrearPedidoData.fromJson(jsonDecode(json));
   Serializer<CrearPedidoVariables> varsSerializer = (CrearPedidoVariables vars) => jsonEncode(vars.toJson());
   Future<OperationResult<CrearPedidoData, CrearPedidoVariables>> execute() {
@@ -20,7 +20,7 @@ class CrearPedidoVariablesBuilder {
   }
 
   MutationRef<CrearPedidoData, CrearPedidoVariables> ref() {
-    CrearPedidoVariables vars= CrearPedidoVariables(id: id,puestoId: puestoId,recogerA: recogerA,notas: _notas,items: items,);
+    CrearPedidoVariables vars= CrearPedidoVariables(id: id,cafeteriaId: cafeteriaId,recogerA: recogerA,notas: _notas,items: items,);
     return _dataConnect.mutation("CrearPedido", dataDeserializer, varsSerializer, vars);
   }
 }
@@ -64,7 +64,7 @@ class CrearPedidoData {
 @immutable
 class CrearPedidoVariables {
   final String id;
-  final String puestoId;
+  final String cafeteriaId;
   final Timestamp recogerA;
   late final Optional<String>notas;
   final AnyValue items;
@@ -72,7 +72,7 @@ class CrearPedidoVariables {
   CrearPedidoVariables.fromJson(Map<String, dynamic> json):
   
   id = nativeFromJson<String>(json['id']),
-  puestoId = nativeFromJson<String>(json['puestoId']),
+  cafeteriaId = nativeFromJson<String>(json['cafeteriaId']),
   recogerA = Timestamp.fromJson(json['recogerA']),
   items = AnyValue.fromJson(json['items']) {
   
@@ -96,20 +96,20 @@ class CrearPedidoVariables {
 
     final CrearPedidoVariables otherTyped = other as CrearPedidoVariables;
     return id == otherTyped.id && 
-    puestoId == otherTyped.puestoId && 
+    cafeteriaId == otherTyped.cafeteriaId && 
     recogerA == otherTyped.recogerA && 
     notas == otherTyped.notas && 
     items == otherTyped.items;
     
   }
   @override
-  int get hashCode => Object.hashAll([id.hashCode, puestoId.hashCode, recogerA.hashCode, notas.hashCode, items.hashCode]);
+  int get hashCode => Object.hashAll([id.hashCode, cafeteriaId.hashCode, recogerA.hashCode, notas.hashCode, items.hashCode]);
   
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
     json['id'] = nativeToJson<String>(id);
-    json['puestoId'] = nativeToJson<String>(puestoId);
+    json['cafeteriaId'] = nativeToJson<String>(cafeteriaId);
     json['recogerA'] = recogerA.toJson();
     if(notas.state == OptionalState.set) {
       json['notas'] = notas.toJson();
@@ -120,7 +120,7 @@ class CrearPedidoVariables {
 
   CrearPedidoVariables({
     required this.id,
-    required this.puestoId,
+    required this.cafeteriaId,
     required this.recogerA,
     required this.notas,
     required this.items,
