@@ -43,6 +43,10 @@ part 'entregar_pedido.dart';
 
 part 'marcar_no_recogido.dart';
 
+part 'registrar_dispositivo.dart';
+
+part 'olvidar_dispositivo.dart';
+
 part 'listar_menu.dart';
 
 part 'mi_perfil.dart';
@@ -68,6 +72,8 @@ part 'panel_pedidos.dart';
 part 'pagos_por_validar.dart';
 
 part 'mi_confianza.dart';
+
+part 'mis_notificaciones.dart';
 
 
 
@@ -178,6 +184,16 @@ class AgiluConnector {
   }
   
   
+  RegistrarDispositivoVariablesBuilder registrarDispositivo ({required String token, required String plataforma, }) {
+    return RegistrarDispositivoVariablesBuilder(dataConnect, token: token,plataforma: plataforma,);
+  }
+  
+  
+  OlvidarDispositivoVariablesBuilder olvidarDispositivo ({required String token, }) {
+    return OlvidarDispositivoVariablesBuilder(dataConnect, token: token,);
+  }
+  
+  
   ListarMenuVariablesBuilder listarMenu () {
     return ListarMenuVariablesBuilder(dataConnect, );
   }
@@ -240,6 +256,11 @@ class AgiluConnector {
   
   MiConfianzaVariablesBuilder miConfianza () {
     return MiConfianzaVariablesBuilder(dataConnect, );
+  }
+  
+  
+  MisNotificacionesVariablesBuilder misNotificaciones () {
+    return MisNotificacionesVariablesBuilder(dataConnect, );
   }
   
 

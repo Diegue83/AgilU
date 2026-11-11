@@ -134,16 +134,20 @@ type CarritoItem @table {
   producto: Producto!
 }
 
-type DispositivoToken @table {
+# HU-05: token de FCM de cada dispositivo con sesión. Un token pertenece a un
+# solo usuario; si otro inicia sesión en el mismo teléfono, el token cambia de dueño.
+type DispositivoToken @table(key: "token") {
   token: String!
   plataforma: String!
+  actualizado: Timestamp! @default(expr: "request.time")
   usuario: Usuario!
 }
 
 type Notificacion @table {
   titulo: String!
   mensaje: String!
-  fechaEnvio: Timestamp!
-  leido: Boolean!
+  fechaEnvio: Timestamp! @default(expr: "request.time")
+  leido: Boolean! @default(value: false)
   usuario: Usuario!
+  pedido: Pedido
 }
