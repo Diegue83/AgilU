@@ -1,18 +1,20 @@
 part of 'agilu.dart';
 
 class ListarMenuVariablesBuilder {
-  
   final FirebaseDataConnect _dataConnect;
-  ListarMenuVariablesBuilder(this._dataConnect, );
-  Deserializer<ListarMenuData> dataDeserializer = (dynamic json)  => ListarMenuData.fromJson(jsonDecode(json));
-  
+  ListarMenuVariablesBuilder(
+    this._dataConnect,
+  );
+  Deserializer<ListarMenuData> dataDeserializer =
+      (dynamic json) => ListarMenuData.fromJson(jsonDecode(json));
+
   Future<QueryResult<ListarMenuData, void>> execute() {
     return ref().execute();
   }
 
   QueryRef<ListarMenuData, void> ref() {
-    
-    return _dataConnect.query("ListarMenu", dataDeserializer, emptySerializer, null);
+    return _dataConnect.query(
+        "ListarMenu", dataDeserializer, emptySerializer, null);
   }
 }
 
@@ -24,38 +26,52 @@ class ListarMenuProductos {
   final double precio;
   final String categoria;
   final bool disponible;
+  final String? urlDeImagen;
   final ListarMenuProductosPuesto puesto;
-  ListarMenuProductos.fromJson(dynamic json):
-  
-  id = nativeFromJson<String>(json['id']),
-  nombre = nativeFromJson<String>(json['nombre']),
-  descripcion = json['descripcion'] == null ? null : nativeFromJson<String>(json['descripcion']),
-  precio = nativeFromJson<double>(json['precio']),
-  categoria = nativeFromJson<String>(json['categoria']),
-  disponible = nativeFromJson<bool>(json['disponible']),
-  puesto = ListarMenuProductosPuesto.fromJson(json['puesto']);
+  ListarMenuProductos.fromJson(dynamic json)
+      : id = nativeFromJson<String>(json['id']),
+        nombre = nativeFromJson<String>(json['nombre']),
+        descripcion = json['descripcion'] == null
+            ? null
+            : nativeFromJson<String>(json['descripcion']),
+        precio = nativeFromJson<double>(json['precio']),
+        categoria = nativeFromJson<String>(json['categoria']),
+        disponible = nativeFromJson<bool>(json['disponible']),
+        urlDeImagen = json['urlDeImagen'] == null
+            ? null
+            : nativeFromJson<String>(json['urlDeImagen']),
+        puesto = ListarMenuProductosPuesto.fromJson(json['puesto']);
   @override
   bool operator ==(Object other) {
-    if(identical(this, other)) {
+    if (identical(this, other)) {
       return true;
     }
-    if(other.runtimeType != runtimeType) {
+    if (other.runtimeType != runtimeType) {
       return false;
     }
 
     final ListarMenuProductos otherTyped = other as ListarMenuProductos;
-    return id == otherTyped.id && 
-    nombre == otherTyped.nombre && 
-    descripcion == otherTyped.descripcion && 
-    precio == otherTyped.precio && 
-    categoria == otherTyped.categoria && 
-    disponible == otherTyped.disponible && 
-    puesto == otherTyped.puesto;
-    
+    return id == otherTyped.id &&
+        nombre == otherTyped.nombre &&
+        descripcion == otherTyped.descripcion &&
+        precio == otherTyped.precio &&
+        categoria == otherTyped.categoria &&
+        disponible == otherTyped.disponible &&
+        urlDeImagen == otherTyped.urlDeImagen &&
+        puesto == otherTyped.puesto;
   }
+
   @override
-  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, descripcion.hashCode, precio.hashCode, categoria.hashCode, disponible.hashCode, puesto.hashCode]);
-  
+  int get hashCode => Object.hashAll([
+        id.hashCode,
+        nombre.hashCode,
+        descripcion.hashCode,
+        precio.hashCode,
+        categoria.hashCode,
+        disponible.hashCode,
+        urlDeImagen.hashCode,
+        puesto.hashCode
+      ]);
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -67,6 +83,9 @@ class ListarMenuProductos {
     json['precio'] = nativeToJson<double>(precio);
     json['categoria'] = nativeToJson<String>(categoria);
     json['disponible'] = nativeToJson<bool>(disponible);
+    if (urlDeImagen != null) {
+      json['urlDeImagen'] = nativeToJson<String?>(urlDeImagen);
+    }
     json['puesto'] = puesto.toJson();
     return json;
   }
@@ -78,6 +97,7 @@ class ListarMenuProductos {
     required this.precio,
     required this.categoria,
     required this.disponible,
+    this.urlDeImagen,
     required this.puesto,
   });
 }
@@ -88,31 +108,32 @@ class ListarMenuProductosPuesto {
   final String nombre;
   final int orden;
   final ListarMenuProductosPuestoCafeteria cafeteria;
-  ListarMenuProductosPuesto.fromJson(dynamic json):
-  
-  id = nativeFromJson<String>(json['id']),
-  nombre = nativeFromJson<String>(json['nombre']),
-  orden = nativeFromJson<int>(json['orden']),
-  cafeteria = ListarMenuProductosPuestoCafeteria.fromJson(json['cafeteria']);
+  ListarMenuProductosPuesto.fromJson(dynamic json)
+      : id = nativeFromJson<String>(json['id']),
+        nombre = nativeFromJson<String>(json['nombre']),
+        orden = nativeFromJson<int>(json['orden']),
+        cafeteria =
+            ListarMenuProductosPuestoCafeteria.fromJson(json['cafeteria']);
   @override
   bool operator ==(Object other) {
-    if(identical(this, other)) {
+    if (identical(this, other)) {
       return true;
     }
-    if(other.runtimeType != runtimeType) {
+    if (other.runtimeType != runtimeType) {
       return false;
     }
 
-    final ListarMenuProductosPuesto otherTyped = other as ListarMenuProductosPuesto;
-    return id == otherTyped.id && 
-    nombre == otherTyped.nombre && 
-    orden == otherTyped.orden && 
-    cafeteria == otherTyped.cafeteria;
-    
+    final ListarMenuProductosPuesto otherTyped =
+        other as ListarMenuProductosPuesto;
+    return id == otherTyped.id &&
+        nombre == otherTyped.nombre &&
+        orden == otherTyped.orden &&
+        cafeteria == otherTyped.cafeteria;
   }
+
   @override
-  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, orden.hashCode, cafeteria.hashCode]);
-  
+  int get hashCode => Object.hashAll(
+      [id.hashCode, nombre.hashCode, orden.hashCode, cafeteria.hashCode]);
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -135,27 +156,25 @@ class ListarMenuProductosPuesto {
 class ListarMenuProductosPuestoCafeteria {
   final String id;
   final String nombre;
-  ListarMenuProductosPuestoCafeteria.fromJson(dynamic json):
-  
-  id = nativeFromJson<String>(json['id']),
-  nombre = nativeFromJson<String>(json['nombre']);
+  ListarMenuProductosPuestoCafeteria.fromJson(dynamic json)
+      : id = nativeFromJson<String>(json['id']),
+        nombre = nativeFromJson<String>(json['nombre']);
   @override
   bool operator ==(Object other) {
-    if(identical(this, other)) {
+    if (identical(this, other)) {
       return true;
     }
-    if(other.runtimeType != runtimeType) {
+    if (other.runtimeType != runtimeType) {
       return false;
     }
 
-    final ListarMenuProductosPuestoCafeteria otherTyped = other as ListarMenuProductosPuestoCafeteria;
-    return id == otherTyped.id && 
-    nombre == otherTyped.nombre;
-    
+    final ListarMenuProductosPuestoCafeteria otherTyped =
+        other as ListarMenuProductosPuestoCafeteria;
+    return id == otherTyped.id && nombre == otherTyped.nombre;
   }
+
   @override
   int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode]);
-  
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -173,27 +192,25 @@ class ListarMenuProductosPuestoCafeteria {
 @immutable
 class ListarMenuData {
   final List<ListarMenuProductos> productos;
-  ListarMenuData.fromJson(dynamic json):
-  
-  productos = (json['productos'] as List<dynamic>)
-        .map((e) => ListarMenuProductos.fromJson(e))
-        .toList();
+  ListarMenuData.fromJson(dynamic json)
+      : productos = (json['productos'] as List<dynamic>)
+            .map((e) => ListarMenuProductos.fromJson(e))
+            .toList();
   @override
   bool operator ==(Object other) {
-    if(identical(this, other)) {
+    if (identical(this, other)) {
       return true;
     }
-    if(other.runtimeType != runtimeType) {
+    if (other.runtimeType != runtimeType) {
       return false;
     }
 
     final ListarMenuData otherTyped = other as ListarMenuData;
     return productos == otherTyped.productos;
-    
   }
+
   @override
   int get hashCode => productos.hashCode;
-  
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -205,4 +222,3 @@ class ListarMenuData {
     required this.productos,
   });
 }
-

@@ -51,5 +51,6 @@ class DataConnectMenuRepository implements MenuRepository {
         estacionId: p.puesto.id,
         estacion: p.puesto.nombre,
         estacionOrden: p.puesto.orden,
+        urlImagen: p.urlDeImagen,
       );
 }
