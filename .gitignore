@@ -6,20 +6,36 @@
 build/
 .flutter-plugins
 .flutter-plugins-dependencies
-pubspec.lock
+# pubspec.lock SÍ se versiona: es una app y fija las versiones revisadas.
 
 # IDE
 .idea/
 .vscode/
 *.iml
 
-# Firebase (NO subir llaves)
+# Configuración local de Firebase (se genera con flutterfire configure).
+# El ejemplo con valores ficticios está en tool/firebase_options.ejemplo.dart.
 google-services.json
 GoogleService-Info.plist
 firebase_options.dart
+.firebase/
 *-debug.log
-test_dataconnect/node_modules/
 dataconnect/.dataconnect/
+
+# Secretos y llaves: nunca se suben
+.env
+.env.*
+*.pem
+*.p12
+*.jks
+*.keystore
+key.properties
+service-account*.json
+*-adminsdk-*.json
+
+# Node
+node_modules/
 
 # SO
 .DS_Store
+Thumbs.db
