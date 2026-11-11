@@ -1,5 +1,12 @@
 import 'app_config.dart';
 
+/// Hora de recogida con su disponibilidad.
+class Franja {
+  final DateTime hora;
+  final bool llena;
+  const Franja(this.hora, {this.llena = false});
+}
+
 class ReglasPedido {
   static List<DateTime> horasDisponibles(
     DateTime ahora, {

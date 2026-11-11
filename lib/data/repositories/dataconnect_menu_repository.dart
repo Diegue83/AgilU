@@ -52,6 +52,7 @@ class DataConnectMenuRepository implements MenuRepository {
               cierreMinutos: c.cierreMinutos,
               anticipacionMinutos: c.anticipacionMinutos,
               intervaloMinutos: c.intervaloMinutos,
+              capacidadPorFranja: c.capacidadPorFranja,
               activa: c.activa,
             ))
         .toList();

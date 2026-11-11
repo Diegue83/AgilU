@@ -34,13 +34,44 @@ class DataConnectPedidoRepository implements PedidoRepository {
         .execute();
 
     if ((res.data.execute_ ?? 0) == 0) {
-      throw Exception(
-          'La cafetería rechazó el pedido. Revisa tu carrito e intenta de nuevo.');
+      throw PedidoRechazado(await _motivoDelRechazo(pedido));
     }
 
     final consulta = await _conector.miPedido(id: id).execute();
     return ReglasPedido.formatearFolio(consulta.data.pedidos.single.folio);
   }
+
+  Future<String> _motivoDelRechazo(Pedido pedido) async {
+    try {
+      final d = await _conector
+          .diagnosticarPedido(
+            cafeteriaId: pedido.cafeteriaId,
+            recogerA: _timestamp(pedido.recogerA),
+            items: AnyValue(itemsDe(pedido)),
+          )
+          .execute();
+      final motivo = (d.data.diagnostico as Map?)?['motivo'];
+      if (motivo is String && motivo.isNotEmpty) return motivo;
+    } catch (_) {
+      // Si tampoco se puede diagnosticar, se usa el mensaje general.
+    }
+    return 'La cafetería rechazó el pedido. Revisa tu carrito e intenta de nuevo.';
+  }
+
+  @override
+  Future<Map<DateTime, int>> ocupacion(String cafeteriaId) async {
+    final res =
+        await _conector.ocupacionFranjas(cafeteriaId: cafeteriaId).execute();
+    final filas = (res.data.franjas as List?) ?? const [];
+    return {
+      for (final f in filas.cast<Map>())
+        DateTime.parse(f['recogerA'] as String).toLocal():
+            (f['pedidos'] as num).toInt(),
+    };
+  }
+
+  static Timestamp _timestamp(DateTime t) =>
+      Timestamp(0, t.millisecondsSinceEpoch ~/ 1000);
 
   static List<Map<String, dynamic>> itemsDe(Pedido pedido) => [
         for (final i in pedido.items)

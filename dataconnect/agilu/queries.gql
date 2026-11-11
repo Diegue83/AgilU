@@ -164,6 +164,96 @@ query ListarCafeterias
     cierreMinutos
     anticipacionMinutos
     intervaloMinutos
+    capacidadPorFranja
+    zonaHoraria
     activa
+  }
+}
+
+# HU-10: cuántos pedidos hay en cada hora de recogida de hoy. Solo regresa
+# horas y conteos, sin datos de los alumnos.
+query OcupacionFranjas($cafeteriaId: UUID!)
+  @auth(level: USER, insecureReason: "Solo expone conteos por hora, sin datos personales.") {
+  franjas: _select(
+    sql: """
+    SELECT o.recoger_a AS "recogerA", count(*)::int AS "pedidos"
+    FROM pedido o
+    JOIN cafeteria c ON c.id = o.cafeteria_id
+    WHERE o.cafeteria_id = $1::uuid
+      AND o.estado <> 'cancelado'
+      AND (o.recoger_a AT TIME ZONE c.zona_horaria)::date = (now() AT TIME ZONE c.zona_horaria)::date
+    GROUP BY o.recoger_a
+    """
+    params: [$cafeteriaId]
+  )
+}
+
+# HU-10: si CrearPedido no insertó nada, explica por qué con las mismas reglas.
+query DiagnosticarPedido($cafeteriaId: UUID!, $recogerA: Timestamp!, $items: Any!)
+  @auth(level: USER) {
+  diagnostico: _selectFirst(
+    sql: """
+    WITH
+      cliente AS (SELECT usuario_id FROM autenticacion WHERE firebase_auth_uid = $1),
+      caf AS (SELECT * FROM cafeteria WHERE id = $2::uuid),
+      f AS (
+        SELECT caf.*,
+               ($3::timestamptz AT TIME ZONE caf.zona_horaria) AS local,
+               (now() AT TIME ZONE caf.zona_horaria) AS ahora_local
+        FROM caf
+      ),
+      pedidos_items AS (
+        SELECT (e->>'productoId')::uuid AS producto_id, (e->>'cantidad')::int AS cantidad
+        FROM jsonb_array_elements($4::jsonb) AS e
+      ),
+      validos AS (
+        SELECT i.producto_id FROM pedidos_items i
+        JOIN producto p ON p.id = i.producto_id
+        JOIN puesto e ON e.id = p.puesto_id
+        WHERE p.disponible AND NOT p.eliminado AND e.activo
+          AND e.cafeteria_id = $2::uuid AND i.cantidad BETWEEN 1 AND 50
+      ),
+      m AS (
+        SELECT f.*, (extract(hour FROM f.local) * 60 + extract(minute FROM f.local))::int AS minuto
+        FROM f
+      )
+    SELECT CASE
+      WHEN NOT EXISTS (SELECT 1 FROM cliente) THEN 'Tu perfil no está listo. Cierra sesión y vuelve a entrar.'
+      WHEN NOT EXISTS (SELECT 1 FROM caf WHERE activa) THEN 'La cafetería no está recibiendo pedidos.'
+      WHEN (SELECT count(*) FROM validos) <> (SELECT count(*) FROM pedidos_items)
+        THEN 'Algún producto ya no está disponible. Revisa tu carrito.'
+      WHEN (SELECT local::date <> ahora_local::date FROM m) THEN 'Solo se pueden hacer pedidos para hoy.'
+      WHEN (SELECT minuto < apertura_minutos OR minuto > cierre_minutos FROM m)
+        THEN 'La hora elegida está fuera del horario de la cafetería.'
+      WHEN (SELECT $3::timestamptz < now() + make_interval(mins => greatest(anticipacion_minutos - 5, 0)) FROM m)
+        THEN 'La hora elegida ya no cumple la anticipación mínima. Elige otra.'
+      WHEN (SELECT count(*) FROM pedido o WHERE o.cafeteria_id = $2::uuid
+              AND o.recoger_a = $3::timestamptz AND o.estado <> 'cancelado')
+           >= (SELECT capacidad_por_franja FROM caf)
+        THEN 'Esa hora ya se llenó. Elige otra.'
+      ELSE 'No se pudo registrar el pedido. Intenta de nuevo.'
+    END AS motivo
+    """
+    params: [{ _expr: "auth.uid" }, $cafeteriaId, $recogerA, $items]
+  )
+}
+
+# HU-10: configuración de la cafetería del encargado.
+query MiCafeteria @auth(level: USER) {
+  autenticacion(key: { firebaseAuthUid_expr: "auth.uid" }) {
+    usuario {
+      rol {
+        nombre
+      }
+      cafeteria {
+        id
+        nombre
+        aperturaMinutos
+        cierreMinutos
+        anticipacionMinutos
+        intervaloMinutos
+        capacidadPorFranja
+      }
+    }
   }
 }
