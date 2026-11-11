@@ -21,6 +21,8 @@ part 'editar_estacion.dart';
 
 part 'eliminar_estacion.dart';
 
+part 'crear_mi_producto.dart';
+
 part 'listar_menu.dart';
 
 part 'mi_perfil.dart';
@@ -84,6 +86,11 @@ class AgiluConnector {
   
   EliminarEstacionVariablesBuilder eliminarEstacion ({required String id, }) {
     return EliminarEstacionVariablesBuilder(dataConnect, id: id,);
+  }
+  
+  
+  CrearMiProductoVariablesBuilder crearMiProducto ({required String nombre, required double precio, required String puestoId, required bool disponible, }) {
+    return CrearMiProductoVariablesBuilder(dataConnect, nombre: nombre,precio: precio,puestoId: puestoId,disponible: disponible,);
   }
   
   

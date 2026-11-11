@@ -10,7 +10,7 @@ AgiluConnector.instance.CrearProducto(crearProductoVariables).execute();
 AgiluConnector.instance.CrearEstacion(crearEstacionVariables).execute();
 AgiluConnector.instance.EditarEstacion(editarEstacionVariables).execute();
 AgiluConnector.instance.EliminarEstacion(eliminarEstacionVariables).execute();
-AgiluConnector.instance.ListarMenu().execute();
+AgiluConnector.instance.CrearMiProducto(crearMiProductoVariables).execute();
 
 ```
 
@@ -23,7 +23,7 @@ Optional fields can be discovered based on classes that have `Optional` object t
 This is an example of a mutation with an optional field:
 
 ```dart
-await AgiluConnector.instance.CrearProducto({ ... })
+await AgiluConnector.instance.CrearMiProducto({ ... })
 .descripcion(...)
 .execute();
 ```
