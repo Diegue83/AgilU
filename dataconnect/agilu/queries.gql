@@ -147,3 +147,17 @@ query MisProductos @auth(level: USER) {
     }
   }
 }
+
+# HU-19: cafeterías abiertas con su horario, para el menú del día.
+query ListarCafeterias
+  @auth(level: USER, insecureReason: "El horario de las cafeterías es el mismo para todos los alumnos con sesión.") {
+  cafeterias(where: { activa: { eq: true } }, orderBy: [{ nombre: ASC }]) {
+    id
+    nombre
+    aperturaMinutos
+    cierreMinutos
+    anticipacionMinutos
+    intervaloMinutos
+    activa
+  }
+}
