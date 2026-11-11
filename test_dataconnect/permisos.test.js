@@ -1109,6 +1109,75 @@ describe('sistema de confianza (HU-23)', () => {
   });
 });
 
+describe('aviso de pedido listo (HU-05)', () => {
+  const { avisarPedidoListo } = createRequire(import.meta.url)('../functions/avisos.js');
+  const TOKEN_ANA = 'token-de-prueba-ana-'.padEnd(40, 'x');
+  const enviados = [];
+  const messaging = {
+    sendEachForMulticast: async (m) => {
+      enviados.push(m);
+      return {
+        successCount: m.tokens.filter((t) => !t.startsWith('viejo')).length,
+        responses: m.tokens.map((t) => (t.startsWith('viejo')
+          ? { success: false, error: { code: 'messaging/registration-token-not-registered' } }
+          : { success: true })),
+      };
+    },
+  };
+
+  test('el alumno registra su dispositivo; tokens o plataformas raros se rechazan', async () => {
+    await ana.mutation('RegistrarDispositivo', { token: TOKEN_ANA, plataforma: 'android' });
+    await assert.rejects(ana.mutation('RegistrarDispositivo', { token: 'corto', plataforma: 'android' }), /Token inválido/);
+    await assert.rejects(ana.mutation('RegistrarDispositivo', { token: TOKEN_ANA, plataforma: 'nevera' }));
+  });
+
+  test('al marcar listo se avisa al dueño del pedido y se guarda la notificación', async () => {
+    const vars = pedido({ recogerA: pronto(9) });
+    await ana.mutation('CrearPedido', vars);
+    await pagado(vars);
+    await beto.mutation('AvanzarPedido', { id: vars.id, estado: 'preparando' });
+    const r = await beto.mutation('AvanzarPedido', { id: vars.id, estado: 'listo' });
+
+    await adminDataConnect.executeGraphql(
+      'mutation T($u: UUID!) { dispositivoToken_upsert(data: { token: "viejo-token-invalido-000000000000", plataforma: "android", usuario: { id: $u } }) }',
+      { variables: { u: (await ana.query('MiPerfil')).data.autenticacion.usuario.id } },
+    );
+    const evento = { data: { payload: { variables: { id: vars.id, estado: 'listo' }, data: r.data, errors: [] } } };
+    const n = await avisarPedidoListo(evento, { dataConnect: adminDataConnect, messaging });
+    assert.equal(n, 1);
+    const ultimo = enviados.at(-1);
+    assert.ok(ultimo.tokens.includes(TOKEN_ANA));
+    assert.match(ultimo.notification.body, /AGU-\d{5}/);
+
+    const { data } = await ana.query('MisNotificaciones');
+    assert.equal(data.notificacions[0].titulo, 'Tu pedido está listo');
+    const otros = await beto.query('MisNotificaciones');
+    assert.equal(otros.data.notificacions.length, 0);
+  });
+
+  test('los tokens inválidos se borran después del envío', async () => {
+    const res = await adminDataConnect.executeGraphql(
+      'query { dispositivoTokens(where: { token: { startsWith: "viejo" } }) { token } }',
+    );
+    assert.equal(res.data.dispositivoTokens.length, 0);
+  });
+
+  test('pasar a preparando no avisa', async () => {
+    const antes = enviados.length;
+    const evento = { data: { payload: { variables: { id: CAFETERIA, estado: 'preparando' }, data: { _execute: 1 }, errors: [] } } };
+    assert.equal(await avisarPedidoListo(evento, { dataConnect: adminDataConnect, messaging }), 0);
+    assert.equal(enviados.length, antes);
+  });
+
+  test('al cerrar sesión se olvida el dispositivo', async () => {
+    await ana.mutation('OlvidarDispositivo', { token: TOKEN_ANA });
+    const res = await adminDataConnect.executeGraphql(
+      'query T($t: String!) { dispositivoToken(key: { token: $t }) { token } }', { variables: { t: TOKEN_ANA } },
+    );
+    assert.equal(res.data.dispositivoToken, null);
+  });
+});
+
 describe('catálogo', () => {
   test('un alumno no puede crear productos ni puestos', async () => {
     await assert.rejects(

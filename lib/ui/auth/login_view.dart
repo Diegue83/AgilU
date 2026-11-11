@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/routes.dart';
 import '../../data/repositories/auth_repository.dart';
+import '../../data/repositories/avisos_repository.dart';
 import '../../data/repositories/perfil_repository.dart';
 import 'login_view_model.dart';
 
@@ -44,8 +45,10 @@ class _LoginFormState extends State<_LoginForm> {
     if (!ok || !mounted) return;
     final perfiles = context.read<PerfilRepository>();
     final nav = Navigator.of(context);
+    final avisos = context.read<AvisosRepository>();
     final perfil =
         await perfiles.miPerfil().then((p) => p, onError: (_) => null);
+    avisos.registrar().ignore();
     nav.pushReplacementNamed(Routes.inicioPara(perfil));
   }
 

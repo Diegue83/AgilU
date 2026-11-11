@@ -369,3 +369,20 @@ query MiConfianza @auth(level: USER) {
     params: [{ _expr: "auth.uid" }]
   )
 }
+
+# HU-05: avisos recibidos por el alumno con sesión.
+query MisNotificaciones @auth(level: USER) {
+  notificacions(
+    where: {
+      usuario: { autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } } }
+    }
+    orderBy: [{ fechaEnvio: DESC }]
+    limit: 20
+  ) {
+    id
+    titulo
+    mensaje
+    fechaEnvio
+    leido
+  }
+}

@@ -2,6 +2,7 @@ import 'package:agilu/app.dart';
 import 'package:agilu/core/routes.dart';
 import 'package:agilu/data/models/perfil.dart';
 import 'package:agilu/data/repositories/auth_repository.dart';
+import 'package:agilu/data/repositories/avisos_repository.dart';
 import 'package:agilu/data/repositories/cafeteria_repository.dart';
 import 'package:agilu/data/repositories/estacion_repository.dart';
 import 'package:agilu/data/repositories/foto_repository.dart';
@@ -29,6 +30,7 @@ Widget _app(AuthRepository auth,
     MultiProvider(
       providers: [
         Provider<AuthRepository>.value(value: auth),
+        Provider<AvisosRepository>(create: (_) => MockAvisosRepository()),
         Provider<PerfilRepository>.value(
             value: perfiles ?? MockPerfilRepository()),
         Provider<EstacionRepository>(create: (_) => MockEstacionRepository()),
@@ -312,5 +314,23 @@ void main() {
     await tester.tap(find.text('Aprobar'));
     await tester.pumpAndSettle();
     expect(find.text('No hay comprobantes por validar.'), findsOneWidget);
+  });
+
+  testWidgets('al iniciar sesión registra el dispositivo para avisos',
+      (tester) async {
+    final avisos = MockAvisosRepository();
+    await tester.pumpWidget(MultiProvider(
+      providers: [
+        Provider<AuthRepository>.value(value: MockAuthRepository()),
+        Provider<AvisosRepository>.value(value: avisos),
+        Provider<PerfilRepository>.value(value: MockPerfilRepository()),
+        Provider<MenuRepository>(create: (_) => MockMenuRepository()),
+        Provider<PedidoRepository>(create: (_) => MockPedidoRepository()),
+        ChangeNotifierProvider(create: (_) => CartViewModel()),
+      ],
+      child: const AgilUApp(),
+    ));
+    await _iniciarSesion(tester);
+    expect(avisos.registrado, isTrue);
   });
 }

@@ -9,6 +9,8 @@ const { cancelarSiQuedoAgotado } = require('./cancelaciones');
 const { subirFoto, ErrorDeFoto } = require('./fotos');
 const { subirComprobante } = require('./comprobantes');
 const { cerrarDia } = require('./cierre');
+const { avisarPedidoListo } = require('./avisos');
+const { getMessaging } = require('firebase-admin/messaging');
 const { onSchedule } = require('firebase-functions/scheduler');
 
 initializeApp();
@@ -96,5 +98,18 @@ exports.cerrarDia = onSchedule(
   async () => {
     const r = await cerrarDia(getDataConnect(SERVICIO));
     logger.info('Cierre del día', r);
+  },
+);
+
+// HU-05: aviso push "pedido listo". Escucha AvanzarPedido; las mutaciones que
+// ejecuta (notificacion_insert, dispositivoToken_deleteMany) no lo disparan.
+exports.avisarPedidoListo = onMutationExecuted(
+  { ...DISPARADOR, operation: 'AvanzarPedido' },
+  async (event) => {
+    const enviados = await avisarPedidoListo(event, {
+      dataConnect: getDataConnect(SERVICIO),
+      messaging: getMessaging(),
+    });
+    logger.info('Aviso de pedido listo', { pedidoId: event.data.payload.variables?.id, enviados });
   },
 );
