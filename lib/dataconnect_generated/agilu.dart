@@ -37,6 +37,8 @@ part 'editar_mi_cafeteria.dart';
 
 part 'avanzar_pedido.dart';
 
+part 'validar_pago.dart';
+
 part 'listar_menu.dart';
 
 part 'mi_perfil.dart';
@@ -58,6 +60,8 @@ part 'diagnosticar_pedido.dart';
 part 'mi_cafeteria.dart';
 
 part 'panel_pedidos.dart';
+
+part 'pagos_por_validar.dart';
 
 
 
@@ -153,6 +157,11 @@ class AgiluConnector {
   }
   
   
+  ValidarPagoVariablesBuilder validarPago ({required String id, required bool aprobado, }) {
+    return ValidarPagoVariablesBuilder(dataConnect, id: id,aprobado: aprobado,);
+  }
+  
+  
   ListarMenuVariablesBuilder listarMenu () {
     return ListarMenuVariablesBuilder(dataConnect, );
   }
@@ -205,6 +214,11 @@ class AgiluConnector {
   
   PanelPedidosVariablesBuilder panelPedidos ({required Timestamp desde, required Timestamp hasta, }) {
     return PanelPedidosVariablesBuilder(dataConnect, desde: desde,hasta: hasta,);
+  }
+  
+  
+  PagosPorValidarVariablesBuilder pagosPorValidar () {
+    return PagosPorValidarVariablesBuilder(dataConnect, );
   }
   
 

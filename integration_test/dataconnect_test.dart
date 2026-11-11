@@ -35,8 +35,8 @@ Future<void> _comoAdmin(String query, [String? operationName]) async {
 /// Catálogo de prueba y la cafetería abierta todo el día, en UTC y sin
 /// anticipación, para que la prueba no dependa de la hora en que corre.
 Future<void> _sembrarCatalogo() async {
-  await _comoAdmin(File('dataconnect/seed_data.gql').readAsStringSync(),
-      'SembrarCatalogo');
+  await _comoAdmin(
+      File('dataconnect/seed_data.gql').readAsStringSync(), 'SembrarCatalogo');
   await _comoAdmin('''
     mutation { cafeteria_update(id: "c0000000-0000-4000-8000-000000000001", data: {
       zonaHoraria: "UTC", aperturaMinutos: 0, cierreMinutos: 1439,
@@ -76,7 +76,7 @@ void main() {
     final molletes = menu.firstWhere((p) => p.nombre == 'Molletes');
     final horchata = menu.firstWhere((p) => p.nombre == 'Agua de horchata');
 
-    final folio = await DataConnectPedidoRepository().crearPedido(Pedido(
+    final creado = await DataConnectPedidoRepository().crearPedido(Pedido(
       usuarioId: auth.uidActual!,
       cafeteriaId: molletes.cafeteriaId,
       items: [
@@ -87,7 +87,7 @@ void main() {
       recogerA: _pronto(),
       notas: 'Sin cebolla',
     ));
-    expect(folio, matches(RegExp(r'^AGU-\d{5}$')));
+    expect(creado.folio, matches(RegExp(r'^AGU-\d{5}$')));
 
     final mios = await AgiluConnector.instance.misPedidos().execute();
     expect(mios.data.pedidos, hasLength(1));

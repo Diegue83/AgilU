@@ -5,6 +5,7 @@ import '../../core/routes.dart';
 import '../../data/repositories/auth_repository.dart';
 import 'cafeteria/cafeteria_view.dart';
 import 'estaciones/estaciones_view.dart';
+import 'pagos/pagos_view.dart';
 import 'panel/panel_view.dart';
 import 'productos/productos_view.dart';
 
@@ -22,6 +23,7 @@ class _EncargadoViewState extends State<EncargadoView> {
 
   static const _secciones = <(String, IconData, Widget)>[
     ('Pedidos', Icons.receipt_long, PanelView()),
+    ('Pagos', Icons.payments_outlined, PagosView()),
     ('Productos', Icons.restaurant_menu, ProductosView()),
     ('Estaciones', Icons.storefront, EstacionesView()),
     ('Cafetería', Icons.tune, CafeteriaView()),

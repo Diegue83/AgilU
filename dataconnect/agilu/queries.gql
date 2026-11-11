@@ -61,6 +61,25 @@ query MiPedido($id: UUID!) @auth(level: USER) {
     montoTotal
     estado
     recogerA
+    notas
+    referenciaPago
+    comprobanteUrl
+    motivoRechazoPago
+    pagadoEn
+    cafeteria {
+      nombre
+      ubicacion
+      banco
+      clabe
+      titular
+    }
+    detallePedidos_on_pedido {
+      cantidad
+      precioEnElMomento
+      producto {
+        nombre
+      }
+    }
   }
 }
 
@@ -77,6 +96,8 @@ query MisPedidos @auth(level: USER) {
     estado
     recogerA
     notas
+    referenciaPago
+    motivoRechazoPago
     cafeteria {
       nombre
     }
@@ -296,6 +317,34 @@ query PanelPedidos($desde: Timestamp!, $hasta: Timestamp!) @auth(level: USER) {
       producto {
         nombre
       }
+    }
+  }
+}
+
+# HU-08: comprobantes que esperan validación en la cafetería del encargado.
+query PagosPorValidar @auth(level: USER) {
+  pedidos(
+    where: {
+      cafeteria: {
+        usuarios_on_cafeteria: {
+          exist: {
+            rol: { nombre: { eq: "encargado" } }
+            autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+          }
+        }
+      }
+      estado: { eq: "pago_en_revision" }
+    }
+    orderBy: [{ recogerA: ASC }]
+  ) {
+    id
+    folio
+    referenciaPago
+    montoTotal
+    recogerA
+    comprobanteUrl
+    usuario {
+      nombre
     }
   }
 }

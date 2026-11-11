@@ -6,6 +6,7 @@ import 'package:agilu/data/repositories/cafeteria_repository.dart';
 import 'package:agilu/data/repositories/estacion_repository.dart';
 import 'package:agilu/data/repositories/foto_repository.dart';
 import 'package:agilu/data/repositories/menu_repository.dart';
+import 'package:agilu/data/repositories/pagos_repository.dart';
 import 'package:agilu/data/repositories/panel_repository.dart';
 import 'package:agilu/data/repositories/pedido_repository.dart';
 import 'package:agilu/data/repositories/perfil_repository.dart';
@@ -35,6 +36,7 @@ Widget _app(AuthRepository auth,
         Provider<FotoRepository>(create: (_) => MockFotoRepository()),
         Provider<CafeteriaRepository>(create: (_) => MockCafeteriaRepository()),
         Provider<PanelRepository>(create: (_) => MockPanelRepository()),
+        Provider<PagosRepository>(create: (_) => MockPagosRepository()),
         Provider<MenuRepository>(create: (_) => MockMenuRepository()),
         Provider<PedidoRepository>(create: (_) => MockPedidoRepository()),
         ChangeNotifierProvider(create: (_) => CartViewModel()),
@@ -265,5 +267,18 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('En espera (0)'), findsOneWidget);
     expect(find.text('Preparando (2)'), findsOneWidget);
+  });
+
+  testWidgets('el encargado aprueba un comprobante desde la pestaña Pagos',
+      (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository(),
+        perfiles: MockPerfilRepository(perfil: _encargado)));
+    await _iniciarSesion(tester);
+    await tester.tap(find.text('Pagos'));
+    await tester.pumpAndSettle();
+    expect(find.text('AGU-00009 · Ana'), findsOneWidget);
+    await tester.tap(find.text('Aprobar'));
+    await tester.pumpAndSettle();
+    expect(find.text('No hay comprobantes por validar.'), findsOneWidget);
   });
 }
