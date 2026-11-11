@@ -2,7 +2,10 @@ query ListarMenu
   @auth(level: USER, insecureReason: "El menú es el mismo para todos los alumnos con sesión.")
   @refresh(every: { seconds: 30 }) {
   productos(
-    where: { puesto: { activo: { eq: true }, cafeteria: { activa: { eq: true } } } }
+    where: {
+      eliminado: { eq: false }
+      puesto: { activo: { eq: true }, cafeteria: { activa: { eq: true } } }
+    }
     orderBy: [{ nombre: ASC }]
   ) {
     id
@@ -101,7 +104,7 @@ query MisEstaciones @auth(level: USER) {
     nombre
     orden
     activo
-    productos_on_puesto {
+    productos_on_puesto(where: { eliminado: { eq: false } }) {
       id
     }
   }
@@ -111,6 +114,7 @@ query MisEstaciones @auth(level: USER) {
 query MisProductos @auth(level: USER) {
   productos(
     where: {
+      eliminado: { eq: false }
       puesto: {
         cafeteria: {
           usuarios_on_cafeteria: {
