@@ -11,6 +11,11 @@ query ListarMenu
     puesto {
       id
       nombre
+      orden
+      cafeteria {
+        id
+        nombre
+      }
     }
   }
 }
@@ -21,6 +26,13 @@ query MiPerfil @auth(level: USER) {
     usuario {
       id
       nombre
+      rol {
+        nombre
+      }
+      cafeteria {
+        id
+        nombre
+      }
     }
   }
 }
@@ -54,7 +66,7 @@ query MisPedidos @auth(level: USER) {
     estado
     recogerA
     notas
-    puesto {
+    cafeteria {
       nombre
     }
     detallePedidos_on_pedido {

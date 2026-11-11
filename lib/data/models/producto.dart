@@ -8,6 +8,8 @@ class Producto {
   final String categoria;
   final bool disponible;
   final String cafeteriaId;
+  final String estacionId;
+  final String estacion;
 
   const Producto({
     required this.id,
@@ -17,6 +19,8 @@ class Producto {
     required this.categoria,
     this.disponible = true,
     this.cafeteriaId = AppConfig.cafeteriaPorDefecto,
+    this.estacionId = '',
+    this.estacion = '',
   });
 
   factory Producto.fromMap(Map<String, dynamic> map, String id) => Producto(
@@ -28,6 +32,8 @@ class Producto {
         disponible: (map['disponible'] ?? true) as bool,
         cafeteriaId:
             (map['cafeteriaId'] ?? AppConfig.cafeteriaPorDefecto) as String,
+        estacionId: (map['estacionId'] ?? '') as String,
+        estacion: (map['estacion'] ?? '') as String,
       );
 
   Map<String, dynamic> toMap() => {
@@ -37,5 +43,7 @@ class Producto {
         'categoria': categoria,
         'disponible': disponible,
         'cafeteriaId': cafeteriaId,
+        'estacionId': estacionId,
+        'estacion': estacion,
       };
 }
