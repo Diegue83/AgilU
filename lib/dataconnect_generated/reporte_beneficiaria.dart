@@ -5,54 +5,43 @@ class ReporteBeneficiariaVariablesBuilder {
   Timestamp hasta;
 
   final FirebaseDataConnect _dataConnect;
-  ReporteBeneficiariaVariablesBuilder(
-    this._dataConnect, {
-    required this.desde,
-    required this.hasta,
-  });
-  Deserializer<ReporteBeneficiariaData> dataDeserializer =
-      (dynamic json) => ReporteBeneficiariaData.fromJson(jsonDecode(json));
-  Serializer<ReporteBeneficiariaVariables> varsSerializer =
-      (ReporteBeneficiariaVariables vars) => jsonEncode(vars.toJson());
-  Future<QueryResult<ReporteBeneficiariaData, ReporteBeneficiariaVariables>>
-      execute() {
+  ReporteBeneficiariaVariablesBuilder(this._dataConnect, {required  this.desde,required  this.hasta,});
+  Deserializer<ReporteBeneficiariaData> dataDeserializer = (dynamic json)  => ReporteBeneficiariaData.fromJson(jsonDecode(json));
+  Serializer<ReporteBeneficiariaVariables> varsSerializer = (ReporteBeneficiariaVariables vars) => jsonEncode(vars.toJson());
+  Future<QueryResult<ReporteBeneficiariaData, ReporteBeneficiariaVariables>> execute() {
     return ref().execute();
   }
 
   QueryRef<ReporteBeneficiariaData, ReporteBeneficiariaVariables> ref() {
-    ReporteBeneficiariaVariables vars = ReporteBeneficiariaVariables(
-      desde: desde,
-      hasta: hasta,
-    );
-    return _dataConnect.query(
-        "ReporteBeneficiaria", dataDeserializer, varsSerializer, vars);
+    ReporteBeneficiariaVariables vars= ReporteBeneficiariaVariables(desde: desde,hasta: hasta,);
+    return _dataConnect.query("ReporteBeneficiaria", dataDeserializer, varsSerializer, vars);
   }
 }
 
 @immutable
 class ReporteBeneficiariaData {
   final List<AnyValue>? filas;
-  ReporteBeneficiariaData.fromJson(dynamic json)
-      : filas = json['filas'] == null
-            ? null
-            : (json['filas'] as List<dynamic>)
-                .map((e) => AnyValue.fromJson(e))
-                .toList();
+  ReporteBeneficiariaData.fromJson(dynamic json):
+  
+  filas = json['filas'] == null ? null : (json['filas'] as List<dynamic>)
+        .map((e) => AnyValue.fromJson(e))
+        .toList();
   @override
   bool operator ==(Object other) {
-    if (identical(this, other)) {
+    if(identical(this, other)) {
       return true;
     }
-    if (other.runtimeType != runtimeType) {
+    if(other.runtimeType != runtimeType) {
       return false;
     }
 
     final ReporteBeneficiariaData otherTyped = other as ReporteBeneficiariaData;
     return filas == otherTyped.filas;
+    
   }
-
   @override
   int get hashCode => filas.hashCode;
+  
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -71,27 +60,28 @@ class ReporteBeneficiariaData {
 class ReporteBeneficiariaVariables {
   final Timestamp desde;
   final Timestamp hasta;
-  @Deprecated(
-      'fromJson is deprecated for Variable classes as they are no longer required for deserialization.')
-  ReporteBeneficiariaVariables.fromJson(Map<String, dynamic> json)
-      : desde = Timestamp.fromJson(json['desde']),
-        hasta = Timestamp.fromJson(json['hasta']);
+  @Deprecated('fromJson is deprecated for Variable classes as they are no longer required for deserialization.')
+  ReporteBeneficiariaVariables.fromJson(Map<String, dynamic> json):
+  
+  desde = Timestamp.fromJson(json['desde']),
+  hasta = Timestamp.fromJson(json['hasta']);
   @override
   bool operator ==(Object other) {
-    if (identical(this, other)) {
+    if(identical(this, other)) {
       return true;
     }
-    if (other.runtimeType != runtimeType) {
+    if(other.runtimeType != runtimeType) {
       return false;
     }
 
-    final ReporteBeneficiariaVariables otherTyped =
-        other as ReporteBeneficiariaVariables;
-    return desde == otherTyped.desde && hasta == otherTyped.hasta;
+    final ReporteBeneficiariaVariables otherTyped = other as ReporteBeneficiariaVariables;
+    return desde == otherTyped.desde && 
+    hasta == otherTyped.hasta;
+    
   }
-
   @override
   int get hashCode => Object.hashAll([desde.hashCode, hasta.hashCode]);
+  
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -105,3 +95,4 @@ class ReporteBeneficiariaVariables {
     required this.hasta,
   });
 }
+
