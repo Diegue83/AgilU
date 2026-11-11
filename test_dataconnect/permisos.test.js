@@ -372,6 +372,53 @@ describe('crear producto (HU-13)', () => {
   });
 });
 
+describe('editar producto (HU-15)', () => {
+  const MOLLETES_ID = MOLLETES;
+  const TIENDITA = 'a0000000000040008000000000000003';
+  const cambio = (c = {}) => ({
+    id: MOLLETES_ID, nombre: 'Molletes', descripcion: 'Con frijoles',
+    precio: 42, puestoId: 'a0000000000040008000000000000001', disponible: true, ...c,
+  });
+
+  test('el encargado cambia precio, descripción y sección', async () => {
+    await beto.mutation('EditarMiProducto', cambio({ puestoId: TIENDITA }));
+    const { data } = await beto.query('MisProductos');
+    const m = data.productos.find((p) => p.id === MOLLETES_ID);
+    assert.equal(m.precio, 42);
+    assert.equal(m.descripcion, 'Con frijoles');
+    assert.equal(m.puesto.id, TIENDITA);
+  });
+
+  test('los pedidos anteriores conservan el precio con que se compraron', async () => {
+    const res = await ana.query('MisPedidos');
+    const p = res.data.pedidos.find((x) => x.id === pedidoDeAna.id);
+    const d = p.detallePedidos_on_pedido.find((x) => x.producto.nombre === 'Molletes');
+    assert.equal(d.precioEnElMomento, 40);
+  });
+
+  test('no se puede mover el producto a otra cafetería', async () => {
+    await assert.rejects(
+      beto.mutation('EditarMiProducto', cambio({ puestoId: 'a0000000000040008000000000000002' })),
+      /no es de tu cafetería/,
+    );
+  });
+
+  test('no se puede editar un producto de otra cafetería', async () => {
+    await assert.rejects(
+      beto.mutation('EditarMiProducto', cambio({ id: CAPUCHINO })),
+      /no es de tu cafetería/,
+    );
+  });
+
+  test('un alumno no puede editar productos', async () => {
+    await assert.rejects(ana.mutation('EditarMiProducto', cambio()), /no es de tu cafetería/);
+  });
+
+  test('el servidor valida precio al editar', async () => {
+    await assert.rejects(beto.mutation('EditarMiProducto', cambio({ precio: 0 })), /mayor a 0/);
+  });
+});
+
 describe('catálogo', () => {
   test('un alumno no puede crear productos ni puestos', async () => {
     await assert.rejects(

@@ -4,7 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   const cafe = Producto(
-      id: 'c1', nombre: 'Café', descripcion: '', precio: 25, categoria: 'Bebidas');
+      id: 'c1',
+      nombre: 'Café',
+      descripcion: '',
+      precio: 25,
+      categoria: 'Bebidas');
 
   test('agregar suma cantidades y total', () {
     final vm = CartViewModel();

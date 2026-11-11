@@ -2,20 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/models/estacion.dart';
+import '../../../data/models/producto.dart';
 import '../../../data/repositories/producto_repository.dart';
 import 'producto_form_view_model.dart';
 
-/// Formulario para dar de alta un producto. Devuelve true al cerrarse si se
-/// guardó.
+/// Formulario para dar de alta o editar un producto. Devuelve true al
+/// cerrarse si se guardó.
 class ProductoFormView extends StatelessWidget {
   final List<Estacion> estaciones;
-  const ProductoFormView({super.key, required this.estaciones});
+  final Producto? producto;
+  const ProductoFormView({super.key, required this.estaciones, this.producto});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (ctx) =>
-          ProductoFormViewModel(ctx.read<ProductoRepository>(), estaciones),
+      create: (ctx) => ProductoFormViewModel(
+          ctx.read<ProductoRepository>(), estaciones,
+          actual: producto),
       child: const _Formulario(),
     );
   }
@@ -34,6 +37,19 @@ class _FormularioState extends State<_Formulario> {
   final _precio = TextEditingController();
   String? _estacionId;
   bool _disponible = true;
+
+  @override
+  void initState() {
+    super.initState();
+    final p = context.read<ProductoFormViewModel>().actual;
+    if (p != null) {
+      _nombre.text = p.nombre;
+      _descripcion.text = p.descripcion;
+      _precio.text = p.precio.toStringAsFixed(2);
+      _estacionId = p.estacionId;
+      _disponible = p.disponible;
+    }
+  }
 
   @override
   void dispose() {
@@ -58,7 +74,8 @@ class _FormularioState extends State<_Formulario> {
   Widget build(BuildContext context) {
     final vm = context.watch<ProductoFormViewModel>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Nuevo producto')),
+      appBar: AppBar(
+          title: Text(vm.editando ? 'Editar producto' : 'Nuevo producto')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -74,7 +91,8 @@ class _FormularioState extends State<_Formulario> {
           TextField(
             controller: _descripcion,
             maxLines: 2,
-            decoration: const InputDecoration(labelText: 'Descripción (opcional)'),
+            decoration:
+                const InputDecoration(labelText: 'Descripción (opcional)'),
           ),
           const SizedBox(height: 16),
           TextField(

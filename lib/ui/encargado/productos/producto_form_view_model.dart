@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../../core/errores.dart';
 import '../../../data/models/estacion.dart';
+import '../../../data/models/producto.dart';
 import '../../../data/repositories/producto_repository.dart';
 
 /// Errores de validación del formulario, por campo.
@@ -18,14 +19,23 @@ class ProductoFormViewModel extends ChangeNotifier {
   final ProductoRepository _repo;
   final List<Estacion> estaciones;
 
-  ProductoFormViewModel(this._repo, List<Estacion> estaciones)
-      : estaciones = estaciones.where((e) => e.activo).toList();
+  /// Producto que se edita; null cuando es un alta.
+  final Producto? actual;
+
+  ProductoFormViewModel(this._repo, List<Estacion> estaciones, {this.actual})
+      : estaciones = estaciones
+            .where((e) => e.activo || e.id == actual?.estacionId)
+            .toList();
+
+  bool get editando => actual != null;
 
   static const _mensajes = [
     'El nombre es obligatorio',
     'El precio debe ser mayor a 0',
     'Elige una estación',
     'La estación no es de tu cafetería',
+    'El producto no es de tu cafetería',
+    'El producto no existe',
   ];
 
   bool guardando = false;
@@ -67,13 +77,18 @@ class ProductoFormViewModel extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      await _repo.crear(DatosProducto(
+      final datos = DatosProducto(
         nombre: nombre.trim(),
         descripcion: descripcion.trim(),
         precio: leerPrecio(precio)!,
         estacionId: estacionId!,
         disponible: disponible,
-      ));
+      );
+      if (editando) {
+        await _repo.editar(actual!.id, datos);
+      } else {
+        await _repo.crear(datos);
+      }
       return true;
     } catch (e) {
       error = mensajeDeError(

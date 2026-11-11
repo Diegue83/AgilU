@@ -881,3 +881,87 @@ final ref = AgiluConnector.instance.crearMiProducto(
 ref.execute();
 ```
 
+
+### EditarMiProducto
+#### Required Arguments
+```dart
+String id = ...;
+String nombre = ...;
+double precio = ...;
+String puestoId = ...;
+bool disponible = ...;
+AgiluConnector.instance.editarMiProducto(
+  id: id,
+  nombre: nombre,
+  precio: precio,
+  puestoId: puestoId,
+  disponible: disponible,
+).execute();
+```
+
+#### Optional Arguments
+We return a builder for each query. For EditarMiProducto, we created `EditarMiProductoBuilder`. For queries and mutations with optional parameters, we return a builder class.
+The builder pattern allows Data Connect to distinguish between fields that haven't been set and fields that have been set to null. A field can be set by calling its respective setter method like below:
+```dart
+class EditarMiProductoVariablesBuilder {
+  ...
+   EditarMiProductoVariablesBuilder descripcion(String? t) {
+   _descripcion.value = t;
+   return this;
+  }
+
+  ...
+}
+AgiluConnector.instance.editarMiProducto(
+  id: id,
+  nombre: nombre,
+  precio: precio,
+  puestoId: puestoId,
+  disponible: disponible,
+)
+.descripcion(descripcion)
+.execute();
+```
+
+#### Return Type
+`execute()` returns a `OperationResult<EditarMiProductoData, EditarMiProductoVariables>`
+```dart
+/// Result of an Operation Request (query/mutation).
+class OperationResult<Data, Variables> {
+  OperationResult(this.dataConnect, this.data, this.ref);
+  Data data;
+  OperationRef<Data, Variables> ref;
+  FirebaseDataConnect dataConnect;
+}
+
+final result = await AgiluConnector.instance.editarMiProducto(
+  id: id,
+  nombre: nombre,
+  precio: precio,
+  puestoId: puestoId,
+  disponible: disponible,
+);
+EditarMiProductoData data = result.data;
+final ref = result.ref;
+```
+
+#### Getting the Ref
+Each builder returns an `execute` function, which is a helper function that creates a `Ref` object, and executes the underlying operation.
+An example of how to use the `Ref` object is shown below:
+```dart
+String id = ...;
+String nombre = ...;
+double precio = ...;
+String puestoId = ...;
+bool disponible = ...;
+
+final ref = AgiluConnector.instance.editarMiProducto(
+  id: id,
+  nombre: nombre,
+  precio: precio,
+  puestoId: puestoId,
+  disponible: disponible,
+).ref();
+ref.execute();
+```
+
