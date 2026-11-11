@@ -5,6 +5,7 @@ import '../../core/routes.dart';
 import '../../data/repositories/auth_repository.dart';
 import 'cafeteria/cafeteria_view.dart';
 import 'estaciones/estaciones_view.dart';
+import 'panel/panel_view.dart';
 import 'productos/productos_view.dart';
 
 /// Pantalla principal del encargado de la cafetería. Cada sección del panel
@@ -20,6 +21,7 @@ class _EncargadoViewState extends State<EncargadoView> {
   int _seccion = 0;
 
   static const _secciones = <(String, IconData, Widget)>[
+    ('Pedidos', Icons.receipt_long, PanelView()),
     ('Productos', Icons.restaurant_menu, ProductosView()),
     ('Estaciones', Icons.storefront, EstacionesView()),
     ('Cafetería', Icons.tune, CafeteriaView()),

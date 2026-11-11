@@ -35,6 +35,8 @@ part 'quitar_oferta.dart';
 
 part 'editar_mi_cafeteria.dart';
 
+part 'avanzar_pedido.dart';
+
 part 'listar_menu.dart';
 
 part 'mi_perfil.dart';
@@ -54,6 +56,8 @@ part 'ocupacion_franjas.dart';
 part 'diagnosticar_pedido.dart';
 
 part 'mi_cafeteria.dart';
+
+part 'panel_pedidos.dart';
 
 
 
@@ -144,6 +148,11 @@ class AgiluConnector {
   }
   
   
+  AvanzarPedidoVariablesBuilder avanzarPedido ({required String id, required String estado, }) {
+    return AvanzarPedidoVariablesBuilder(dataConnect, id: id,estado: estado,);
+  }
+  
+  
   ListarMenuVariablesBuilder listarMenu () {
     return ListarMenuVariablesBuilder(dataConnect, );
   }
@@ -191,6 +200,11 @@ class AgiluConnector {
   
   MiCafeteriaVariablesBuilder miCafeteria () {
     return MiCafeteriaVariablesBuilder(dataConnect, );
+  }
+  
+  
+  PanelPedidosVariablesBuilder panelPedidos ({required Timestamp desde, required Timestamp hasta, }) {
+    return PanelPedidosVariablesBuilder(dataConnect, desde: desde,hasta: hasta,);
   }
   
 
