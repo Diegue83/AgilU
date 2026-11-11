@@ -254,6 +254,70 @@ describe('roles', () => {
   });
 });
 
+describe('estaciones (HU-18)', () => {
+  let nueva;
+
+  test('el encargado ve las estaciones de su cafetería en orden', async () => {
+    const { data } = await beto.query('MisEstaciones');
+    assert.deepEqual(data.puestos.map((p) => p.nombre), ['Guisados', 'Tiendita']);
+  });
+
+  test('un alumno no ve estaciones para administrar', async () => {
+    const { data } = await ana.query('MisEstaciones');
+    assert.equal(data.puestos.length, 0);
+  });
+
+  test('el encargado crea una estación en su cafetería', async () => {
+    const { data } = await beto.mutation('CrearEstacion', { nombre: 'Tacos', orden: 0 });
+    nueva = data.puesto_insert.id;
+    const res = await beto.query('MisEstaciones');
+    assert.equal(res.data.puestos[0].nombre, 'Tacos');
+  });
+
+  test('un alumno no puede crear estaciones', async () => {
+    await assert.rejects(ana.mutation('CrearEstacion', { nombre: 'Falsa', orden: 1 }));
+  });
+
+  test('el encargado renombra y desactiva una estación', async () => {
+    await beto.mutation('EditarEstacion', {
+      id: nueva, nombre: 'Tacos al pastor', orden: 3, activo: false,
+    });
+    const { data } = await beto.query('MisEstaciones');
+    const t = data.puestos.find((p) => p.id === nueva);
+    assert.equal(t.nombre, 'Tacos al pastor');
+    assert.equal(t.activo, false);
+  });
+
+  test('no se puede editar la estación de otra cafetería', async () => {
+    await assert.rejects(beto.mutation('EditarEstacion', {
+      id: 'a0000000000040008000000000000002', nombre: 'X', orden: 1, activo: false,
+    }));
+  });
+
+  test('una estación con productos no se puede eliminar', async () => {
+    await assert.rejects(beto.mutation('EliminarEstacion', {
+      id: 'a0000000000040008000000000000001',
+    }));
+  });
+
+  test('una estación vacía sí se elimina', async () => {
+    await beto.mutation('EliminarEstacion', { id: nueva });
+    const { data } = await beto.query('MisEstaciones');
+    assert.ok(data.puestos.every((p) => p.id !== nueva));
+  });
+
+  test('los productos de una estación desactivada salen del menú', async () => {
+    await beto.mutation('EditarEstacion', {
+      id: 'a0000000000040008000000000000003', nombre: 'Tiendita', orden: 2, activo: false,
+    });
+    const { data } = await ana.query('ListarMenu');
+    assert.ok(data.productos.every((p) => p.nombre !== 'Agua de horchata'));
+    await beto.mutation('EditarEstacion', {
+      id: 'a0000000000040008000000000000003', nombre: 'Tiendita', orden: 2, activo: true,
+    });
+  });
+});
+
 describe('catálogo', () => {
   test('un alumno no puede crear productos ni puestos', async () => {
     await assert.rejects(
