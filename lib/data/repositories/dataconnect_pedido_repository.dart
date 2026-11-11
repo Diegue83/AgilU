@@ -54,9 +54,25 @@ class DataConnectPedidoRepository implements PedidoRepository {
   @override
   Future<int> noRecogidos() async {
     final res = await _conector.miConfianza().execute();
-    final fila = res.data.confianza as Map?;
-    return (fila?['noRecogidos'] as num?)?.toInt() ?? 0;
+    return noRecogidosDe(res.data);
   }
+
+  // Las operaciones de SQL nativo regresan AnyValue: el mapa o la lista
+  // están en .value.
+  static int noRecogidosDe(MiConfianzaData d) =>
+      ((d.confianza?.value as Map?)?['noRecogidos'] as num?)?.toInt() ?? 0;
+
+  static String? motivoDe(DiagnosticarPedidoData d) {
+    final motivo = (d.diagnostico?.value as Map?)?['motivo'];
+    return motivo is String && motivo.isNotEmpty ? motivo : null;
+  }
+
+  static Map<DateTime, int> ocupacionDe(OcupacionFranjasData d) => {
+        for (final f
+            in (d.franjas ?? const <AnyValue>[]).map((v) => v.value as Map))
+          DateTime.parse(f['recogerA'] as String).toLocal():
+              (f['pedidos'] as num).toInt(),
+      };
 
   @override
   Future<List<ResumenPedido>> misPedidos() async {
@@ -127,8 +143,8 @@ class DataConnectPedidoRepository implements PedidoRepository {
             items: AnyValue(itemsDe(pedido)),
           )
           .execute();
-      final motivo = (d.data.diagnostico as Map?)?['motivo'];
-      if (motivo is String && motivo.isNotEmpty) return motivo;
+      final motivo = motivoDe(d.data);
+      if (motivo != null) return motivo;
     } catch (_) {
       // Si tampoco se puede diagnosticar, se usa el mensaje general.
     }
@@ -139,12 +155,7 @@ class DataConnectPedidoRepository implements PedidoRepository {
   Future<Map<DateTime, int>> ocupacion(String cafeteriaId) async {
     final res =
         await _conector.ocupacionFranjas(cafeteriaId: cafeteriaId).execute();
-    final filas = (res.data.franjas as List?) ?? const [];
-    return {
-      for (final f in filas.cast<Map>())
-        DateTime.parse(f['recogerA'] as String).toLocal():
-            (f['pedidos'] as num).toInt(),
-    };
+    return ocupacionDe(res.data);
   }
 
   static Timestamp _timestamp(DateTime t) =>
