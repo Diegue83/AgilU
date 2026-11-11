@@ -28,7 +28,8 @@ class EstacionesViewModel extends ChangeNotifier {
       estaciones = await _repo.misEstaciones();
       error = null;
     } catch (e) {
-      error = mensajeDeError(e, 'No se pudieron cargar las estaciones.', _mensajes);
+      error =
+          mensajeDeError(e, 'No se pudieron cargar las estaciones.', _mensajes);
     } finally {
       cargando = false;
       notifyListeners();
@@ -48,7 +49,8 @@ class EstacionesViewModel extends ChangeNotifier {
   Future<bool> crear(String nombre) => _ejecutar(() {
         final orden = estaciones.isEmpty
             ? 1
-            : estaciones.map((e) => e.orden).reduce((a, b) => a > b ? a : b) + 1;
+            : estaciones.map((e) => e.orden).reduce((a, b) => a > b ? a : b) +
+                1;
         return _repo.crear(nombre.trim(), orden);
       });
 

@@ -26,11 +26,13 @@ class CartViewModel extends ChangeNotifier {
   bool enviando = false;
   String? error;
 
-  List<DateTime> get horasDisponibles => ReglasPedido.horasDisponibles(_ahora());
+  List<DateTime> get horasDisponibles =>
+      ReglasPedido.horasDisponibles(_ahora());
 
   bool agregar(Producto p) {
     if (_items.isNotEmpty && cafeteriaId != p.cafeteriaId) {
-      error = 'Tu carrito es de otra cafetería. Envía o vacía ese pedido primero.';
+      error =
+          'Tu carrito es de otra cafetería. Envía o vacía ese pedido primero.';
       notifyListeners();
       return false;
     }
@@ -124,7 +126,8 @@ class CartViewModel extends ChangeNotifier {
       notas = '';
       return resultado;
     } catch (_) {
-      error = 'No se pudo enviar el pedido. Revisa tu conexión e intenta de nuevo.';
+      error =
+          'No se pudo enviar el pedido. Revisa tu conexión e intenta de nuevo.';
       return null;
     } finally {
       enviando = false;

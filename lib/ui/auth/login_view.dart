@@ -39,12 +39,13 @@ class _LoginFormState extends State<_LoginForm> {
   }
 
   Future<void> _enviar(LoginViewModel vm) async {
-    final ok = await vm.enviar(_correo.text, _contrasena.text,
-        nombre: _nombre.text);
+    final ok =
+        await vm.enviar(_correo.text, _contrasena.text, nombre: _nombre.text);
     if (!ok || !mounted) return;
     final perfiles = context.read<PerfilRepository>();
     final nav = Navigator.of(context);
-    final perfil = await perfiles.miPerfil().then((p) => p, onError: (_) => null);
+    final perfil =
+        await perfiles.miPerfil().then((p) => p, onError: (_) => null);
     nav.pushReplacementNamed(Routes.inicioPara(perfil));
   }
 
@@ -80,8 +81,8 @@ class _LoginFormState extends State<_LoginForm> {
                   TextField(
                     controller: _correo,
                     keyboardType: TextInputType.emailAddress,
-                    decoration:
-                        const InputDecoration(labelText: 'Correo institucional'),
+                    decoration: const InputDecoration(
+                        labelText: 'Correo institucional'),
                   ),
                   const SizedBox(height: 16),
                   TextField(
@@ -103,7 +104,8 @@ class _LoginFormState extends State<_LoginForm> {
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(strokeWidth: 2))
-                        : Text(vm.modoRegistro ? 'Registrarme' : 'Iniciar sesión'),
+                        : Text(
+                            vm.modoRegistro ? 'Registrarme' : 'Iniciar sesión'),
                   ),
                   TextButton(
                     onPressed: vm.alternarModo,
