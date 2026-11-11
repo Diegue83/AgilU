@@ -20,9 +20,14 @@ class DataConnectReporteRepository implements ReporteRepository {
     final res = await _conector
         .reporteBeneficiaria(desde: _ts(desde), hasta: _ts(hasta))
         .execute();
-    final filas = (res.data.filas as List?) ?? const [];
-    return filas.cast<Map>().map(FilaReporte.desdeMapa).toList();
+    return filasDe(res.data);
   }
+
+  /// La respuesta de SQL nativo llega como List<AnyValue>; cada fila en .value.
+  static List<FilaReporte> filasDe(ReporteBeneficiariaData d) =>
+      (d.filas ?? const <AnyValue>[])
+          .map((v) => FilaReporte.desdeMapa(v.value as Map))
+          .toList();
 }
 
 class MockReporteRepository implements ReporteRepository {

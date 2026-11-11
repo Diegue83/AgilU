@@ -1,18 +1,20 @@
 part of 'agilu.dart';
 
 class ListarCafeteriasVariablesBuilder {
-  
   final FirebaseDataConnect _dataConnect;
-  ListarCafeteriasVariablesBuilder(this._dataConnect, );
-  Deserializer<ListarCafeteriasData> dataDeserializer = (dynamic json)  => ListarCafeteriasData.fromJson(jsonDecode(json));
-  
+  ListarCafeteriasVariablesBuilder(
+    this._dataConnect,
+  );
+  Deserializer<ListarCafeteriasData> dataDeserializer =
+      (dynamic json) => ListarCafeteriasData.fromJson(jsonDecode(json));
+
   Future<QueryResult<ListarCafeteriasData, void>> execute() {
     return ref().execute();
   }
 
   QueryRef<ListarCafeteriasData, void> ref() {
-    
-    return _dataConnect.query("ListarCafeterias", dataDeserializer, emptySerializer, null);
+    return _dataConnect.query(
+        "ListarCafeterias", dataDeserializer, emptySerializer, null);
   }
 }
 
@@ -28,43 +30,53 @@ class ListarCafeteriasCafeterias {
   final bool permitirInmediatos;
   final String zonaHoraria;
   final bool activa;
-  ListarCafeteriasCafeterias.fromJson(dynamic json):
-  
-  id = nativeFromJson<String>(json['id']),
-  nombre = nativeFromJson<String>(json['nombre']),
-  aperturaMinutos = nativeFromJson<int>(json['aperturaMinutos']),
-  cierreMinutos = nativeFromJson<int>(json['cierreMinutos']),
-  anticipacionMinutos = nativeFromJson<int>(json['anticipacionMinutos']),
-  intervaloMinutos = nativeFromJson<int>(json['intervaloMinutos']),
-  capacidadPorFranja = nativeFromJson<int>(json['capacidadPorFranja']),
-  permitirInmediatos = nativeFromJson<bool>(json['permitirInmediatos']),
-  zonaHoraria = nativeFromJson<String>(json['zonaHoraria']),
-  activa = nativeFromJson<bool>(json['activa']);
+  ListarCafeteriasCafeterias.fromJson(dynamic json)
+      : id = nativeFromJson<String>(json['id']),
+        nombre = nativeFromJson<String>(json['nombre']),
+        aperturaMinutos = nativeFromJson<int>(json['aperturaMinutos']),
+        cierreMinutos = nativeFromJson<int>(json['cierreMinutos']),
+        anticipacionMinutos = nativeFromJson<int>(json['anticipacionMinutos']),
+        intervaloMinutos = nativeFromJson<int>(json['intervaloMinutos']),
+        capacidadPorFranja = nativeFromJson<int>(json['capacidadPorFranja']),
+        permitirInmediatos = nativeFromJson<bool>(json['permitirInmediatos']),
+        zonaHoraria = nativeFromJson<String>(json['zonaHoraria']),
+        activa = nativeFromJson<bool>(json['activa']);
   @override
   bool operator ==(Object other) {
-    if(identical(this, other)) {
+    if (identical(this, other)) {
       return true;
     }
-    if(other.runtimeType != runtimeType) {
+    if (other.runtimeType != runtimeType) {
       return false;
     }
 
-    final ListarCafeteriasCafeterias otherTyped = other as ListarCafeteriasCafeterias;
-    return id == otherTyped.id && 
-    nombre == otherTyped.nombre && 
-    aperturaMinutos == otherTyped.aperturaMinutos && 
-    cierreMinutos == otherTyped.cierreMinutos && 
-    anticipacionMinutos == otherTyped.anticipacionMinutos && 
-    intervaloMinutos == otherTyped.intervaloMinutos && 
-    capacidadPorFranja == otherTyped.capacidadPorFranja && 
-    permitirInmediatos == otherTyped.permitirInmediatos && 
-    zonaHoraria == otherTyped.zonaHoraria && 
-    activa == otherTyped.activa;
-    
+    final ListarCafeteriasCafeterias otherTyped =
+        other as ListarCafeteriasCafeterias;
+    return id == otherTyped.id &&
+        nombre == otherTyped.nombre &&
+        aperturaMinutos == otherTyped.aperturaMinutos &&
+        cierreMinutos == otherTyped.cierreMinutos &&
+        anticipacionMinutos == otherTyped.anticipacionMinutos &&
+        intervaloMinutos == otherTyped.intervaloMinutos &&
+        capacidadPorFranja == otherTyped.capacidadPorFranja &&
+        permitirInmediatos == otherTyped.permitirInmediatos &&
+        zonaHoraria == otherTyped.zonaHoraria &&
+        activa == otherTyped.activa;
   }
+
   @override
-  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, aperturaMinutos.hashCode, cierreMinutos.hashCode, anticipacionMinutos.hashCode, intervaloMinutos.hashCode, capacidadPorFranja.hashCode, permitirInmediatos.hashCode, zonaHoraria.hashCode, activa.hashCode]);
-  
+  int get hashCode => Object.hashAll([
+        id.hashCode,
+        nombre.hashCode,
+        aperturaMinutos.hashCode,
+        cierreMinutos.hashCode,
+        anticipacionMinutos.hashCode,
+        intervaloMinutos.hashCode,
+        capacidadPorFranja.hashCode,
+        permitirInmediatos.hashCode,
+        zonaHoraria.hashCode,
+        activa.hashCode
+      ]);
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -98,27 +110,25 @@ class ListarCafeteriasCafeterias {
 @immutable
 class ListarCafeteriasData {
   final List<ListarCafeteriasCafeterias> cafeterias;
-  ListarCafeteriasData.fromJson(dynamic json):
-  
-  cafeterias = (json['cafeterias'] as List<dynamic>)
-        .map((e) => ListarCafeteriasCafeterias.fromJson(e))
-        .toList();
+  ListarCafeteriasData.fromJson(dynamic json)
+      : cafeterias = (json['cafeterias'] as List<dynamic>)
+            .map((e) => ListarCafeteriasCafeterias.fromJson(e))
+            .toList();
   @override
   bool operator ==(Object other) {
-    if(identical(this, other)) {
+    if (identical(this, other)) {
       return true;
     }
-    if(other.runtimeType != runtimeType) {
+    if (other.runtimeType != runtimeType) {
       return false;
     }
 
     final ListarCafeteriasData otherTyped = other as ListarCafeteriasData;
     return cafeterias == otherTyped.cafeterias;
-    
   }
+
   @override
   int get hashCode => cafeterias.hashCode;
-  
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -130,4 +140,3 @@ class ListarCafeteriasData {
     required this.cafeterias,
   });
 }
-

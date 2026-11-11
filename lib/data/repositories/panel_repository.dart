@@ -109,7 +109,12 @@ class DataConnectPanelRepository implements PanelRepository {
     final res = await _conector
         .entregarPedido(id: pedidoId, codigo: codigo.trim())
         .execute();
-    final fila = res.data.resultado as Map?;
+    return resultadoDe(res.data);
+  }
+
+  /// La respuesta de SQL nativo llega como AnyValue; el mapa está en .value.
+  static ResultadoEntrega resultadoDe(EntregarPedidoData d) {
+    final fila = d.resultado?.value as Map?;
     if (fila == null) return ResultadoEntrega.noDisponible;
     return fila['estado'] == 'entregado'
         ? ResultadoEntrega.entregado
