@@ -4,6 +4,7 @@ import 'package:agilu/data/models/item_carrito.dart';
 import 'package:agilu/data/models/pedido.dart';
 import 'package:agilu/data/models/pedido_panel.dart';
 import 'package:agilu/data/models/producto.dart';
+import 'package:agilu/data/models/ticket.dart';
 import 'package:agilu/data/repositories/pagos_repository.dart';
 import 'package:agilu/data/repositories/pedido_repository.dart';
 import 'package:agilu/ui/encargado/pagos/pagos_view_model.dart';
@@ -87,5 +88,21 @@ void main() {
       expect(await vm.aprobar(p), isFalse);
       expect(vm.error, 'Ese pago ya se había validado. Se actualizó la lista.');
     });
+  });
+
+  test('el ticket dice cómo terminó el pedido', () {
+    TicketPedido t(EstadoPedido e) => TicketPedido(
+        id: 'x',
+        folio: 'AGU-1',
+        referencia: 'AGU-1',
+        estado: e,
+        recogerA: DateTime(2026),
+        total: 1,
+        cafeteria: 'C');
+    expect(t(EstadoPedido.porPagar).etiquetaEstado, 'Por pagar');
+    expect(t(EstadoPedido.preparando).etiquetaEstado, 'Pagado');
+    expect(t(EstadoPedido.entregado).etiquetaEstado, 'Entregado');
+    expect(t(EstadoPedido.noRecogido).etiquetaEstado, 'No recogido');
+    expect(t(EstadoPedido.cancelado).etiquetaEstado, 'Cancelado');
   });
 }

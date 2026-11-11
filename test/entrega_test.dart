@@ -54,7 +54,7 @@ void main() {
     final vm = await _vm(MockPanelRepository(pedidos: [_listo()]));
     expect(await vm.entregar(_listo(), '4821'), isTrue);
     expect(vm.enEstado(EstadoPedido.listo), isEmpty);
-    expect(vm.mensaje, 'Pedido 14 entregado.');
+    expect(vm.mensaje, 'Pedido AGU-00014 entregado.');
   });
 
   test('un código incorrecto no entrega y lo explica', () async {

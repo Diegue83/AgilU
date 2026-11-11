@@ -81,7 +81,7 @@ class _Ticket extends StatelessWidget {
                         avatar: Icon(t.pagado
                             ? Icons.check_circle
                             : Icons.hourglass_bottom),
-                        label: Text(t.pagado ? 'Pagado' : t.estado.etiqueta),
+                        label: Text(t.etiquetaEstado),
                       ),
                     ),
                     const SizedBox(height: 8),
