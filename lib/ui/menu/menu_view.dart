@@ -54,7 +54,8 @@ class _MenuScaffold extends StatelessWidget {
               await auth.cerrarSesion();
               carrito.limpiar();
               if (context.mounted) {
-                Navigator.pushReplacementNamed(context, Routes.login);
+                Navigator.pushNamedAndRemoveUntil(
+                    context, Routes.login, (_) => false);
               }
             },
           ),

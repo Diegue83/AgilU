@@ -351,4 +351,22 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Total'), findsOneWidget);
   });
+
+  testWidgets(
+      'al cerrar sesión e iniciar con otra cuenta no queda la pantalla anterior',
+      (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository()));
+    await _iniciarSesion(tester);
+    expect(find.text('Menú de hoy'), findsOneWidget);
+    expect(find.byType(BackButton), findsNothing);
+
+    await tester.tap(find.byTooltip('Cerrar sesión'));
+    await tester.pumpAndSettle();
+    expect(find.text('Iniciar sesión'), findsOneWidget);
+    expect(find.byType(BackButton), findsNothing);
+
+    await _iniciarSesion(tester);
+    expect(find.text('Menú de hoy'), findsOneWidget);
+    expect(find.byType(BackButton), findsNothing);
+  });
 }

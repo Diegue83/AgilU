@@ -42,7 +42,8 @@ class _EncargadoViewState extends State<EncargadoView> {
             onPressed: () async {
               await context.read<AuthRepository>().cerrarSesion();
               if (context.mounted) {
-                Navigator.pushReplacementNamed(context, Routes.login);
+                Navigator.pushNamedAndRemoveUntil(
+                    context, Routes.login, (_) => false);
               }
             },
           ),
