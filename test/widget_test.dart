@@ -269,6 +269,38 @@ void main() {
     expect(find.text('Preparando (2)'), findsOneWidget);
   });
 
+  testWidgets('el encargado entrega un pedido listo con el código del alumno',
+      (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository(),
+        perfiles: MockPerfilRepository(perfil: _encargado)));
+    await _iniciarSesion(tester);
+    await tester.scrollUntilVisible(find.text('Entregar con código'), 200,
+        scrollable: find.byType(Scrollable).first);
+    await tester.dragUntilVisible(find.text('Entregar con código'),
+        find.byType(Scrollable).first, const Offset(0, -100));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Entregar con código'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '0000');
+    await tester.tap(find.widgetWithText(FilledButton, 'Entregar'));
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, 2000));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Código incorrecto'), findsOneWidget);
+
+    await tester.dragUntilVisible(find.text('Entregar con código'),
+        find.byType(Scrollable).first, const Offset(0, -100));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Entregar con código'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '4821');
+    await tester.tap(find.widgetWithText(FilledButton, 'Entregar'));
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, 2000));
+    await tester.pumpAndSettle();
+    expect(find.text('Pedido 14 entregado.'), findsOneWidget);
+  });
+
   testWidgets('el encargado aprueba un comprobante desde la pestaña Pagos',
       (tester) async {
     await tester.pumpWidget(_app(MockAuthRepository(),

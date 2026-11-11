@@ -60,6 +60,38 @@ class PanelViewModel extends ChangeNotifier {
     }
   }
 
+  String? mensaje;
+
+  /// HU-09: entrega con el PIN que dicta o muestra el alumno.
+  Future<bool> entregar(PedidoPanel p, String codigo) async {
+    if (!RegExp(r'^\d{4}$').hasMatch(codigo.trim())) {
+      error = 'El código tiene 4 dígitos.';
+      notifyListeners();
+      return false;
+    }
+    try {
+      final r = await _repo.entregar(p.id, codigo);
+      switch (r) {
+        case ResultadoEntrega.entregado:
+          _pedidos.removeWhere((x) => x.id == p.id);
+          error = null;
+          mensaje = 'Pedido ${p.folio} entregado.';
+          notifyListeners();
+          return true;
+        case ResultadoEntrega.codigoIncorrecto:
+          error =
+              'Código incorrecto. Pide al alumno que lo revise en su ticket.';
+        case ResultadoEntrega.noDisponible:
+          error = 'Este pedido ya no se puede entregar con código. '
+              'Si hubo varios intentos fallidos, verifica la identidad del alumno.';
+      }
+    } catch (_) {
+      error = 'No se pudo registrar la entrega.';
+    }
+    notifyListeners();
+    return false;
+  }
+
   @override
   void dispose() {
     _sub?.cancel();

@@ -960,6 +960,70 @@ describe('pago anticipado (HU-08)', () => {
   });
 });
 
+describe('entrega con código (HU-09)', () => {
+  let vars;
+  let codigo;
+
+  test('al aprobar el pago se genera un PIN de 4 dígitos que solo ve el alumno', async () => {
+    vars = pedido({ recogerA: pronto(7) });
+    await ana.mutation('CrearPedido', vars);
+    await pagado(vars);
+    const { data } = await ana.query('MiPedido', { id: vars.id });
+    codigo = data.pedidos[0].codigoEntrega;
+    assert.match(codigo, /^\d{4}$/);
+    const hoy = new Date(); hoy.setUTCHours(0, 0, 0, 0);
+    const panel = await beto.query('PanelPedidos', {
+      desde: hoy.toISOString(), hasta: new Date(hoy.getTime() + 864e5).toISOString(),
+    });
+    const enPanel = panel.data.pedidos.find((p) => p.id === sinGuiones(vars.id));
+    assert.equal(enPanel.codigoEntrega, undefined);
+  });
+
+  test('no se entrega un pedido que todavía no está listo', async () => {
+    const { data } = await beto.mutation('EntregarPedido', { id: vars.id, codigo });
+    assert.equal(data.resultado, null);
+  });
+
+  test('un código equivocado suma intento y no entrega', async () => {
+    await beto.mutation('AvanzarPedido', { id: vars.id, estado: 'preparando' });
+    await beto.mutation('AvanzarPedido', { id: vars.id, estado: 'listo' });
+    const malo = codigo === '0000' ? '1111' : '0000';
+    const { data } = await beto.mutation('EntregarPedido', { id: vars.id, codigo: malo });
+    assert.equal(data.resultado.estado, 'listo');
+    assert.equal(data.resultado.intentos, 1);
+  });
+
+  test('un alumno no puede entregar pedidos aunque sepa el código', async () => {
+    const { data } = await ana.mutation('EntregarPedido', { id: vars.id, codigo });
+    assert.equal(data.resultado, null);
+  });
+
+  test('con el código correcto queda entregado y no se puede volver a usar', async () => {
+    const { data } = await beto.mutation('EntregarPedido', { id: vars.id, codigo });
+    assert.equal(data.resultado.estado, 'entregado');
+    const otra = await beto.mutation('EntregarPedido', { id: vars.id, codigo });
+    assert.equal(otra.data.resultado, null);
+    const mio = await ana.query('MiPedido', { id: vars.id });
+    assert.equal(mio.data.pedidos[0].estado, 'entregado');
+    assert.ok(mio.data.pedidos[0].entregadoEn);
+  });
+
+  test('tras 5 códigos equivocados el pedido se bloquea', async () => {
+    const otro = pedido({ recogerA: pronto(8) });
+    await ana.mutation('CrearPedido', otro);
+    await pagado(otro);
+    await beto.mutation('AvanzarPedido', { id: otro.id, estado: 'preparando' });
+    await beto.mutation('AvanzarPedido', { id: otro.id, estado: 'listo' });
+    const bueno = (await ana.query('MiPedido', { id: otro.id })).data.pedidos[0].codigoEntrega;
+    const malo = bueno === '0000' ? '1111' : '0000';
+    for (let i = 0; i < 5; i++) {
+      await beto.mutation('EntregarPedido', { id: otro.id, codigo: malo });
+    }
+    const { data } = await beto.mutation('EntregarPedido', { id: otro.id, codigo: bueno });
+    assert.equal(data.resultado, null);
+  });
+});
+
 describe('catálogo', () => {
   test('un alumno no puede crear productos ni puestos', async () => {
     await assert.rejects(
