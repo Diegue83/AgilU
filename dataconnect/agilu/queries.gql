@@ -386,3 +386,32 @@ query MisNotificaciones @auth(level: USER) {
     leido
   }
 }
+
+# HU-11: resumen del negocio por cafetería para la beneficiaria. Para cualquier
+# otro rol la consulta regresa una lista vacía. Solo expone totales.
+query ReporteBeneficiaria($desde: Timestamp!, $hasta: Timestamp!) @auth(level: USER) {
+  filas: _select(
+    sql: """
+    SELECT c.id AS "cafeteriaId",
+           c.nombre AS "cafeteria",
+           count(o.id) FILTER (WHERE o.estado <> 'cancelado')::int AS "pedidos",
+           count(o.id) FILTER (WHERE o.estado = 'entregado')::int AS "entregados",
+           count(o.id) FILTER (WHERE o.estado = 'no_recogido')::int AS "noRecogidos",
+           count(o.id) FILTER (WHERE o.estado = 'cancelado')::int AS "cancelados",
+           coalesce(sum(o.monto_total) FILTER (WHERE o.pagado_en IS NOT NULL), 0)::float8 AS "ingresos",
+           coalesce(sum(o.monto_total) FILTER (WHERE o.estado = 'no_recogido'), 0)::float8 AS "montoNoRecogido"
+    FROM cafeteria c
+    LEFT JOIN pedido o ON o.cafeteria_id = c.id
+      AND o.recoger_a >= $2::timestamptz AND o.recoger_a < $3::timestamptz
+    WHERE EXISTS (
+      SELECT 1 FROM usuario u
+      JOIN autenticacion a ON a.usuario_id = u.id
+      JOIN rol r ON r.id = u.rol_id
+      WHERE a.firebase_auth_uid = $1 AND r.nombre = 'beneficiaria'
+    )
+    GROUP BY c.id, c.nombre
+    ORDER BY c.nombre
+    """
+    params: [{ _expr: "auth.uid" }, $desde, $hasta]
+  )
+}

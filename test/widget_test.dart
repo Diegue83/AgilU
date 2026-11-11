@@ -12,6 +12,7 @@ import 'package:agilu/data/repositories/panel_repository.dart';
 import 'package:agilu/data/repositories/pedido_repository.dart';
 import 'package:agilu/data/repositories/perfil_repository.dart';
 import 'package:agilu/data/repositories/producto_repository.dart';
+import 'package:agilu/data/repositories/reporte_repository.dart';
 import 'package:agilu/ui/cart/cart_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -31,6 +32,7 @@ Widget _app(AuthRepository auth,
       providers: [
         Provider<AuthRepository>.value(value: auth),
         Provider<AvisosRepository>(create: (_) => MockAvisosRepository()),
+        Provider<ReporteRepository>(create: (_) => MockReporteRepository()),
         Provider<PerfilRepository>.value(
             value: perfiles ?? MockPerfilRepository()),
         Provider<EstacionRepository>(create: (_) => MockEstacionRepository()),
@@ -332,5 +334,21 @@ void main() {
     ));
     await _iniciarSesion(tester);
     expect(avisos.registrado, isTrue);
+  });
+
+  testWidgets('la beneficiaria entra directo a su reporte', (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository(),
+        perfiles: MockPerfilRepository(
+            perfil: const Perfil(
+                nombre: 'Elena',
+                correo: 'elena@utng.edu.mx',
+                rol: RolUsuario.beneficiaria))));
+    await _iniciarSesion(tester);
+    expect(find.text('Reporte'), findsOneWidget);
+    expect(find.text('Total'), findsOneWidget);
+    expect(find.text('Cafetería central'), findsOneWidget);
+    await tester.tap(find.text('Hoy'));
+    await tester.pumpAndSettle();
+    expect(find.text('Total'), findsOneWidget);
   });
 }
