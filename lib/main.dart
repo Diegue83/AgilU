@@ -15,6 +15,7 @@ import 'data/repositories/estacion_repository.dart';
 import 'data/repositories/firebase_auth_repository.dart';
 import 'data/repositories/foto_repository.dart';
 import 'data/repositories/menu_repository.dart';
+import 'data/repositories/panel_repository.dart';
 import 'data/repositories/pedido_repository.dart';
 import 'data/repositories/producto_repository.dart';
 import 'data/repositories/perfil_repository.dart';
@@ -59,6 +60,11 @@ Future<void> main() async {
           create: (_) => AppConfig.usarFirebase
               ? DataConnectEstacionRepository()
               : MockEstacionRepository(),
+        ),
+        Provider<PanelRepository>(
+          create: (_) => AppConfig.usarFirebase
+              ? DataConnectPanelRepository()
+              : MockPanelRepository(),
         ),
         Provider<CafeteriaRepository>(
           create: (_) => AppConfig.usarFirebase
