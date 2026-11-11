@@ -30,7 +30,7 @@ class _MenuScaffold extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Menú'),
+        title: const Text('Menú de hoy'),
         actions: [
           IconButton(
             tooltip: 'Cerrar sesión',
@@ -54,6 +54,27 @@ class _MenuScaffold extends StatelessWidget {
         }
         return Column(
           children: [
+            if (vm.cafeterias.length > 1)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: DropdownButtonFormField<String>(
+                  initialValue: vm.cafeteriaSeleccionada,
+                  decoration: const InputDecoration(labelText: 'Cafetería'),
+                  items: [
+                    for (final c in vm.cafeterias)
+                      DropdownMenuItem(value: c.id, child: Text(c.nombre)),
+                  ],
+                  onChanged: (id) {
+                    if (id != null) vm.seleccionarCafeteria(id);
+                  },
+                ),
+              ),
+            if (vm.aviso != null)
+              MaterialBanner(
+                leading: const Icon(Icons.info_outline),
+                content: Text(vm.aviso!),
+                actions: const [SizedBox.shrink()],
+              ),
             SizedBox(
               height: 56,
               child: ListView(
@@ -88,7 +109,7 @@ class _MenuScaffold extends StatelessWidget {
                         Text('\$${p.precio.toStringAsFixed(2)}'),
                         IconButton(
                           icon: const Icon(Icons.add_circle_outline),
-                          onPressed: p.disponible
+                          onPressed: p.disponible && vm.puedePedir
                               ? () {
                                   if (!carrito.agregar(p)) {
                                     ScaffoldMessenger.of(context).showSnackBar(

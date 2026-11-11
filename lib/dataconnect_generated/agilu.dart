@@ -1,5 +1,4 @@
 library agilu_connector;
-
 import 'package:firebase_data_connect/firebase_data_connect.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
@@ -42,204 +41,116 @@ part 'mis_estaciones.dart';
 
 part 'mis_productos.dart';
 
+part 'listar_cafeterias.dart';
+
+
+
+
+
+
+
 class AgiluConnector {
-  CrearPerfilVariablesBuilder crearPerfil({
-    required String nombre,
-  }) {
-    return CrearPerfilVariablesBuilder(
-      dataConnect,
-      nombre: nombre,
-    );
+  
+  
+  CrearPerfilVariablesBuilder crearPerfil ({required String nombre, }) {
+    return CrearPerfilVariablesBuilder(dataConnect, nombre: nombre,);
   }
-
-  CrearPedidoVariablesBuilder crearPedido({
-    required String id,
-    required String cafeteriaId,
-    required Timestamp recogerA,
-    required dynamic items,
-  }) {
-    return CrearPedidoVariablesBuilder(
-      dataConnect,
-      id: id,
-      cafeteriaId: cafeteriaId,
-      recogerA: recogerA,
-      items: items,
-    );
+  
+  
+  CrearPedidoVariablesBuilder crearPedido ({required String id, required String cafeteriaId, required Timestamp recogerA, required dynamic items, }) {
+    return CrearPedidoVariablesBuilder(dataConnect, id: id,cafeteriaId: cafeteriaId,recogerA: recogerA,items: items,);
   }
-
-  CrearCafeteriaVariablesBuilder crearCafeteria({
-    required String nombre,
-  }) {
-    return CrearCafeteriaVariablesBuilder(
-      dataConnect,
-      nombre: nombre,
-    );
+  
+  
+  CrearCafeteriaVariablesBuilder crearCafeteria ({required String nombre, }) {
+    return CrearCafeteriaVariablesBuilder(dataConnect, nombre: nombre,);
   }
-
-  CrearPuestoVariablesBuilder crearPuesto({
-    required String nombre,
-    required String cafeteriaId,
-  }) {
-    return CrearPuestoVariablesBuilder(
-      dataConnect,
-      nombre: nombre,
-      cafeteriaId: cafeteriaId,
-    );
+  
+  
+  CrearPuestoVariablesBuilder crearPuesto ({required String nombre, required String cafeteriaId, }) {
+    return CrearPuestoVariablesBuilder(dataConnect, nombre: nombre,cafeteriaId: cafeteriaId,);
   }
-
-  AsignarRolVariablesBuilder asignarRol({
-    required String correo,
-    required String rol,
-  }) {
-    return AsignarRolVariablesBuilder(
-      dataConnect,
-      correo: correo,
-      rol: rol,
-    );
+  
+  
+  AsignarRolVariablesBuilder asignarRol ({required String correo, required String rol, }) {
+    return AsignarRolVariablesBuilder(dataConnect, correo: correo,rol: rol,);
   }
-
-  CrearProductoVariablesBuilder crearProducto({
-    required String nombre,
-    required double precio,
-    required int cantidadEnStock,
-    required String categoria,
-    required String puestoId,
-  }) {
-    return CrearProductoVariablesBuilder(
-      dataConnect,
-      nombre: nombre,
-      precio: precio,
-      cantidadEnStock: cantidadEnStock,
-      categoria: categoria,
-      puestoId: puestoId,
-    );
+  
+  
+  CrearProductoVariablesBuilder crearProducto ({required String nombre, required double precio, required int cantidadEnStock, required String categoria, required String puestoId, }) {
+    return CrearProductoVariablesBuilder(dataConnect, nombre: nombre,precio: precio,cantidadEnStock: cantidadEnStock,categoria: categoria,puestoId: puestoId,);
   }
-
-  CrearEstacionVariablesBuilder crearEstacion({
-    required String nombre,
-    required int orden,
-  }) {
-    return CrearEstacionVariablesBuilder(
-      dataConnect,
-      nombre: nombre,
-      orden: orden,
-    );
+  
+  
+  CrearEstacionVariablesBuilder crearEstacion ({required String nombre, required int orden, }) {
+    return CrearEstacionVariablesBuilder(dataConnect, nombre: nombre,orden: orden,);
   }
-
-  EditarEstacionVariablesBuilder editarEstacion({
-    required String id,
-    required String nombre,
-    required int orden,
-    required bool activo,
-  }) {
-    return EditarEstacionVariablesBuilder(
-      dataConnect,
-      id: id,
-      nombre: nombre,
-      orden: orden,
-      activo: activo,
-    );
+  
+  
+  EditarEstacionVariablesBuilder editarEstacion ({required String id, required String nombre, required int orden, required bool activo, }) {
+    return EditarEstacionVariablesBuilder(dataConnect, id: id,nombre: nombre,orden: orden,activo: activo,);
   }
-
-  EliminarEstacionVariablesBuilder eliminarEstacion({
-    required String id,
-  }) {
-    return EliminarEstacionVariablesBuilder(
-      dataConnect,
-      id: id,
-    );
+  
+  
+  EliminarEstacionVariablesBuilder eliminarEstacion ({required String id, }) {
+    return EliminarEstacionVariablesBuilder(dataConnect, id: id,);
   }
-
-  CrearMiProductoVariablesBuilder crearMiProducto({
-    required String nombre,
-    required double precio,
-    required String puestoId,
-    required bool disponible,
-  }) {
-    return CrearMiProductoVariablesBuilder(
-      dataConnect,
-      nombre: nombre,
-      precio: precio,
-      puestoId: puestoId,
-      disponible: disponible,
-    );
+  
+  
+  CrearMiProductoVariablesBuilder crearMiProducto ({required String nombre, required double precio, required String puestoId, required bool disponible, }) {
+    return CrearMiProductoVariablesBuilder(dataConnect, nombre: nombre,precio: precio,puestoId: puestoId,disponible: disponible,);
   }
-
-  EditarMiProductoVariablesBuilder editarMiProducto({
-    required String id,
-    required String nombre,
-    required double precio,
-    required String puestoId,
-    required bool disponible,
-  }) {
-    return EditarMiProductoVariablesBuilder(
-      dataConnect,
-      id: id,
-      nombre: nombre,
-      precio: precio,
-      puestoId: puestoId,
-      disponible: disponible,
-    );
+  
+  
+  EditarMiProductoVariablesBuilder editarMiProducto ({required String id, required String nombre, required double precio, required String puestoId, required bool disponible, }) {
+    return EditarMiProductoVariablesBuilder(dataConnect, id: id,nombre: nombre,precio: precio,puestoId: puestoId,disponible: disponible,);
   }
-
-  EstablecerDisponibilidadVariablesBuilder establecerDisponibilidad({
-    required String id,
-    required bool disponible,
-  }) {
-    return EstablecerDisponibilidadVariablesBuilder(
-      dataConnect,
-      id: id,
-      disponible: disponible,
-    );
+  
+  
+  EstablecerDisponibilidadVariablesBuilder establecerDisponibilidad ({required String id, required bool disponible, }) {
+    return EstablecerDisponibilidadVariablesBuilder(dataConnect, id: id,disponible: disponible,);
   }
-
-  EliminarMiProductoVariablesBuilder eliminarMiProducto({
-    required String id,
-  }) {
-    return EliminarMiProductoVariablesBuilder(
-      dataConnect,
-      id: id,
-    );
+  
+  
+  EliminarMiProductoVariablesBuilder eliminarMiProducto ({required String id, }) {
+    return EliminarMiProductoVariablesBuilder(dataConnect, id: id,);
   }
-
-  ListarMenuVariablesBuilder listarMenu() {
-    return ListarMenuVariablesBuilder(
-      dataConnect,
-    );
+  
+  
+  ListarMenuVariablesBuilder listarMenu () {
+    return ListarMenuVariablesBuilder(dataConnect, );
   }
-
-  MiPerfilVariablesBuilder miPerfil() {
-    return MiPerfilVariablesBuilder(
-      dataConnect,
-    );
+  
+  
+  MiPerfilVariablesBuilder miPerfil () {
+    return MiPerfilVariablesBuilder(dataConnect, );
   }
-
-  MiPedidoVariablesBuilder miPedido({
-    required String id,
-  }) {
-    return MiPedidoVariablesBuilder(
-      dataConnect,
-      id: id,
-    );
+  
+  
+  MiPedidoVariablesBuilder miPedido ({required String id, }) {
+    return MiPedidoVariablesBuilder(dataConnect, id: id,);
   }
-
-  MisPedidosVariablesBuilder misPedidos() {
-    return MisPedidosVariablesBuilder(
-      dataConnect,
-    );
+  
+  
+  MisPedidosVariablesBuilder misPedidos () {
+    return MisPedidosVariablesBuilder(dataConnect, );
   }
-
-  MisEstacionesVariablesBuilder misEstaciones() {
-    return MisEstacionesVariablesBuilder(
-      dataConnect,
-    );
+  
+  
+  MisEstacionesVariablesBuilder misEstaciones () {
+    return MisEstacionesVariablesBuilder(dataConnect, );
   }
-
-  MisProductosVariablesBuilder misProductos() {
-    return MisProductosVariablesBuilder(
-      dataConnect,
-    );
+  
+  
+  MisProductosVariablesBuilder misProductos () {
+    return MisProductosVariablesBuilder(dataConnect, );
   }
+  
+  
+  ListarCafeteriasVariablesBuilder listarCafeterias () {
+    return ListarCafeteriasVariablesBuilder(dataConnect, );
+  }
+  
 
   static ConnectorConfig connectorConfig = ConnectorConfig(
     'us-east4',
@@ -249,9 +160,11 @@ class AgiluConnector {
 
   AgiluConnector({required this.dataConnect});
   static AgiluConnector get instance {
+    
     return AgiluConnector(
         dataConnect: FirebaseDataConnect.instanceFor(
             connectorConfig: connectorConfig,
+            
             sdkType: CallerSDKType.generated));
   }
 

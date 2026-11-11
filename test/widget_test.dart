@@ -54,7 +54,7 @@ void main() {
   testWidgets('con sesión guardada abre directo en el menú', (tester) async {
     await tester.pumpWidget(_app(MockAuthRepository(), ruta: Routes.menu));
     await tester.pumpAndSettle();
-    expect(find.text('Menú'), findsOneWidget);
+    expect(find.text('Menú de hoy'), findsOneWidget);
     expect(find.text('Iniciar sesión'), findsNothing);
   });
 
@@ -68,7 +68,7 @@ void main() {
   testWidgets('login correcto de un alumno lleva al menú', (tester) async {
     await tester.pumpWidget(_app(MockAuthRepository()));
     await _iniciarSesion(tester);
-    expect(find.text('Menú'), findsOneWidget);
+    expect(find.text('Menú de hoy'), findsOneWidget);
   });
 
   testWidgets('login de un encargado lleva a su panel', (tester) async {
