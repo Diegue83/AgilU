@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/routes.dart';
 import '../../data/repositories/auth_repository.dart';
 import 'estaciones/estaciones_view.dart';
+import 'productos/productos_view.dart';
 
 /// Pantalla principal del encargado de la cafetería. Cada sección del panel
 /// es una pestaña de la barra inferior.
@@ -18,6 +19,7 @@ class _EncargadoViewState extends State<EncargadoView> {
   int _seccion = 0;
 
   static const _secciones = <(String, IconData, Widget)>[
+    ('Productos', Icons.restaurant_menu, ProductosView()),
     ('Estaciones', Icons.storefront, EstacionesView()),
   ];
 
