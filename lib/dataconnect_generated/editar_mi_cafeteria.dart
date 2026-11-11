@@ -9,59 +9,41 @@ class EditarMiCafeteriaVariablesBuilder {
   bool permitirInmediatos;
 
   final FirebaseDataConnect _dataConnect;
-  EditarMiCafeteriaVariablesBuilder(
-    this._dataConnect, {
-    required this.aperturaMinutos,
-    required this.cierreMinutos,
-    required this.anticipacionMinutos,
-    required this.intervaloMinutos,
-    required this.capacidadPorFranja,
-    required this.permitirInmediatos,
-  });
-  Deserializer<EditarMiCafeteriaData> dataDeserializer =
-      (dynamic json) => EditarMiCafeteriaData.fromJson(jsonDecode(json));
-  Serializer<EditarMiCafeteriaVariables> varsSerializer =
-      (EditarMiCafeteriaVariables vars) => jsonEncode(vars.toJson());
-  Future<OperationResult<EditarMiCafeteriaData, EditarMiCafeteriaVariables>>
-      execute() {
+  EditarMiCafeteriaVariablesBuilder(this._dataConnect, {required  this.aperturaMinutos,required  this.cierreMinutos,required  this.anticipacionMinutos,required  this.intervaloMinutos,required  this.capacidadPorFranja,required  this.permitirInmediatos,});
+  Deserializer<EditarMiCafeteriaData> dataDeserializer = (dynamic json)  => EditarMiCafeteriaData.fromJson(jsonDecode(json));
+  Serializer<EditarMiCafeteriaVariables> varsSerializer = (EditarMiCafeteriaVariables vars) => jsonEncode(vars.toJson());
+  Future<OperationResult<EditarMiCafeteriaData, EditarMiCafeteriaVariables>> execute() {
     return ref().execute();
   }
 
   MutationRef<EditarMiCafeteriaData, EditarMiCafeteriaVariables> ref() {
-    EditarMiCafeteriaVariables vars = EditarMiCafeteriaVariables(
-      aperturaMinutos: aperturaMinutos,
-      cierreMinutos: cierreMinutos,
-      anticipacionMinutos: anticipacionMinutos,
-      intervaloMinutos: intervaloMinutos,
-      capacidadPorFranja: capacidadPorFranja,
-      permitirInmediatos: permitirInmediatos,
-    );
-    return _dataConnect.mutation(
-        "EditarMiCafeteria", dataDeserializer, varsSerializer, vars);
+    EditarMiCafeteriaVariables vars= EditarMiCafeteriaVariables(aperturaMinutos: aperturaMinutos,cierreMinutos: cierreMinutos,anticipacionMinutos: anticipacionMinutos,intervaloMinutos: intervaloMinutos,capacidadPorFranja: capacidadPorFranja,permitirInmediatos: permitirInmediatos,);
+    return _dataConnect.mutation("EditarMiCafeteria", dataDeserializer, varsSerializer, vars);
   }
 }
 
 @immutable
 class EditarMiCafeteriaCafeteriaUpdate {
   final String id;
-  EditarMiCafeteriaCafeteriaUpdate.fromJson(dynamic json)
-      : id = nativeFromJson<String>(json['id']);
+  EditarMiCafeteriaCafeteriaUpdate.fromJson(dynamic json):
+  
+  id = nativeFromJson<String>(json['id']);
   @override
   bool operator ==(Object other) {
-    if (identical(this, other)) {
+    if(identical(this, other)) {
       return true;
     }
-    if (other.runtimeType != runtimeType) {
+    if(other.runtimeType != runtimeType) {
       return false;
     }
 
-    final EditarMiCafeteriaCafeteriaUpdate otherTyped =
-        other as EditarMiCafeteriaCafeteriaUpdate;
+    final EditarMiCafeteriaCafeteriaUpdate otherTyped = other as EditarMiCafeteriaCafeteriaUpdate;
     return id == otherTyped.id;
+    
   }
-
   @override
   int get hashCode => id.hashCode;
+  
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -77,26 +59,25 @@ class EditarMiCafeteriaCafeteriaUpdate {
 @immutable
 class EditarMiCafeteriaData {
   final EditarMiCafeteriaCafeteriaUpdate? cafeteria_update;
-  EditarMiCafeteriaData.fromJson(dynamic json)
-      : cafeteria_update = json['cafeteria_update'] == null
-            ? null
-            : EditarMiCafeteriaCafeteriaUpdate.fromJson(
-                json['cafeteria_update']);
+  EditarMiCafeteriaData.fromJson(dynamic json):
+  
+  cafeteria_update = json['cafeteria_update'] == null ? null : EditarMiCafeteriaCafeteriaUpdate.fromJson(json['cafeteria_update']);
   @override
   bool operator ==(Object other) {
-    if (identical(this, other)) {
+    if(identical(this, other)) {
       return true;
     }
-    if (other.runtimeType != runtimeType) {
+    if(other.runtimeType != runtimeType) {
       return false;
     }
 
     final EditarMiCafeteriaData otherTyped = other as EditarMiCafeteriaData;
     return cafeteria_update == otherTyped.cafeteria_update;
+    
   }
-
   @override
   int get hashCode => cafeteria_update.hashCode;
+  
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -119,43 +100,36 @@ class EditarMiCafeteriaVariables {
   final int intervaloMinutos;
   final int capacidadPorFranja;
   final bool permitirInmediatos;
-  @Deprecated(
-      'fromJson is deprecated for Variable classes as they are no longer required for deserialization.')
-  EditarMiCafeteriaVariables.fromJson(Map<String, dynamic> json)
-      : aperturaMinutos = nativeFromJson<int>(json['aperturaMinutos']),
-        cierreMinutos = nativeFromJson<int>(json['cierreMinutos']),
-        anticipacionMinutos = nativeFromJson<int>(json['anticipacionMinutos']),
-        intervaloMinutos = nativeFromJson<int>(json['intervaloMinutos']),
-        capacidadPorFranja = nativeFromJson<int>(json['capacidadPorFranja']),
-        permitirInmediatos = nativeFromJson<bool>(json['permitirInmediatos']);
+  @Deprecated('fromJson is deprecated for Variable classes as they are no longer required for deserialization.')
+  EditarMiCafeteriaVariables.fromJson(Map<String, dynamic> json):
+  
+  aperturaMinutos = nativeFromJson<int>(json['aperturaMinutos']),
+  cierreMinutos = nativeFromJson<int>(json['cierreMinutos']),
+  anticipacionMinutos = nativeFromJson<int>(json['anticipacionMinutos']),
+  intervaloMinutos = nativeFromJson<int>(json['intervaloMinutos']),
+  capacidadPorFranja = nativeFromJson<int>(json['capacidadPorFranja']),
+  permitirInmediatos = nativeFromJson<bool>(json['permitirInmediatos']);
   @override
   bool operator ==(Object other) {
-    if (identical(this, other)) {
+    if(identical(this, other)) {
       return true;
     }
-    if (other.runtimeType != runtimeType) {
+    if(other.runtimeType != runtimeType) {
       return false;
     }
 
-    final EditarMiCafeteriaVariables otherTyped =
-        other as EditarMiCafeteriaVariables;
-    return aperturaMinutos == otherTyped.aperturaMinutos &&
-        cierreMinutos == otherTyped.cierreMinutos &&
-        anticipacionMinutos == otherTyped.anticipacionMinutos &&
-        intervaloMinutos == otherTyped.intervaloMinutos &&
-        capacidadPorFranja == otherTyped.capacidadPorFranja &&
-        permitirInmediatos == otherTyped.permitirInmediatos;
+    final EditarMiCafeteriaVariables otherTyped = other as EditarMiCafeteriaVariables;
+    return aperturaMinutos == otherTyped.aperturaMinutos && 
+    cierreMinutos == otherTyped.cierreMinutos && 
+    anticipacionMinutos == otherTyped.anticipacionMinutos && 
+    intervaloMinutos == otherTyped.intervaloMinutos && 
+    capacidadPorFranja == otherTyped.capacidadPorFranja && 
+    permitirInmediatos == otherTyped.permitirInmediatos;
+    
   }
-
   @override
-  int get hashCode => Object.hashAll([
-        aperturaMinutos.hashCode,
-        cierreMinutos.hashCode,
-        anticipacionMinutos.hashCode,
-        intervaloMinutos.hashCode,
-        capacidadPorFranja.hashCode,
-        permitirInmediatos.hashCode
-      ]);
+  int get hashCode => Object.hashAll([aperturaMinutos.hashCode, cierreMinutos.hashCode, anticipacionMinutos.hashCode, intervaloMinutos.hashCode, capacidadPorFranja.hashCode, permitirInmediatos.hashCode]);
+  
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
@@ -177,3 +151,4 @@ class EditarMiCafeteriaVariables {
     required this.permitirInmediatos,
   });
 }
+

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:agilu/data/models/cafeteria.dart';
 import 'package:agilu/data/models/producto.dart';
 import 'package:agilu/data/repositories/menu_repository.dart';
+import 'package:agilu/data/repositories/pedido_repository.dart';
 import 'package:agilu/ui/menu/menu_view_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -97,5 +98,34 @@ void main() {
     final vm = await _vm([], cafeterias: const []);
     expect(vm.aviso, 'Por ahora no hay cafeterías abiertas.');
     expect(vm.puedePedir, isFalse);
+  });
+
+  group('sistema de confianza', () {
+    Future<MenuViewModel> conNoRecogidos(int n) async {
+      final pedidos = MockPedidoRepository()..sinRecoger = n;
+      final vm = MenuViewModel(_Menu([_p('1', 'Torta')], const [_central]),
+          ahora: () => DateTime(2026, 11, 10, 10), pedidos: pedidos);
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      return vm;
+    }
+
+    test('sin pedidos no recogidos no hay aviso', () async {
+      final vm = await conNoRecogidos(0);
+      expect(vm.avisoConfianza, isNull);
+      expect(vm.puedePedir, isTrue);
+    });
+
+    test('con uno o dos avisa antes del bloqueo', () async {
+      final vm = await conNoRecogidos(2);
+      expect(vm.avisoConfianza, startsWith('Tienes 2 pedido(s) sin recoger'));
+      expect(vm.puedePedir, isTrue);
+    });
+
+    test('con 3 bloquea los pedidos nuevos', () async {
+      final vm = await conNoRecogidos(3);
+      expect(vm.bloqueadoPorConfianza, isTrue);
+      expect(vm.puedePedir, isFalse);
+    });
   });
 }

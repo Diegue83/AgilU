@@ -1024,6 +1024,91 @@ describe('entrega con código (HU-09)', () => {
   });
 });
 
+describe('sistema de confianza (HU-23)', () => {
+  const { cerrarDia } = createRequire(import.meta.url)('../functions/cierre.js');
+  let dani;
+
+  const listoYVencido = async (alumno) => {
+    const vars = pedido({ recogerA: pronto(2) });
+    await alumno.mutation('CrearPedido', vars);
+    await pagado(vars);
+    await beto.mutation('AvanzarPedido', { id: vars.id, estado: 'preparando' });
+    await beto.mutation('AvanzarPedido', { id: vars.id, estado: 'listo' });
+    await adminDataConnect.executeGraphql(
+      'mutation V($id: UUID!, $t: Timestamp!) { pedido_update(id: $id, data: { recogerA: $t }) }',
+      { variables: { id: vars.id, t: new Date(Date.now() - 3600e3).toISOString() } },
+    );
+    return vars;
+  };
+
+  before(async () => {
+    dani = await alumno('dani');
+    await dani.mutation('CrearPerfil', { nombre: 'Dani' });
+  });
+
+  after(async () => {
+    await signOut(dani.auth);
+    await deleteApp(dani.app);
+  });
+
+  test('el encargado marca un pedido listo y vencido como no recogido', async () => {
+    const vars = await listoYVencido(dani);
+    const r = await beto.mutation('MarcarNoRecogido', { id: vars.id });
+    assert.equal(r.data._execute, 1);
+    const { data } = await dani.query('MiConfianza');
+    assert.equal(data.confianza.noRecogidos, 1);
+  });
+
+  test('no se puede marcar un pedido que todavía no llega a su hora', async () => {
+    const vars = pedido({ recogerA: pronto(30) });
+    await dani.mutation('CrearPedido', vars);
+    await pagado(vars);
+    await beto.mutation('AvanzarPedido', { id: vars.id, estado: 'preparando' });
+    await beto.mutation('AvanzarPedido', { id: vars.id, estado: 'listo' });
+    const r = await beto.mutation('MarcarNoRecogido', { id: vars.id });
+    assert.equal(r.data._execute, 0);
+  });
+
+  test('un alumno no puede marcar pedidos', async () => {
+    const vars = await listoYVencido(dani);
+    const r = await dani.mutation('MarcarNoRecogido', { id: vars.id });
+    assert.equal(r.data._execute, 0);
+  });
+
+  test('el cierre del día marca lo no recogido y cancela lo que nunca se pagó', async () => {
+    const sinPagar = pedido({ recogerA: pronto(2) });
+    await dani.mutation('CrearPedido', sinPagar);
+    await adminDataConnect.executeGraphql(
+      'mutation V($id: UUID!, $t: Timestamp!) { pedido_update(id: $id, data: { recogerA: $t }) }',
+      { variables: { id: sinPagar.id, t: new Date(Date.now() - 3600e3).toISOString() } },
+    );
+    const r = await cerrarDia(adminDataConnect);
+    assert.ok(r.noRecogidos >= 1);
+    assert.ok(r.sinPagar >= 1);
+    const { data } = await dani.query('MiPedido', { id: sinPagar.id });
+    assert.equal(data.pedidos[0].estado, 'cancelado');
+    const c = await dani.query('MiConfianza');
+    assert.equal(c.data.confianza.noRecogidos, 2);
+  });
+
+  test('con 3 pedidos sin recoger ya no puede pedir y el diagnóstico lo explica', async () => {
+    const vars = await listoYVencido(dani);
+    await beto.mutation('MarcarNoRecogido', { id: vars.id });
+    const nuevo = pedido({ recogerA: pronto(5) });
+    const r = await dani.mutation('CrearPedido', nuevo);
+    assert.equal(r.data._execute, 0);
+    const d = await dani.query('DiagnosticarPedido', {
+      cafeteriaId: CAFETERIA, recogerA: nuevo.recogerA, items: nuevo.items,
+    });
+    assert.match(d.data.diagnostico.motivo, /3 pedidos sin recoger/);
+  });
+
+  test('a los demás alumnos no les afecta', async () => {
+    const r = await ana.mutation('CrearPedido', pedido({ recogerA: pronto(5) }));
+    assert.equal(r.data._execute, 2);
+  });
+});
+
 describe('catálogo', () => {
   test('un alumno no puede crear productos ni puestos', async () => {
     await assert.rejects(

@@ -20,6 +20,30 @@ Future<PanelViewModel> _vm(MockPanelRepository repo) async {
 }
 
 void main() {
+  test('el encargado marca como no recogido un pedido listo y vencido',
+      () async {
+    final vencido = PedidoPanel(
+      id: 'v1',
+      folio: 20,
+      estado: EstadoPedido.listo,
+      recogerA: DateTime.now().subtract(const Duration(hours: 1)),
+      alumno: 'Dani',
+    );
+    final aTiempo = PedidoPanel(
+      id: 'v2',
+      folio: 21,
+      estado: EstadoPedido.listo,
+      recogerA: DateTime.now().add(const Duration(hours: 1)),
+      alumno: 'Eva',
+    );
+    final vm = await _vm(MockPanelRepository(pedidos: [vencido, aTiempo]));
+    expect(await vm.marcarNoRecogido(aTiempo), isFalse);
+    expect(vm.error, 'Solo se marca cuando ya pasó la hora de recogida.');
+    expect(await vm.marcarNoRecogido(vencido), isTrue);
+    expect(vm.enEstado(EstadoPedido.listo).single.id, 'v2');
+    expect(EstadoPedido.desdeNombre('no_recogido'), EstadoPedido.noRecogido);
+  });
+
   test('valida que el código tenga 4 dígitos antes de enviarlo', () async {
     final vm = await _vm(MockPanelRepository(pedidos: [_listo()]));
     expect(await vm.entregar(_listo(), '12'), isFalse);

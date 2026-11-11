@@ -143,6 +143,17 @@ class _Tarjeta extends StatelessWidget {
             if (pedido.notas != null && pedido.notas!.isNotEmpty)
               Text('Nota: ${pedido.notas}',
                   style: const TextStyle(fontStyle: FontStyle.italic)),
+            if (pedido.estado == EstadoPedido.listo &&
+                pedido.recogerA.isBefore(DateTime.now())) ...[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => vm.marcarNoRecogido(pedido),
+                  child: const Text('No se presentó'),
+                ),
+              ),
+            ],
             if (pedido.estado == EstadoPedido.listo) ...[
               const SizedBox(height: 8),
               Align(
