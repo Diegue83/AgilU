@@ -117,6 +117,33 @@ class _Ticket extends StatelessWidget {
                             style: Theme.of(context).textTheme.titleMedium),
                       ],
                     ),
+                    if (t.muestraCodigo) ...[
+                      const SizedBox(height: 16),
+                      Card(
+                        color: Theme.of(context).colorScheme.primaryContainer,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: [
+                              const Text('Código de entrega'),
+                              Text(
+                                t.codigoEntrega!,
+                                key: const Key('codigo-entrega'),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .displayMedium
+                                    ?.copyWith(letterSpacing: 8),
+                              ),
+                              const Text(
+                                'Dicta o muestra este código en el mostrador para recoger tu pedido. '
+                                'No lo compartas.',
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                     if (t.pagadoEn != null)
                       Text(
                           'Pagado el ${t.pagadoEn!.day}/${t.pagadoEn!.month} a las ${ReglasPedido.formatearHora(t.pagadoEn!)}'),

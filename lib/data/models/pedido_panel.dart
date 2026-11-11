@@ -49,6 +49,7 @@ class PedidoPanel {
   final String alumno;
   final String? notas;
   final double total;
+  final int intentosEntrega;
   final List<LineaPanel> lineas;
 
   const PedidoPanel({
@@ -59,8 +60,12 @@ class PedidoPanel {
     required this.alumno,
     this.notas,
     this.total = 0,
+    this.intentosEntrega = 0,
     this.lineas = const [],
   });
+
+  /// HU-09: tras 5 códigos equivocados ya no se entrega con código.
+  bool get entregaBloqueada => intentosEntrega >= 5;
 
   PedidoPanel conEstado(EstadoPedido e) => PedidoPanel(
         id: id,
@@ -70,6 +75,7 @@ class PedidoPanel {
         alumno: alumno,
         notas: notas,
         total: total,
+        intentosEntrega: intentosEntrega,
         lineas: lineas,
       );
 }

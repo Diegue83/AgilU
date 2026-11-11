@@ -11,10 +11,16 @@ class PedidoDesactualizado implements Exception {
   String toString() => 'El pedido ya cambió de estado. Se actualizó la lista.';
 }
 
+/// Resultado de intentar entregar un pedido con el código del alumno.
+enum ResultadoEntrega { entregado, codigoIncorrecto, noDisponible }
+
 abstract class PanelRepository {
   /// Pedidos de hoy de la cafetería del encargado; se actualiza solo.
   Stream<List<PedidoPanel>> observarHoy();
   Future<void> avanzar(PedidoPanel pedido);
+
+  /// HU-09: entrega un pedido listo si el código coincide.
+  Future<ResultadoEntrega> entregar(String pedidoId, String codigo);
 }
 
 class DataConnectPanelRepository implements PanelRepository {
@@ -48,6 +54,7 @@ class DataConnectPanelRepository implements PanelRepository {
               alumno: p.usuario.nombre,
               notas: p.notas,
               total: p.montoTotal,
+              intentosEntrega: p.intentosEntrega,
               lineas: [
                 for (final d in p.detallePedidos_on_pedido)
                   LineaPanel(d.cantidad, d.producto.nombre),
@@ -87,6 +94,18 @@ class DataConnectPanelRepository implements PanelRepository {
         .execute();
     if ((res.data.execute_ ?? 0) == 0) throw PedidoDesactualizado();
   }
+
+  @override
+  Future<ResultadoEntrega> entregar(String pedidoId, String codigo) async {
+    final res = await _conector
+        .entregarPedido(id: pedidoId, codigo: codigo.trim())
+        .execute();
+    final fila = res.data.resultado as Map?;
+    if (fila == null) return ResultadoEntrega.noDisponible;
+    return fila['estado'] == 'entregado'
+        ? ResultadoEntrega.entregado
+        : ResultadoEntrega.codigoIncorrecto;
+  }
 }
 
 class MockPanelRepository implements PanelRepository {
@@ -115,6 +134,15 @@ class MockPanelRepository implements PanelRepository {
                 total: 50,
                 lineas: const [LineaPanel(1, 'Torta de milanesa')],
               ),
+              PedidoPanel(
+                id: 'p3',
+                folio: 14,
+                estado: EstadoPedido.listo,
+                recogerA: DateTime.now().add(const Duration(minutes: 5)),
+                alumno: 'Carla',
+                total: 20,
+                lineas: const [LineaPanel(1, 'Agua de horchata')],
+              ),
             ];
 
   @override
@@ -132,5 +160,35 @@ class MockPanelRepository implements PanelRepository {
     }
     pedidos[i] = pedidos[i].conEstado(siguiente);
     _cambios.add(List.of(pedidos));
+  }
+
+  final Map<String, String> codigos = {'p3': '4821'};
+
+  @override
+  Future<ResultadoEntrega> entregar(String pedidoId, String codigo) async {
+    final i = pedidos.indexWhere((p) => p.id == pedidoId);
+    if (i < 0 ||
+        pedidos[i].estado != EstadoPedido.listo ||
+        pedidos[i].entregaBloqueada) {
+      return ResultadoEntrega.noDisponible;
+    }
+    if (codigos[pedidoId] != codigo) {
+      final p = pedidos[i];
+      pedidos[i] = PedidoPanel(
+        id: p.id,
+        folio: p.folio,
+        estado: p.estado,
+        recogerA: p.recogerA,
+        alumno: p.alumno,
+        notas: p.notas,
+        total: p.total,
+        intentosEntrega: p.intentosEntrega + 1,
+        lineas: p.lineas,
+      );
+      return ResultadoEntrega.codigoIncorrecto;
+    }
+    pedidos[i] = pedidos[i].conEstado(EstadoPedido.entregado);
+    _cambios.add(List.of(pedidos));
+    return ResultadoEntrega.entregado;
   }
 }

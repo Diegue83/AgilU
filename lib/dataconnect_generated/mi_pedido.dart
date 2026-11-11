@@ -29,6 +29,8 @@ class MiPedidoPedidos {
   final String? comprobanteUrl;
   final String? motivoRechazoPago;
   final Timestamp? pagadoEn;
+  final String? codigoEntrega;
+  final Timestamp? entregadoEn;
   final MiPedidoPedidosCafeteria cafeteria;
   final List<MiPedidoPedidosDetallePedidosOnPedido> detallePedidos_on_pedido;
   MiPedidoPedidos.fromJson(dynamic json):
@@ -43,6 +45,8 @@ class MiPedidoPedidos {
   comprobanteUrl = json['comprobanteUrl'] == null ? null : nativeFromJson<String>(json['comprobanteUrl']),
   motivoRechazoPago = json['motivoRechazoPago'] == null ? null : nativeFromJson<String>(json['motivoRechazoPago']),
   pagadoEn = json['pagadoEn'] == null ? null : Timestamp.fromJson(json['pagadoEn']),
+  codigoEntrega = json['codigoEntrega'] == null ? null : nativeFromJson<String>(json['codigoEntrega']),
+  entregadoEn = json['entregadoEn'] == null ? null : Timestamp.fromJson(json['entregadoEn']),
   cafeteria = MiPedidoPedidosCafeteria.fromJson(json['cafeteria']),
   detallePedidos_on_pedido = (json['detallePedidos_on_pedido'] as List<dynamic>)
         .map((e) => MiPedidoPedidosDetallePedidosOnPedido.fromJson(e))
@@ -67,12 +71,14 @@ class MiPedidoPedidos {
     comprobanteUrl == otherTyped.comprobanteUrl && 
     motivoRechazoPago == otherTyped.motivoRechazoPago && 
     pagadoEn == otherTyped.pagadoEn && 
+    codigoEntrega == otherTyped.codigoEntrega && 
+    entregadoEn == otherTyped.entregadoEn && 
     cafeteria == otherTyped.cafeteria && 
     detallePedidos_on_pedido == otherTyped.detallePedidos_on_pedido;
     
   }
   @override
-  int get hashCode => Object.hashAll([id.hashCode, folio.hashCode, montoTotal.hashCode, estado.hashCode, recogerA.hashCode, notas.hashCode, referenciaPago.hashCode, comprobanteUrl.hashCode, motivoRechazoPago.hashCode, pagadoEn.hashCode, cafeteria.hashCode, detallePedidos_on_pedido.hashCode]);
+  int get hashCode => Object.hashAll([id.hashCode, folio.hashCode, montoTotal.hashCode, estado.hashCode, recogerA.hashCode, notas.hashCode, referenciaPago.hashCode, comprobanteUrl.hashCode, motivoRechazoPago.hashCode, pagadoEn.hashCode, codigoEntrega.hashCode, entregadoEn.hashCode, cafeteria.hashCode, detallePedidos_on_pedido.hashCode]);
   
 
   Map<String, dynamic> toJson() {
@@ -97,6 +103,12 @@ class MiPedidoPedidos {
     if (pagadoEn != null) {
       json['pagadoEn'] = pagadoEn!.toJson();
     }
+    if (codigoEntrega != null) {
+      json['codigoEntrega'] = nativeToJson<String?>(codigoEntrega);
+    }
+    if (entregadoEn != null) {
+      json['entregadoEn'] = entregadoEn!.toJson();
+    }
     json['cafeteria'] = cafeteria.toJson();
     json['detallePedidos_on_pedido'] = detallePedidos_on_pedido.map((e) => e.toJson()).toList();
     return json;
@@ -113,6 +125,8 @@ class MiPedidoPedidos {
     this.comprobanteUrl,
     this.motivoRechazoPago,
     this.pagadoEn,
+    this.codigoEntrega,
+    this.entregadoEn,
     required this.cafeteria,
     required this.detallePedidos_on_pedido,
   });
