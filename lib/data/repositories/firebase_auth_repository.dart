@@ -1,11 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'auth_repository.dart';
+import 'perfil_repository.dart';
 
 class FirebaseAuthRepository implements AuthRepository {
   final FirebaseAuth _auth;
-  FirebaseAuthRepository({FirebaseAuth? auth})
-      : _auth = auth ?? FirebaseAuth.instance;
+  final PerfilRepository? _perfil;
+  FirebaseAuthRepository({FirebaseAuth? auth, PerfilRepository? perfil})
+      : _auth = auth ?? FirebaseAuth.instance,
+        _perfil = perfil;
 
   @override
   String? get uidActual => _auth.currentUser?.uid;
@@ -19,6 +22,7 @@ class FirebaseAuthRepository implements AuthRepository {
     try {
       final cred = await _auth.signInWithEmailAndPassword(
           email: correo, password: contrasena);
+      await _asegurarPerfil(nombreDesdeCorreo(correo));
       return cred.user!.uid;
     } on FirebaseAuthException catch (e) {
       throw Exception(mensajeDeError(e.code));
@@ -26,15 +30,30 @@ class FirebaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<String> registrar(String correo, String contrasena) async {
+  Future<String> registrar(
+      String correo, String contrasena, String nombre) async {
     try {
       final cred = await _auth.createUserWithEmailAndPassword(
           email: correo, password: contrasena);
+      await _asegurarPerfil(nombre);
       return cred.user!.uid;
     } on FirebaseAuthException catch (e) {
       throw Exception(mensajeDeError(e.code));
     }
   }
+
+  Future<void> _asegurarPerfil(String nombre) async {
+    if (_perfil == null) return;
+    try {
+      await _perfil.asegurarPerfil(nombre);
+    } catch (_) {
+      throw Exception(
+          'Tu cuenta está lista, pero no se pudo crear tu perfil. Inicia sesión de nuevo.');
+    }
+  }
+
+  /// Para cuentas creadas antes de que existiera el perfil.
+  static String nombreDesdeCorreo(String correo) => correo.split('@').first;
 
   @override
   Future<void> cerrarSesion() => _auth.signOut();

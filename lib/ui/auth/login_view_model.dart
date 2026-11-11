@@ -19,7 +19,10 @@ class LoginViewModel extends ChangeNotifier {
   }
 
   /// Devuelve el problema con los datos capturados, o null si son válidos.
-  String? validar(String correo, String contrasena) {
+  String? validar(String correo, String contrasena, {String nombre = ''}) {
+    if (modoRegistro && nombre.isEmpty) {
+      return 'Escribe tu nombre.';
+    }
     if (correo.isEmpty || contrasena.isEmpty) {
       return 'Escribe tu correo y tu contraseña.';
     }
@@ -33,10 +36,12 @@ class LoginViewModel extends ChangeNotifier {
   }
 
   /// Devuelve true si la autenticación fue exitosa.
-  Future<bool> enviar(String correo, String contrasena) async {
+  Future<bool> enviar(String correo, String contrasena,
+      {String nombre = ''}) async {
     if (cargando) return false;
     final limpio = correo.trim();
-    final problema = validar(limpio, contrasena);
+    final nombreLimpio = nombre.trim();
+    final problema = validar(limpio, contrasena, nombre: nombreLimpio);
     if (problema != null) {
       error = problema;
       notifyListeners();
@@ -48,7 +53,7 @@ class LoginViewModel extends ChangeNotifier {
     notifyListeners();
     try {
       if (modoRegistro) {
-        await _auth.registrar(limpio, contrasena);
+        await _auth.registrar(limpio, contrasena, nombreLimpio);
       } else {
         await _auth.iniciarSesion(limpio, contrasena);
       }

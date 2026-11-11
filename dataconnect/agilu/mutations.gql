@@ -1,0 +1,97 @@
+mutation CrearPerfil($nombre: String!) @auth(level: USER) @transaction {
+  usuario_insert(data: { nombre: $nombre })
+  autenticacion_insert(
+    data: {
+      firebaseAuthUid_expr: "auth.uid"
+      correoElectronico_expr: "auth.token.email"
+      usuarioId_expr: "response.usuario_insert.id"
+    }
+  )
+}
+
+# El precio y el total salen de la tabla producto, nunca del cliente.
+# El folio avanza en la misma sentencia, así que dos pedidos no comparten folio.
+# Si un producto no existe, no está disponible o es de otro puesto, no se inserta nada.
+mutation CrearPedido(
+  $id: UUID!
+  $puestoId: UUID!
+  $recogerA: Timestamp!
+  $notas: String
+  $items: Any!
+) @auth(level: USER) {
+  _execute(
+    sql: """
+    WITH
+      cliente AS (
+        SELECT usuario_id FROM autenticacion WHERE firebase_auth_uid = $1
+      ),
+      pedidos_items AS (
+        SELECT (e->>'productoId')::uuid AS producto_id,
+               (e->>'cantidad')::int AS cantidad
+        FROM jsonb_array_elements($6::jsonb) AS e
+      ),
+      lineas AS (
+        SELECT i.producto_id, i.cantidad, p.precio
+        FROM pedidos_items i
+        JOIN producto p ON p.id = i.producto_id
+        WHERE p.disponible
+          AND p.puesto_id = $3::uuid
+          AND i.cantidad BETWEEN 1 AND 50
+      ),
+      valido AS (
+        SELECT 1 FROM cliente
+        WHERE (SELECT count(*) FROM lineas) = (SELECT count(*) FROM pedidos_items)
+          AND (SELECT count(*) FROM pedidos_items) BETWEEN 1 AND 50
+          AND $4::timestamptz > now()
+          AND coalesce(length($5::text), 0) <= 200
+      ),
+      folio AS (
+        INSERT INTO contador_folio (nombre, valor)
+        SELECT 'pedidos', 1 FROM valido
+        ON CONFLICT (nombre) DO UPDATE SET valor = contador_folio.valor + 1
+        RETURNING valor
+      ),
+      nuevo AS (
+        INSERT INTO pedido (id, folio, monto_total, estado, fecha_creacion,
+                            recoger_a, notas, es_credito, usuario_id, puesto_id)
+        SELECT $2::uuid, folio.valor, (SELECT sum(precio * cantidad) FROM lineas),
+               'pendiente', now(), $4::timestamptz, nullif(trim($5::text), ''),
+               false, cliente.usuario_id, $3::uuid
+        FROM folio, cliente
+        RETURNING id
+      )
+    INSERT INTO detalle_pedido (id, cantidad, precio_en_el_momento, pedido_id, producto_id)
+    SELECT gen_random_uuid(), lineas.cantidad, lineas.precio, nuevo.id, lineas.producto_id
+    FROM lineas, nuevo
+    """
+    params: [{ _expr: "auth.uid" }, $id, $puestoId, $recogerA, $notas, $items]
+  )
+}
+
+# Altas del catálogo: solo con privilegios de administrador
+# (firebase dataconnect:execute). Las pantallas de HU-13 y HU-18 las reemplazarán.
+mutation CrearPuesto($nombre: String!, $ubicacion: String!) @auth(level: NO_ACCESS) {
+  puesto_insert(data: { nombre: $nombre, ubicacion: $ubicacion })
+}
+
+mutation CrearProducto(
+  $nombre: String!
+  $precio: Float!
+  $cantidadEnStock: Int!
+  $categoria: String!
+  $descripcion: String
+  $urlDeImagen: String
+  $puestoId: UUID!
+) @auth(level: NO_ACCESS) {
+  producto_insert(
+    data: {
+      nombre: $nombre
+      precio: $precio
+      cantidadEnStock: $cantidadEnStock
+      categoria: $categoria
+      descripcion: $descripcion
+      urlDeImagen: $urlDeImagen
+      puesto: { id: $puestoId }
+    }
+  )
+}

@@ -4,7 +4,7 @@ abstract class AuthRepository {
   /// uid de la sesión que quedó abierta en el dispositivo, o null.
   Future<String?> sesionGuardada();
   Future<String> iniciarSesion(String correo, String contrasena);
-  Future<String> registrar(String correo, String contrasena);
+  Future<String> registrar(String correo, String contrasena, String nombre);
   Future<void> cerrarSesion();
 }
 
@@ -32,7 +32,7 @@ class MockAuthRepository implements AuthRepository {
       _simular(correo, contrasena);
 
   @override
-  Future<String> registrar(String correo, String contrasena) =>
+  Future<String> registrar(String correo, String contrasena, String nombre) =>
       _simular(correo, contrasena);
 
   @override
