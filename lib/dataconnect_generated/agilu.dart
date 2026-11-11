@@ -15,6 +15,12 @@ part 'asignar_rol.dart';
 
 part 'crear_producto.dart';
 
+part 'crear_estacion.dart';
+
+part 'editar_estacion.dart';
+
+part 'eliminar_estacion.dart';
+
 part 'listar_menu.dart';
 
 part 'mi_perfil.dart';
@@ -22,6 +28,8 @@ part 'mi_perfil.dart';
 part 'mi_pedido.dart';
 
 part 'mis_pedidos.dart';
+
+part 'mis_estaciones.dart';
 
 
 
@@ -62,6 +70,21 @@ class AgiluConnector {
   }
   
   
+  CrearEstacionVariablesBuilder crearEstacion ({required String nombre, required int orden, }) {
+    return CrearEstacionVariablesBuilder(dataConnect, nombre: nombre,orden: orden,);
+  }
+  
+  
+  EditarEstacionVariablesBuilder editarEstacion ({required String id, required String nombre, required int orden, required bool activo, }) {
+    return EditarEstacionVariablesBuilder(dataConnect, id: id,nombre: nombre,orden: orden,activo: activo,);
+  }
+  
+  
+  EliminarEstacionVariablesBuilder eliminarEstacion ({required String id, }) {
+    return EliminarEstacionVariablesBuilder(dataConnect, id: id,);
+  }
+  
+  
   ListarMenuVariablesBuilder listarMenu () {
     return ListarMenuVariablesBuilder(dataConnect, );
   }
@@ -79,6 +102,11 @@ class AgiluConnector {
   
   MisPedidosVariablesBuilder misPedidos () {
     return MisPedidosVariablesBuilder(dataConnect, );
+  }
+  
+  
+  MisEstacionesVariablesBuilder misEstaciones () {
+    return MisEstacionesVariablesBuilder(dataConnect, );
   }
   
 

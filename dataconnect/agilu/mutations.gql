@@ -125,3 +125,73 @@ mutation CrearProducto(
     }
   )
 }
+
+# HU-18: el encargado administra las estaciones de su propia cafetería.
+mutation CrearEstacion($nombre: String!, $orden: Int!) @auth(level: USER) @transaction {
+  query @redact {
+    autenticacion(key: { firebaseAuthUid_expr: "auth.uid" })
+      @check(expr: "this != null", message: "No tienes perfil") {
+      usuario {
+        rol @check(expr: "this != null && this.nombre == 'encargado'", message: "Solo el encargado puede hacer esto") {
+          nombre
+        }
+        cafeteria @check(expr: "this != null", message: "No tienes cafetería asignada") {
+          id
+        }
+      }
+    }
+  }
+  puesto_insert(
+    data: {
+      nombre: $nombre
+      orden: $orden
+      cafeteriaId_expr: "response.query.autenticacion.usuario.cafeteria.id"
+    }
+  )
+}
+
+mutation EditarEstacion($id: UUID!, $nombre: String!, $orden: Int!, $activo: Boolean!)
+  @auth(level: USER)
+  @transaction {
+  puesto_update(
+    first: {
+      where: {
+        id: { eq: $id }
+        cafeteria: {
+          usuarios_on_cafeteria: {
+            exist: {
+              rol: { nombre: { eq: "encargado" } }
+              autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+            }
+          }
+        }
+      }
+    }
+    data: { nombre: $nombre, orden: $orden, activo: $activo }
+  ) @check(expr: "this != null", message: "La estación no es de tu cafetería")
+}
+
+mutation EliminarEstacion($id: UUID!) @auth(level: USER) @transaction {
+  query @redact {
+    puesto(id: $id) @check(expr: "this != null", message: "La estación no existe") {
+      productos_on_puesto @check(expr: "this.size() == 0", message: "La estación tiene productos: desactívala en lugar de borrarla") {
+        id
+      }
+    }
+  }
+  puesto_delete(
+    first: {
+      where: {
+        id: { eq: $id }
+        cafeteria: {
+          usuarios_on_cafeteria: {
+            exist: {
+              rol: { nombre: { eq: "encargado" } }
+              autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+            }
+          }
+        }
+      }
+    }
+  ) @check(expr: "this != null", message: "La estación no es de tu cafetería")
+}
