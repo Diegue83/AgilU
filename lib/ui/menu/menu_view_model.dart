@@ -79,6 +79,12 @@ class MenuViewModel extends ChangeNotifier {
     return porOrden.map((p) => p.seccion).toSet().toList();
   }
 
+  /// HU-21: ofertas vigentes y especialidades disponibles de la cafetería.
+  List<Producto> get destacados =>
+      _deHoy.where((p) => p.disponible && p.destacadoEn(_ahora())).toList();
+
+  DateTime get ahora => _ahora();
+
   List<Producto> get productosVisibles => categoriaSeleccionada == null
       ? _deHoy
       : _deHoy.where((p) => p.seccion == categoriaSeleccionada).toList();

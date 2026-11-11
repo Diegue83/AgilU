@@ -29,6 +29,10 @@ part 'establecer_disponibilidad.dart';
 
 part 'eliminar_mi_producto.dart';
 
+part 'publicar_oferta.dart';
+
+part 'quitar_oferta.dart';
+
 part 'listar_menu.dart';
 
 part 'mi_perfil.dart';
@@ -114,6 +118,16 @@ class AgiluConnector {
   
   EliminarMiProductoVariablesBuilder eliminarMiProducto ({required String id, }) {
     return EliminarMiProductoVariablesBuilder(dataConnect, id: id,);
+  }
+  
+  
+  PublicarOfertaVariablesBuilder publicarOferta ({required String id, required double precioOferta, required Timestamp hasta, required bool esEspecialidad, }) {
+    return PublicarOfertaVariablesBuilder(dataConnect, id: id,precioOferta: precioOferta,hasta: hasta,esEspecialidad: esEspecialidad,);
+  }
+  
+  
+  QuitarOfertaVariablesBuilder quitarOferta ({required String id, }) {
+    return QuitarOfertaVariablesBuilder(dataConnect, id: id,);
   }
   
   
