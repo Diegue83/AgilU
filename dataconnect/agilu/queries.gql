@@ -37,6 +37,7 @@ query MiPerfil @auth(level: USER) {
     usuario {
       id
       nombre
+      numeroDeTelefono
       rol {
         nombre
       }

@@ -62,6 +62,10 @@ En otra terminal:
 node test_dataconnect/sembrar.js
 flutter run --dart-define=EMULADORES=true
 ```
+**Registro:** en dos pasos, primero datos personales (nombre, apellidos y teléfono
+opcional) y después las credenciales (correo y contraseña con confirmación). Toda
+cuenta nueva es de **alumno**.
+
 **Roles:** alumno (al registrarse), empleado, encargado, beneficiaria y administrador.
 El primer administrador se nombra una sola vez desde la consola de SQL Connect con
 la mutación `AsignarRol` (`rol: "admin"`). Después, desde la app, el administrador

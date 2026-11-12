@@ -27,21 +27,18 @@ class _LoginForm extends StatefulWidget {
 }
 
 class _LoginFormState extends State<_LoginForm> {
-  final _nombre = TextEditingController();
   final _correo = TextEditingController();
   final _contrasena = TextEditingController();
 
   @override
   void dispose() {
-    _nombre.dispose();
     _correo.dispose();
     _contrasena.dispose();
     super.dispose();
   }
 
   Future<void> _enviar(LoginViewModel vm) async {
-    final ok =
-        await vm.enviar(_correo.text, _contrasena.text, nombre: _nombre.text);
+    final ok = await vm.enviar(_correo.text, _contrasena.text);
     if (!ok || !mounted) return;
     final perfiles = context.read<PerfilRepository>();
     final nav = Navigator.of(context);
@@ -73,14 +70,6 @@ class _LoginFormState extends State<_LoginForm> {
                   const Text('Pide en tu cafetería sin hacer fila',
                       textAlign: TextAlign.center),
                   const SizedBox(height: 32),
-                  if (vm.modoRegistro) ...[
-                    TextField(
-                      controller: _nombre,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(labelText: 'Nombre'),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
                   TextField(
                     controller: _correo,
                     keyboardType: TextInputType.emailAddress,
@@ -107,14 +96,13 @@ class _LoginFormState extends State<_LoginForm> {
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(strokeWidth: 2))
-                        : Text(
-                            vm.modoRegistro ? 'Registrarme' : 'Iniciar sesión'),
+                        : const Text('Iniciar sesión'),
                   ),
                   TextButton(
-                    onPressed: vm.alternarModo,
-                    child: Text(vm.modoRegistro
-                        ? '¿Ya tienes cuenta? Inicia sesión'
-                        : '¿No tienes cuenta? Regístrate'),
+                    onPressed: vm.cargando
+                        ? null
+                        : () => Navigator.pushNamed(context, Routes.registro),
+                    child: const Text('¿No tienes cuenta? Regístrate'),
                   ),
                 ],
               ),

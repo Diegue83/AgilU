@@ -829,7 +829,25 @@ AgiluConnector.instance.crearPerfil(
 ).execute();
 ```
 
+#### Optional Arguments
+We return a builder for each query. For CrearPerfil, we created `CrearPerfilBuilder`. For queries and mutations with optional parameters, we return a builder class.
+The builder pattern allows Data Connect to distinguish between fields that haven't been set and fields that have been set to null. A field can be set by calling its respective setter method like below:
+```dart
+class CrearPerfilVariablesBuilder {
+  ...
+   CrearPerfilVariablesBuilder telefono(String? t) {
+   _telefono.value = t;
+   return this;
+  }
 
+  ...
+}
+AgiluConnector.instance.crearPerfil(
+  nombre: nombre,
+)
+.telefono(telefono)
+.execute();
+```
 
 #### Return Type
 `execute()` returns a `OperationResult<CrearPerfilData, CrearPerfilVariables>`
@@ -2062,6 +2080,100 @@ String token = ...;
 final ref = AgiluConnector.instance.olvidarDispositivo(
   token: token,
 ).ref();
+ref.execute();
+```
+
+
+### EditarMiPerfil
+#### Required Arguments
+```dart
+String nombre = ...;
+AgiluConnector.instance.editarMiPerfil(
+  nombre: nombre,
+).execute();
+```
+
+#### Optional Arguments
+We return a builder for each query. For EditarMiPerfil, we created `EditarMiPerfilBuilder`. For queries and mutations with optional parameters, we return a builder class.
+The builder pattern allows Data Connect to distinguish between fields that haven't been set and fields that have been set to null. A field can be set by calling its respective setter method like below:
+```dart
+class EditarMiPerfilVariablesBuilder {
+  ...
+   EditarMiPerfilVariablesBuilder telefono(String? t) {
+   _telefono.value = t;
+   return this;
+  }
+
+  ...
+}
+AgiluConnector.instance.editarMiPerfil(
+  nombre: nombre,
+)
+.telefono(telefono)
+.execute();
+```
+
+#### Return Type
+`execute()` returns a `OperationResult<EditarMiPerfilData, EditarMiPerfilVariables>`
+```dart
+/// Result of an Operation Request (query/mutation).
+class OperationResult<Data, Variables> {
+  OperationResult(this.dataConnect, this.data, this.ref);
+  Data data;
+  OperationRef<Data, Variables> ref;
+  FirebaseDataConnect dataConnect;
+}
+
+final result = await AgiluConnector.instance.editarMiPerfil(
+  nombre: nombre,
+);
+EditarMiPerfilData data = result.data;
+final ref = result.ref;
+```
+
+#### Getting the Ref
+Each builder returns an `execute` function, which is a helper function that creates a `Ref` object, and executes the underlying operation.
+An example of how to use the `Ref` object is shown below:
+```dart
+String nombre = ...;
+
+final ref = AgiluConnector.instance.editarMiPerfil(
+  nombre: nombre,
+).ref();
+ref.execute();
+```
+
+
+### EliminarMiCuenta
+#### Required Arguments
+```dart
+// No required arguments
+AgiluConnector.instance.eliminarMiCuenta().execute();
+```
+
+
+
+#### Return Type
+`execute()` returns a `OperationResult<EliminarMiCuentaData, void>`
+```dart
+/// Result of an Operation Request (query/mutation).
+class OperationResult<Data, Variables> {
+  OperationResult(this.dataConnect, this.data, this.ref);
+  Data data;
+  OperationRef<Data, Variables> ref;
+  FirebaseDataConnect dataConnect;
+}
+
+final result = await AgiluConnector.instance.eliminarMiCuenta();
+EliminarMiCuentaData data = result.data;
+final ref = result.ref;
+```
+
+#### Getting the Ref
+Each builder returns an `execute` function, which is a helper function that creates a `Ref` object, and executes the underlying operation.
+An example of how to use the `Ref` object is shown below:
+```dart
+final ref = AgiluConnector.instance.eliminarMiCuenta().ref();
 ref.execute();
 ```
 

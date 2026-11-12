@@ -167,7 +167,7 @@ mutation QuitarEmpleado($usuarioId: UUID!) @auth(level: USER) {
   resultado: _executeReturningFirst(
     sql: """
     UPDATE usuario u
-    SET rol_id = NULL, cafeteria_id = NULL
+    SET rol_id = (SELECT id FROM rol WHERE nombre = 'alumno'), cafeteria_id = NULL
     WHERE u.id = $2::uuid
       AND u.rol_id = (SELECT id FROM rol WHERE nombre = 'empleado')
       AND u.cafeteria_id = (

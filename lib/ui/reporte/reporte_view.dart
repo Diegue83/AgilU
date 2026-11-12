@@ -1,3 +1,4 @@
+import '../cuenta/cuenta_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -30,6 +31,7 @@ class _Reporte extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Reporte'),
         actions: [
+          const BotonMiCuenta(),
           IconButton(
             tooltip: 'Cerrar sesión',
             icon: const Icon(Icons.logout),
