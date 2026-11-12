@@ -2308,6 +2308,100 @@ ref.execute();
 ```
 
 
+### EnviarComprobante
+#### Required Arguments
+```dart
+String pedidoId = ...;
+String ruta = ...;
+AgiluConnector.instance.enviarComprobante(
+  pedidoId: pedidoId,
+  ruta: ruta,
+).execute();
+```
+
+
+
+#### Return Type
+`execute()` returns a `OperationResult<EnviarComprobanteData, EnviarComprobanteVariables>`
+```dart
+/// Result of an Operation Request (query/mutation).
+class OperationResult<Data, Variables> {
+  OperationResult(this.dataConnect, this.data, this.ref);
+  Data data;
+  OperationRef<Data, Variables> ref;
+  FirebaseDataConnect dataConnect;
+}
+
+final result = await AgiluConnector.instance.enviarComprobante(
+  pedidoId: pedidoId,
+  ruta: ruta,
+);
+EnviarComprobanteData data = result.data;
+final ref = result.ref;
+```
+
+#### Getting the Ref
+Each builder returns an `execute` function, which is a helper function that creates a `Ref` object, and executes the underlying operation.
+An example of how to use the `Ref` object is shown below:
+```dart
+String pedidoId = ...;
+String ruta = ...;
+
+final ref = AgiluConnector.instance.enviarComprobante(
+  pedidoId: pedidoId,
+  ruta: ruta,
+).ref();
+ref.execute();
+```
+
+
+### GuardarFotoProducto
+#### Required Arguments
+```dart
+String id = ...;
+String url = ...;
+AgiluConnector.instance.guardarFotoProducto(
+  id: id,
+  url: url,
+).execute();
+```
+
+
+
+#### Return Type
+`execute()` returns a `OperationResult<GuardarFotoProductoData, GuardarFotoProductoVariables>`
+```dart
+/// Result of an Operation Request (query/mutation).
+class OperationResult<Data, Variables> {
+  OperationResult(this.dataConnect, this.data, this.ref);
+  Data data;
+  OperationRef<Data, Variables> ref;
+  FirebaseDataConnect dataConnect;
+}
+
+final result = await AgiluConnector.instance.guardarFotoProducto(
+  id: id,
+  url: url,
+);
+GuardarFotoProductoData data = result.data;
+final ref = result.ref;
+```
+
+#### Getting the Ref
+Each builder returns an `execute` function, which is a helper function that creates a `Ref` object, and executes the underlying operation.
+An example of how to use the `Ref` object is shown below:
+```dart
+String id = ...;
+String url = ...;
+
+final ref = AgiluConnector.instance.guardarFotoProducto(
+  id: id,
+  url: url,
+).ref();
+ref.execute();
+```
+
+
 ### CrearCafeteriaAdmin
 #### Required Arguments
 ```dart

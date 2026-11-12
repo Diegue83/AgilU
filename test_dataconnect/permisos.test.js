@@ -1504,3 +1504,45 @@ describe('historial del encargado', () => {
     assert.equal(data.pedidos.length, 0);
   });
 });
+
+describe('almacenamiento en Supabase: ligar archivos', () => {
+  const uidDe = (quien) => quien.auth.currentUser.uid;
+
+  test('el alumno liga un comprobante de su carpeta a su pedido por pagar', async () => {
+    const p = pedido();
+    await ana.mutation('CrearPedido', p);
+    const ruta = `${uidDe(ana)}/${p.id}-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.jpg`;
+    const r = await ana.mutation('EnviarComprobante', { pedidoId: p.id, ruta });
+    assert.equal(r.data.resultado.estado, 'pago_en_revision');
+    const { data } = await ana.query('MiPedido', { id: p.id });
+    assert.equal(data.pedidos[0].comprobanteUrl, ruta);
+    const ya = await ana.mutation('EnviarComprobante', { pedidoId: p.id, ruta });
+    assert.equal(ya.data.resultado, null);
+  });
+
+  test('no se acepta una ruta fuera de la carpeta propia ni con ..', async () => {
+    const p = pedido();
+    await ana.mutation('CrearPedido', p);
+    await assert.rejects(ana.mutation('EnviarComprobante', { pedidoId: p.id, ruta: `${uidDe(beto)}/x.jpg` }));
+    await assert.rejects(ana.mutation('EnviarComprobante', { pedidoId: p.id, ruta: `${uidDe(ana)}/../x.jpg` }));
+  });
+
+  test('nadie liga un comprobante a un pedido ajeno', async () => {
+    const p = pedido();
+    await ana.mutation('CrearPedido', p);
+    const r = await beto.mutation('EnviarComprobante', { pedidoId: p.id, ruta: `${uidDe(beto)}/x.jpg` });
+    assert.equal(r.data.resultado, null);
+  });
+
+  test('solo el encargado de la cafetería liga una foto de su carpeta a un producto', async () => {
+    const url = (uid) => `https://abc.supabase.co/storage/v1/object/public/productos/${uid}/f.jpg`;
+    await beto.mutation('GuardarFotoProducto', { id: MOLLETES, url: url(uidDe(beto)) });
+    const { data } = await ana.query('ListarMenu');
+    const molletes = JSON.stringify(data).includes(url(uidDe(beto)));
+    assert.ok(molletes);
+    await assert.rejects(ana.mutation('GuardarFotoProducto', { id: MOLLETES, url: url(uidDe(ana)) }));
+    await assert.rejects(beto.mutation('GuardarFotoProducto', { id: MOLLETES, url: url(uidDe(ana)) }));
+    await assert.rejects(beto.mutation('GuardarFotoProducto', { id: MOLLETES, url: 'https://otro.sitio/f.jpg' }));
+    await assert.rejects(beto.mutation('GuardarFotoProducto', { id: CAPUCHINO, url: url(uidDe(beto)) }));
+  });
+});

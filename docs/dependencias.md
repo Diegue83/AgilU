@@ -10,7 +10,8 @@
 
 Dependencias principales de la app: `firebase_core 3.15`, `firebase_auth 5.7`,
 `firebase_data_connect 0.1.5`, `cloud_functions 5.6`, `firebase_messaging 15.2`,
-`provider`, `image_picker`, `qr_flutter`, `mobile_scanner`.
+`provider`, `image_picker`, `qr_flutter`, `mobile_scanner`, `storage_client 2.8`
+(cliente de Supabase Storage, sin el resto de Supabase).
 De las funciones: `firebase-admin 14`, `firebase-functions 7`.
 
 ## Revisión de alertas

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -86,13 +88,7 @@ class _Pagos extends StatelessWidget {
                       const SizedBox(height: 8),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          p.comprobanteUrl!,
-                          height: 220,
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) =>
-                              const Text('No se pudo mostrar el comprobante.'),
-                        ),
+                        child: ImagenComprobante(ubicacion: p.comprobanteUrl!),
                       ),
                     ],
                     const SizedBox(height: 8),
@@ -119,6 +115,49 @@ class _Pagos extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+/// Comprobante guardado como URL (Cloud Functions) o como ruta en el bucket
+/// privado de Supabase, que se descarga con la sesión del encargado.
+class ImagenComprobante extends StatefulWidget {
+  final String ubicacion;
+  const ImagenComprobante({super.key, required this.ubicacion});
+
+  @override
+  State<ImagenComprobante> createState() => _ImagenComprobanteState();
+}
+
+class _ImagenComprobanteState extends State<ImagenComprobante> {
+  late final Future<Uint8List>? _bytes = widget.ubicacion.startsWith('http')
+      ? null
+      : context.read<PagosRepository>().comprobante(widget.ubicacion);
+
+  static const _error = Text('No se pudo mostrar el comprobante.');
+
+  @override
+  Widget build(BuildContext context) {
+    final bytes = _bytes;
+    if (bytes == null) {
+      return Image.network(widget.ubicacion,
+          height: 220,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => _error);
+    }
+    return FutureBuilder<Uint8List>(
+      future: bytes,
+      builder: (context, snap) {
+        if (snap.hasError) return _error;
+        if (!snap.hasData) {
+          return const SizedBox(
+              height: 220, child: Center(child: CircularProgressIndicator()));
+        }
+        return Image.memory(snap.data!,
+            height: 220,
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => _error);
+      },
     );
   }
 }

@@ -698,3 +698,48 @@ mutation CancelarMiPedido($id: UUID!) @auth(level: USER) {
     params: [{ _expr: "auth.uid" }, $id]
   )
 }
+
+# HU-08 con Supabase Storage: el alumno ya subió su comprobante a su carpeta
+# (<uid>/...) del bucket privado "comprobantes" y aquí lo liga a su pedido.
+# Solo el dueño, solo mientras esté por pagar, y la ruta debe estar en su
+# carpeta. Devuelve null si no se cumplió alguna condición.
+mutation EnviarComprobante($pedidoId: UUID!, $ruta: String!)
+  @auth(expr: "auth != null && vars.ruta.startsWith(auth.uid + '/') && vars.ruta.size() <= 200 && !vars.ruta.contains('..')") {
+  resultado: _executeReturningFirst(
+    sql: """
+    UPDATE pedido
+    SET estado = 'pago_en_revision', comprobante_url = $3, motivo_rechazo_pago = NULL
+    WHERE id = $2::uuid
+      AND estado = 'por_pagar'
+      AND usuario_id = (SELECT usuario_id FROM autenticacion WHERE firebase_auth_uid = $1)
+    RETURNING estado
+    """
+    params: [{ _expr: "auth.uid" }, $pedidoId, $ruta]
+  )
+}
+
+# HU-20 con Supabase Storage: el encargado ya subió la foto al bucket público
+# "productos" y aquí la liga a un producto de su cafetería.
+mutation GuardarFotoProducto($id: UUID!, $url: String!)
+  @auth(expr: "auth != null && vars.url.startsWith('https://') && vars.url.contains('.supabase.co/storage/v1/object/public/productos/' + auth.uid + '/') && vars.url.size() <= 500")
+  @transaction {
+  producto_update(
+    first: {
+      where: {
+        id: { eq: $id }
+        eliminado: { eq: false }
+        puesto: {
+          cafeteria: {
+            usuarios_on_cafeteria: {
+              exist: {
+                rol: { nombre: { eq: "encargado" } }
+                autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+              }
+            }
+          }
+        }
+      }
+    }
+    data: { urlDeImagen: $url }
+  ) @check(expr: "this != null", message: "El producto no es de tu cafetería")
+}
