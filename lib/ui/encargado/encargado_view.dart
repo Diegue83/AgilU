@@ -1,3 +1,4 @@
+import '../comun/contadores.dart';
 import '../cuenta/cuenta_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -43,8 +44,23 @@ class _EncargadoViewState extends State<EncargadoView> {
     ('Pedidos', Icons.receipt_long, PanelView()),
   ];
 
+  /// Punto rojo de cada pestaña del panel.
+  static int _cuenta(BuildContext context, String seccion) {
+    final c = context.watch<ContadoresController>().actual;
+    return switch (seccion) {
+      'Pedidos' => c.enEspera,
+      'Pagos' => c.pagos,
+      'Personal' => c.solicitudes,
+      _ => 0,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
+    return ConContadores(child: _panel(context));
+  }
+
+  Widget _panel(BuildContext context) {
     return FutureBuilder<Perfil?>(
       future: _perfil,
       builder: (context, snap) {
@@ -89,7 +105,9 @@ class _EncargadoViewState extends State<EncargadoView> {
                   onDestinationSelected: (n) => setState(() => _seccion = n),
                   destinations: [
                     for (final (t, icono, _) in secciones)
-                      NavigationDestination(icon: Icon(icono), label: t),
+                      NavigationDestination(
+                          icon: IconoConPunto(icono, _cuenta(context, t)),
+                          label: t),
                   ],
                 ),
         );

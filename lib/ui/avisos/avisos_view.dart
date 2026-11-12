@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/routes.dart';
 import '../../data/repositories/bandeja_repository.dart';
+import '../comun/contadores.dart';
 
 /// Bandeja de avisos: los últimos avisos del usuario. Al abrirla se marcan
 /// como leídos.
@@ -95,43 +96,20 @@ class AvisosView extends StatelessWidget {
 }
 
 /// Campana de la barra superior con el número de avisos sin leer.
-class BotonAvisos extends StatefulWidget {
+class BotonAvisos extends StatelessWidget {
   const BotonAvisos({super.key});
 
   @override
-  State<BotonAvisos> createState() => _BotonAvisosState();
-}
-
-class _BotonAvisosState extends State<BotonAvisos> {
-  int _sinLeer = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _contar();
+  Widget build(BuildContext context) {
+    final contadores = context.watch<ContadoresController>();
+    return IconButton(
+      tooltip: 'Avisos',
+      icon:
+          IconoConPunto(Icons.notifications_outlined, contadores.actual.avisos),
+      onPressed: () async {
+        await Navigator.pushNamed(context, Routes.avisos);
+        contadores.actualizar();
+      },
+    );
   }
-
-  Future<void> _contar() async {
-    final avisos = await context
-        .read<BandejaRepository>()
-        .misAvisos()
-        .then((l) => l, onError: (Object _) => <Aviso>[]);
-    if (mounted) {
-      setState(() => _sinLeer = avisos.where((a) => !a.leido).length);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => IconButton(
-        tooltip: 'Avisos',
-        icon: Badge(
-          isLabelVisible: _sinLeer > 0,
-          label: Text('$_sinLeer'),
-          child: const Icon(Icons.notifications_outlined),
-        ),
-        onPressed: () async {
-          await Navigator.pushNamed(context, Routes.avisos);
-          _contar();
-        },
-      );
 }

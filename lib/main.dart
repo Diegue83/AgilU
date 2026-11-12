@@ -13,6 +13,7 @@ import 'data/repositories/auth_repository.dart';
 import 'data/repositories/avisos_repository.dart';
 import 'data/repositories/bandeja_repository.dart';
 import 'data/repositories/cafeteria_repository.dart';
+import 'data/repositories/contadores_repository.dart';
 import 'data/repositories/dataconnect_menu_repository.dart';
 import 'data/repositories/dataconnect_pedido_repository.dart';
 import 'data/repositories/estacion_repository.dart';
@@ -20,6 +21,7 @@ import 'data/repositories/firebase_auth_repository.dart';
 import 'data/repositories/foto_repository.dart';
 import 'data/repositories/historial_repository.dart';
 import 'data/repositories/menu_repository.dart';
+import 'data/repositories/notificador.dart';
 import 'data/repositories/pagos_repository.dart';
 import 'data/repositories/panel_repository.dart';
 import 'data/repositories/pedido_repository.dart';
@@ -29,6 +31,7 @@ import 'data/repositories/personal_repository.dart';
 import 'data/repositories/reporte_repository.dart';
 import 'firebase_options.dart';
 import 'ui/cart/cart_view_model.dart';
+import 'ui/comun/contadores.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -146,6 +149,22 @@ Future<void> main() async {
           create: (_) => AppConfig.usarFirebase
               ? DataConnectPedidoRepository(almacen: almacen, uid: uidActual)
               : MockPedidoRepository(),
+        ),
+        Provider<Notificador>(
+          create: (_) => AppConfig.usarFirebase && AppConfig.usarSupabase
+              ? SupabaseNotificador(
+                  url: AppConfig.supabaseUrl,
+                  llave: AppConfig.supabaseKey,
+                  token: () async =>
+                      FirebaseAuth.instance.currentUser?.getIdToken(),
+                )
+              : MockNotificador(),
+        ),
+        // Puntos rojos de la navegación.
+        ChangeNotifierProvider(
+          create: (_) => ContadoresController(AppConfig.usarFirebase
+              ? DataConnectContadoresRepository()
+              : MockContadoresRepository()),
         ),
         // Estado compartido del carrito.
         ChangeNotifierProvider(create: (_) => CartViewModel()),

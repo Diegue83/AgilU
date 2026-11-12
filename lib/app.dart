@@ -1,3 +1,4 @@
+import 'ui/comun/contadores.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -36,8 +37,10 @@ class _AgilUAppState extends State<AgilUApp> {
   void initState() {
     super.initState();
     // HU-05: con la app abierta, el aviso se muestra como SnackBar.
+    final contadores = context.read<ContadoresController>();
     _avisos = context.read<AvisosRepository>().enPrimerPlano.listen((texto) {
       _mensajero.currentState?.showSnackBar(SnackBar(content: Text(texto)));
+      contadores.actualizar();
     });
   }
 

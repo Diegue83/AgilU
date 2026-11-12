@@ -32,6 +32,12 @@ y pull request.
   creada no es de alumno, no puede hacer pedidos mientras espera, y solo el encargado
   de esa cafetería ve, aprueba o rechaza la solicitud; una cafetería inactiva no las
   recibe.
+- Puntos rojos: `MisPendientes` da al encargado sus pagos por validar y al alumno sus
+  pedidos listos y avisos sin leer, sin mezclar conteos de otros roles.
+- Avisos (`supabase/functions/avisar/reglas.test.ts`, en CI): el comprobante solo lo
+  avisa su dueño y le llega al encargado; validar o rechazar el pago solo lo avisa el
+  encargado y solo si el pedido de verdad cambió; el pedido listo lo avisan encargado o
+  empleado; eventos o ids inválidos se rechazan. En la app, cada acción pide su aviso.
 - Historial: el encargado ve los pedidos terminados de su cafetería (hoy, 7 o 30 días);
   un alumno no ve ninguno.
 - Cancelar pedido: el alumno cancela el suyo por pagar, en revisión o pagado en espera

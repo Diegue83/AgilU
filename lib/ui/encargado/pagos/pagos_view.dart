@@ -1,3 +1,4 @@
+import '../../../data/repositories/notificador.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -15,7 +16,8 @@ class PagosView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (ctx) => PagosViewModel(ctx.read<PagosRepository>()),
+      create: (ctx) => PagosViewModel(ctx.read<PagosRepository>(),
+          avisos: ctx.read<Notificador>()),
       child: const _Pagos(),
     );
   }

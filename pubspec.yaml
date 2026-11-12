@@ -19,6 +19,7 @@ dependencies:
   mobile_scanner: ^7.5.0
   firebase_messaging: 15.2.10
   storage_client: ^2.8.1
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:

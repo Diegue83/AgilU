@@ -1,3 +1,4 @@
+import '../../../data/repositories/notificador.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -11,7 +12,9 @@ class PanelViewModel extends ChangeNotifier {
   final PanelRepository _repo;
   StreamSubscription<List<PedidoPanel>>? _sub;
 
-  PanelViewModel(this._repo) {
+  final Notificador? _avisos;
+
+  PanelViewModel(this._repo, {Notificador? avisos}) : _avisos = avisos {
     _sub = _repo.observarHoy().listen(
       (lista) {
         _pedidos = lista;
@@ -49,6 +52,9 @@ class PanelViewModel extends ChangeNotifier {
     notifyListeners();
     try {
       await _repo.avanzar(p);
+      if (p.estado.siguiente == EstadoPedido.listo) {
+        _avisos?.avisar(EventoAviso.pedidoListo, pedidoId: p.id);
+      }
       final i = _pedidos.indexWhere((x) => x.id == p.id);
       if (i >= 0) _pedidos[i] = p.conEstado(p.estado.siguiente!);
       error = null;
