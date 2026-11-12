@@ -62,6 +62,15 @@ En otra terminal:
 node test_dataconnect/sembrar.js
 flutter run --dart-define=EMULADORES=true
 ```
+En un **teléfono Android por USB**, reenvía los puertos y usa `127.0.0.2` (los SDK de
+Firebase cambian `localhost` y `127.0.0.1` por `10.0.2.2`, que solo existe en la
+máquina virtual de Android Studio):
+```bash
+adb reverse tcp:9099 tcp:9099
+adb reverse tcp:9399 tcp:9399
+flutter run --dart-define=EMULADORES=true --dart-define=FIREBASE_HOST=127.0.0.2
+```
+
 **Roles:** alumno (al registrarse), empleado, encargado, beneficiaria y administrador.
 El primer administrador se nombra una sola vez desde la consola de SQL Connect con
 la mutación `AsignarRol` (`rol: "admin"`). Después, desde la app, el administrador
