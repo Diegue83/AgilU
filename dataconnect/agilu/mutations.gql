@@ -670,3 +670,31 @@ mutation EliminarMiCuenta @auth(level: USER) @transaction {
   )
   autenticacion_delete(key: { firebaseAuthUid_expr: "auth.uid" })
 }
+
+# Bandeja de avisos: marca como leídos todos los avisos del usuario con sesión.
+mutation MarcarAvisosLeidos @auth(level: USER) {
+  notificacion_updateMany(
+    where: {
+      usuario: { autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } } }
+      leido: { eq: false }
+    }
+    data: { leido: true }
+  )
+}
+
+# El alumno cancela su pedido mientras no se empiece a preparar: por pagar,
+# con el comprobante en revisión o pagado esperando en cocina. Devuelve si ya
+# estaba pagado (la cafetería hace el reembolso), o null si ya no se puede.
+mutation CancelarMiPedido($id: UUID!) @auth(level: USER) {
+  resultado: _executeReturningFirst(
+    sql: """
+    UPDATE pedido
+    SET estado = 'cancelado', codigo_entrega = NULL
+    WHERE id = $2::uuid
+      AND estado IN ('por_pagar', 'pago_en_revision', 'pendiente')
+      AND usuario_id = (SELECT usuario_id FROM autenticacion WHERE firebase_auth_uid = $1)
+    RETURNING (pagado_en IS NOT NULL) AS "pagado"
+    """
+    params: [{ _expr: "auth.uid" }, $id]
+  )
+}

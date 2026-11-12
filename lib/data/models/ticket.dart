@@ -1,3 +1,4 @@
+import '../../core/reglas_pedido.dart';
 import 'pedido_panel.dart';
 
 class LineaTicket {
@@ -67,6 +68,27 @@ class TicketPedido {
       ].contains(estado);
 
   bool get esperaComprobante => estado == EstadoPedido.porPagar;
+
+  /// El alumno puede cancelar mientras la cocina no empiece a prepararlo.
+  bool get sePuedeCancelar => const [
+        EstadoPedido.porPagar,
+        EstadoPedido.pagoEnRevision,
+        EstadoPedido.pendiente,
+      ].contains(estado);
+
+  /// Línea bajo el folio: cuándo y dónde recogerlo mientras sigue vigente; al
+  /// final, cómo terminó.
+  String get detalleRecogida {
+    final hora = ReglasPedido.formatearHora(recogerA);
+    final lugar = ubicacion == null ? cafeteria : '$cafeteria ($ubicacion)';
+    return switch (estado) {
+      EstadoPedido.cancelado =>
+        'Pedido cancelado · era para las $hora en $lugar',
+      EstadoPedido.noRecogido => 'No se recogió · era para las $hora en $lugar',
+      EstadoPedido.entregado => 'Entregado en $lugar',
+      _ => 'Recoge hoy a las $hora en $lugar',
+    };
+  }
 
   /// Etiqueta del ticket: mientras se prepara dice "Pagado"; al final, cómo
   /// terminó el pedido.

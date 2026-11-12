@@ -385,6 +385,9 @@ query MisNotificaciones @auth(level: USER) {
     mensaje
     fechaEnvio
     leido
+    pedido {
+      folio
+    }
   }
 }
 
@@ -415,4 +418,41 @@ query ReporteBeneficiaria($desde: Timestamp!, $hasta: Timestamp!) @auth(level: U
     """
     params: [{ _expr: "auth.uid" }, $desde, $hasta]
   )
+}
+
+# Historial: pedidos ya terminados (entregados, cancelados o no recogidos) de la
+# cafetería del encargado o empleado, del más reciente al más antiguo.
+query HistorialPedidos($desde: Timestamp!, $hasta: Timestamp!) @auth(level: USER) {
+  pedidos(
+    where: {
+      cafeteria: {
+        usuarios_on_cafeteria: {
+          exist: {
+            rol: { nombre: { in: ["encargado", "empleado"] } }
+            autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+          }
+        }
+      }
+      estado: { in: ["entregado", "cancelado", "no_recogido"] }
+      recogerA: { ge: $desde, lt: $hasta }
+    }
+    orderBy: [{ recogerA: DESC }, { folio: DESC }]
+    limit: 300
+  ) {
+    id
+    folio
+    estado
+    recogerA
+    notas
+    montoTotal
+    usuario {
+      nombre
+    }
+    detallePedidos_on_pedido {
+      cantidad
+      producto {
+        nombre
+      }
+    }
+  }
 }

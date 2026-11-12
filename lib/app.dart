@@ -9,10 +9,12 @@ import 'data/models/pedido.dart';
 import 'data/repositories/avisos_repository.dart';
 import 'ui/admin/admin_view.dart';
 import 'ui/auth/login_view.dart';
+import 'ui/avisos/avisos_view.dart';
 import 'ui/auth/registro_view.dart';
 import 'ui/cart/cart_view.dart';
 import 'ui/cuenta/cuenta_view.dart';
 import 'ui/encargado/encargado_view.dart';
+import 'ui/encargado/historial/historial_view.dart';
 import 'ui/menu/menu_view.dart';
 import 'ui/pedido/confirmacion_view.dart';
 import 'ui/reporte/reporte_view.dart';
@@ -53,6 +55,8 @@ class _AgilUAppState extends State<AgilUApp> {
     Routes.reporte: (_) => const ReporteView(),
     Routes.admin: (_) => const AdminView(),
     Routes.cuenta: (_) => const CuentaView(),
+    Routes.avisos: (_) => const AvisosView(),
+    Routes.historial: (_) => const HistorialView(),
     Routes.confirmacion: (ctx) => ConfirmacionView(
           resultado: ModalRoute.of(ctx)!.settings.arguments as ResultadoPedido,
         ),
