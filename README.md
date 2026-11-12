@@ -62,6 +62,14 @@ En otra terminal:
 node test_dataconnect/sembrar.js
 flutter run --dart-define=EMULADORES=true
 ```
+En un **teléfono Android por USB**, reenvía los puertos y usa `127.0.0.2` (los SDK de
+Firebase cambian `localhost` y `127.0.0.1` por `10.0.2.2`, que solo existe en la
+máquina virtual de Android Studio):
+```bash
+adb reverse tcp:9099 tcp:9099
+adb reverse tcp:9399 tcp:9399
+flutter run --dart-define=EMULADORES=true --dart-define=FIREBASE_HOST=127.0.0.2
+```
 Para probar como encargado o beneficiaria, asigna el rol a una cuenta de prueba con
 la mutación de administrador `AsignarRol` (ver `docs/integracion-nube.md`).
 
