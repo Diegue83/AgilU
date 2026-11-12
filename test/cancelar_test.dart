@@ -85,4 +85,24 @@ void main() {
     expect(vm.error, motivoNoCancelable);
     expect(vm.ticket!.estado, EstadoPedido.preparando);
   });
+
+  test('la línea bajo el folio dice cómo terminó el pedido', () {
+    TicketPedido con(EstadoPedido e) => TicketPedido(
+        id: '1',
+        folio: 'AGU-00001',
+        referencia: 'AGU-00001',
+        estado: e,
+        recogerA: DateTime(2026, 11, 12, 13),
+        total: 1,
+        cafeteria: 'Cafetería central',
+        ubicacion: 'Edificio A');
+    expect(con(EstadoPedido.porPagar).detalleRecogida,
+        'Recoge hoy a las 13:00 en Cafetería central (Edificio A)');
+    expect(con(EstadoPedido.cancelado).detalleRecogida,
+        'Pedido cancelado · era para las 13:00 en Cafetería central (Edificio A)');
+    expect(con(EstadoPedido.noRecogido).detalleRecogida,
+        startsWith('No se recogió'));
+    expect(con(EstadoPedido.entregado).detalleRecogida,
+        'Entregado en Cafetería central (Edificio A)');
+  });
 }

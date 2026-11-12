@@ -101,9 +101,12 @@ class _Ticket extends StatelessWidget {
                   children: [
                     Center(
                       child: Chip(
-                        avatar: Icon(t.pagado
-                            ? Icons.check_circle
-                            : Icons.hourglass_bottom),
+                        avatar: Icon(switch (t.estado) {
+                          EstadoPedido.cancelado => Icons.cancel_outlined,
+                          EstadoPedido.noRecogido => Icons.event_busy,
+                          _ when t.pagado => Icons.check_circle,
+                          _ => Icons.hourglass_bottom,
+                        }),
                         label: Text(t.etiquetaEstado),
                       ),
                     ),
@@ -117,11 +120,7 @@ class _Ticket extends StatelessWidget {
                           .displaySmall
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),
-                    Text(
-                      'Recoge hoy a las ${ReglasPedido.formatearHora(t.recogerA)} en ${t.cafeteria}'
-                      '${t.ubicacion == null ? '' : ' (${t.ubicacion})'}',
-                      textAlign: TextAlign.center,
-                    ),
+                    Text(t.detalleRecogida, textAlign: TextAlign.center),
                     const Divider(height: 32),
                     for (final l in t.lineas)
                       Row(
