@@ -1483,3 +1483,24 @@ describe('cancelar pedido', () => {
     assert.equal(await estadoDe(ana, p.id), 'por_pagar');
   });
 });
+
+describe('historial del encargado', () => {
+  const rango = () => ({
+    desde: new Date(Date.now() - 2 * 864e5).toISOString(),
+    hasta: new Date(Date.now() + 864e5).toISOString(),
+  });
+
+  test('el encargado ve los pedidos terminados de su cafetería', async () => {
+    const p = pedido();
+    await ana.mutation('CrearPedido', p);
+    await ana.mutation('CancelarMiPedido', { id: p.id });
+    const { data } = await beto.query('HistorialPedidos', rango());
+    assert.ok(data.pedidos.some((x) => x.id === sinGuiones(p.id) && x.estado === 'cancelado'));
+    assert.ok(data.pedidos.every((x) => ['entregado', 'cancelado', 'no_recogido'].includes(x.estado)));
+  });
+
+  test('un alumno no ve el historial de la cafetería', async () => {
+    const { data } = await ana.query('HistorialPedidos', rango());
+    assert.equal(data.pedidos.length, 0);
+  });
+});

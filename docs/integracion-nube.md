@@ -20,8 +20,8 @@ funciones: `us-east4`.
 | --- | --- |
 | Cualquier usuario con sesión | `ListarMenu`, `ListarCafeterias`, `OcupacionFranjas` (solo conteos), `MiPerfil`, `CrearPerfil`, `EditarMiPerfil`, `RegistrarDispositivo`, `OlvidarDispositivo` |
 | Alumno (dueño) | `EliminarMiCuenta`, `CrearPedido`, `CancelarMiPedido`, `DiagnosticarPedido`, `MiPedido`, `MisPedidos`, `MiConfianza`, `MisNotificaciones`, `MarcarAvisosLeidos` |
-| Empleado (de su cafetería) | `PanelPedidos`, `AvanzarPedido`, `EntregarPedido`, `MarcarNoRecogido` |
-| Encargado (de su cafetería) | `MiPersonal`, `AgregarEmpleado`, `QuitarEmpleado`, `MisEstaciones`, `CrearEstacion`, `EditarEstacion`, `EliminarEstacion`, `MisProductos`, `CrearMiProducto`, `EditarMiProducto`, `EstablecerDisponibilidad`, `EliminarMiProducto`, `PublicarOferta`, `QuitarOferta`, `MiCafeteria`, `EditarMiCafeteria`, `PanelPedidos`, `AvanzarPedido`, `PagosPorValidar`, `ValidarPago`, `EntregarPedido`, `MarcarNoRecogido` |
+| Empleado (de su cafetería) | `HistorialPedidos`, `PanelPedidos`, `AvanzarPedido`, `EntregarPedido`, `MarcarNoRecogido` |
+| Encargado (de su cafetería) | `HistorialPedidos`, `MiPersonal`, `AgregarEmpleado`, `QuitarEmpleado`, `MisEstaciones`, `CrearEstacion`, `EditarEstacion`, `EliminarEstacion`, `MisProductos`, `CrearMiProducto`, `EditarMiProducto`, `EstablecerDisponibilidad`, `EliminarMiProducto`, `PublicarOferta`, `QuitarOferta`, `MiCafeteria`, `EditarMiCafeteria`, `PanelPedidos`, `AvanzarPedido`, `PagosPorValidar`, `ValidarPago`, `EntregarPedido`, `MarcarNoRecogido` |
 | Beneficiaria | `ReporteBeneficiaria` (solo totales) |
 | Administrador (rol `admin` en la base) | `CafeteriasAdmin`, `CrearCafeteriaAdmin`, `EditarCafeteriaAdmin`, `PersonalAdmin`, `AsignarRolAdmin` |
 | Consola o Admin SDK (`NO_ACCESS`) | `CrearCafeteria`, `CrearPuesto`, `CrearProducto`, `AsignarRol` (para nombrar al primer administrador) |
