@@ -11,6 +11,14 @@ abstract class AuthRepository {
   Future<String> registrar(
       String correo, String contrasena, DatosPersonales datos);
   Future<void> cerrarSesion();
+
+  /// Confirma la contraseña actual antes de una operación sensible.
+  Future<void> reautenticar(String contrasena);
+
+  Future<void> cambiarContrasena(String actual, String nueva);
+
+  /// Borra la cuenta de inicio de sesión. Llamar después de [reautenticar].
+  Future<void> eliminarCuentaActual();
 }
 
 /// Autenticación simulada: acepta cualquier correo con contraseña >= 6 caracteres.
@@ -48,4 +56,27 @@ class MockAuthRepository implements AuthRepository {
 
   @override
   Future<void> cerrarSesion() async => _uid = null;
+
+  /// Contraseña de la cuenta simulada.
+  String contrasena = '123456';
+  bool eliminada = false;
+
+  @override
+  Future<void> reautenticar(String contrasena) async {
+    if (contrasena != this.contrasena) {
+      throw Exception('La contraseña actual no es correcta.');
+    }
+  }
+
+  @override
+  Future<void> cambiarContrasena(String actual, String nueva) async {
+    await reautenticar(actual);
+    contrasena = nueva;
+  }
+
+  @override
+  Future<void> eliminarCuentaActual() async {
+    eliminada = true;
+    _uid = null;
+  }
 }
