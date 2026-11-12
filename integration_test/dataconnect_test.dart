@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:agilu/core/conector.dart';
 import 'package:agilu/data/models/item_carrito.dart';
 import 'package:agilu/data/models/pedido.dart';
+import 'package:agilu/data/models/perfil.dart';
 import 'package:agilu/data/repositories/dataconnect_menu_repository.dart';
 import 'package:agilu/data/repositories/dataconnect_pedido_repository.dart';
 import 'package:agilu/data/repositories/firebase_auth_repository.dart';
@@ -66,9 +67,16 @@ void main() {
   });
 
   testWidgets('registro, menú y pedido contra SQL Connect', (tester) async {
-    await auth.registrar(correo, '123456', 'Alumno de prueba');
+    await auth.registrar(
+        correo,
+        '123456',
+        const DatosPersonales(
+            nombre: 'Alumno', apellidos: 'de Prueba', telefono: '4181234567'));
     final perfil = await conectorAgilu.miPerfil().execute();
-    expect(perfil.data.autenticacion?.usuario.nombre, 'Alumno de prueba');
+    final usuario = perfil.data.autenticacion?.usuario;
+    expect(usuario?.nombre, 'Alumno de Prueba');
+    expect(usuario?.numeroDeTelefono, '4181234567');
+    expect(usuario?.rol?.nombre, 'alumno');
 
     final menu = await DataConnectMenuRepository().observarMenu().first;
     expect(menu, hasLength(6));
@@ -102,7 +110,8 @@ void main() {
 
   testWidgets('un pedido con un producto no disponible se rechaza',
       (tester) async {
-    await auth.registrar('otro$correo', '123456', 'Otro alumno');
+    await auth.registrar('otro$correo', '123456',
+        const DatosPersonales(nombre: 'Otro', apellidos: 'Alumno'));
     final menu = await DataConnectMenuRepository().observarMenu().first;
     final cafe = menu.firstWhere((p) => !p.disponible);
 

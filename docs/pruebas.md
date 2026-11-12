@@ -18,8 +18,15 @@ y pull request.
 
 **Autenticación**
 - Sin sesión no se puede leer el menú, las cafeterías ni ningún pedido.
-- Validación de correo, contraseña y nombre en el registro; mensajes de error de
-  Firebase traducidos sin detalles internos.
+- Registro en dos pasos (datos personales y después credenciales): nombre y
+  apellidos con letras, teléfono de 10 dígitos opcional, correo válido, contraseña
+  de 6 o más caracteres y confirmación igual. El servidor vuelve a validar nombre y
+  teléfono en `CrearPerfil` y toda cuenta nueva queda con rol alumno.
+- Mensajes de error de Firebase traducidos sin detalles internos.
+- Mi cuenta: cambiar la contraseña y eliminar la cuenta piden la contraseña actual
+  (reautenticación). Al eliminarla se borran nombre, teléfono, avisos, dispositivos y
+  el acceso; los pedidos quedan anónimos para los reportes. El servidor rechaza la
+  baja con pedidos en curso o si la cuenta es del personal.
 
 **Autorización por objeto**
 - Un alumno no puede leer ni crear pedidos de otro, ni subir comprobantes de pedidos ajenos.

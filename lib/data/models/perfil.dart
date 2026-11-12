@@ -14,6 +14,7 @@ enum RolUsuario {
 class Perfil {
   final String nombre;
   final String correo;
+  final String? telefono;
   final RolUsuario rol;
 
   /// Cafetería que administra un encargado; null para alumnos.
@@ -23,6 +24,7 @@ class Perfil {
   const Perfil({
     required this.nombre,
     required this.correo,
+    this.telefono,
     this.rol = RolUsuario.alumno,
     this.cafeteriaId,
     this.cafeteria,
@@ -39,4 +41,19 @@ class Perfil {
   bool get esAdmin => rol == RolUsuario.admin;
 
   bool get esBeneficiaria => rol == RolUsuario.beneficiaria;
+}
+
+/// Lo que el alumno captura en el primer paso del registro.
+class DatosPersonales {
+  final String nombre;
+  final String apellidos;
+  final String? telefono;
+
+  const DatosPersonales({
+    required this.nombre,
+    required this.apellidos,
+    this.telefono,
+  });
+
+  String get nombreCompleto => '${nombre.trim()} ${apellidos.trim()}'.trim();
 }

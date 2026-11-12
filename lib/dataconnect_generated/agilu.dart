@@ -47,6 +47,10 @@ part 'registrar_dispositivo.dart';
 
 part 'olvidar_dispositivo.dart';
 
+part 'editar_mi_perfil.dart';
+
+part 'eliminar_mi_cuenta.dart';
+
 part 'cafeterias_admin.dart';
 
 part 'personal_admin.dart';
@@ -209,6 +213,16 @@ class AgiluConnector {
   
   OlvidarDispositivoVariablesBuilder olvidarDispositivo ({required String token, }) {
     return OlvidarDispositivoVariablesBuilder(dataConnect, token: token,);
+  }
+  
+  
+  EditarMiPerfilVariablesBuilder editarMiPerfil ({required String nombre, }) {
+    return EditarMiPerfilVariablesBuilder(dataConnect, nombre: nombre,);
+  }
+  
+  
+  EliminarMiCuentaVariablesBuilder eliminarMiCuenta () {
+    return EliminarMiCuentaVariablesBuilder(dataConnect, );
   }
   
   

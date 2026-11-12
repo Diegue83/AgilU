@@ -1,3 +1,4 @@
+import '../cuenta/cuenta_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -59,6 +60,7 @@ class _EncargadoViewState extends State<EncargadoView> {
           appBar: AppBar(
             title: Text(titulo),
             actions: [
+              const BotonMiCuenta(),
               IconButton(
                 tooltip: 'Cerrar sesión',
                 icon: const Icon(Icons.logout),

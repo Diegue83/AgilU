@@ -276,9 +276,21 @@ describe('leer pedidos', () => {
 });
 
 describe('roles', () => {
-  test('un alumno nuevo no tiene rol', async () => {
+  test('toda cuenta nueva queda como alumno', async () => {
     const { data } = await beto.query('MiPerfil');
-    assert.equal(data.autenticacion.usuario.rol, null);
+    assert.equal(data.autenticacion.usuario.rol.nombre, 'alumno');
+  });
+
+  test('el registro guarda el teléfono y el servidor valida los datos', async () => {
+    const fer = await alumno('fer');
+    await assert.rejects(fer.mutation('CrearPerfil', { nombre: 'F' }));
+    await assert.rejects(fer.mutation('CrearPerfil', { nombre: 'Fer Ruiz', telefono: '12-34' }));
+    await fer.mutation('CrearPerfil', { nombre: 'Fer Ruiz', telefono: '4181234567' });
+    const { data } = await fer.query('MiPerfil');
+    assert.equal(data.autenticacion.usuario.numeroDeTelefono, '4181234567');
+    assert.equal(data.autenticacion.usuario.rol.nombre, 'alumno');
+    await signOut(fer.auth);
+    await deleteApp(fer.app);
   });
 
   test('el administrador asigna el rol de encargado con su cafetería', async () => {
@@ -1312,7 +1324,7 @@ describe('administrador y personal', () => {
     assert.equal(a.data.resultado, null);
     const b = await beto.mutation('AsignarRolAdmin', { correo: 'eva@utng.edu.mx', rol: 'encargado', cafeteriaId: CAFETERIA });
     assert.equal(b.data.resultado, null);
-    assert.equal((await eva.query('MiPerfil')).data.autenticacion.usuario.rol, null);
+    assert.equal((await eva.query('MiPerfil')).data.autenticacion.usuario.rol.nombre, 'alumno');
   });
 
   test('el empleado atiende pedidos pero no pagos, menú ni ajustes', async () => {
@@ -1342,7 +1354,7 @@ describe('administrador y personal', () => {
 
     const baja = await beto.mutation('QuitarEmpleado', { usuarioId: alta.data.resultado.usuarioId });
     assert.ok(baja.data.resultado);
-    assert.equal((await eva.query('MiPerfil')).data.autenticacion.usuario.rol, null);
+    assert.equal((await eva.query('MiPerfil')).data.autenticacion.usuario.rol.nombre, 'alumno');
   });
 
   test('el encargado no puede ascender a otros roles ni tocar cuentas con rol', async () => {
@@ -1361,5 +1373,46 @@ describe('administrador y personal', () => {
     const luisId = (await admin.query('PersonalAdmin')).data.personal
       .find((m) => m.correo === 'luis@utng.edu.mx').usuarioId;
     assert.equal((await ana.mutation('QuitarEmpleado', { usuarioId: luisId })).data.resultado, null);
+  });
+});
+
+describe('mi cuenta', () => {
+  test('el alumno edita su nombre y teléfono; el servidor los valida', async () => {
+    await ana.mutation('EditarMiPerfil', { nombre: 'Ana López', telefono: '4181112233' });
+    const { data } = await ana.query('MiPerfil');
+    assert.equal(data.autenticacion.usuario.nombre, 'Ana López');
+    assert.equal(data.autenticacion.usuario.numeroDeTelefono, '4181112233');
+    await assert.rejects(ana.mutation('EditarMiPerfil', { nombre: 'A' }));
+    await assert.rejects(ana.mutation('EditarMiPerfil', { nombre: 'Ana', telefono: 'abc' }));
+  });
+
+  test('un alumno sin pedidos en curso elimina su cuenta y sus datos', async () => {
+    const gil = await alumno('gil');
+    await gil.mutation('CrearPerfil', { nombre: 'Gil Soto', telefono: '4189998877' });
+    const antes = await gil.query('MiPerfil');
+    const usuarioId = antes.data.autenticacion.usuario.id;
+    await gil.mutation('EliminarMiCuenta');
+    const { data } = await gil.query('MiPerfil');
+    assert.equal(data.autenticacion, null);
+    const anonimo = await adminDataConnect.executeGraphql(
+      'query U($id: UUID!) { usuario(id: $id) { nombre numeroDeTelefono } }',
+      { variables: { id: usuarioId } },
+    );
+    assert.equal(anonimo.data.usuario.nombre, 'Cuenta eliminada');
+    assert.equal(anonimo.data.usuario.numeroDeTelefono, null);
+    await signOut(gil.auth);
+    await deleteApp(gil.app);
+  });
+
+  test('no se elimina con pedidos en curso ni si la cuenta es del personal', async () => {
+    const hugo = await alumno('hugo');
+    await hugo.mutation('CrearPerfil', { nombre: 'Hugo Paz' });
+    await hugo.mutation('CrearPedido', pedido());
+    await assert.rejects(hugo.mutation('EliminarMiCuenta'), /pedidos en curso/);
+    assert.ok((await hugo.query('MiPerfil')).data.autenticacion);
+    await assert.rejects(beto.mutation('EliminarMiCuenta'), /personal/);
+    assert.ok((await beto.query('MiPerfil')).data.autenticacion);
+    await signOut(hugo.auth);
+    await deleteApp(hugo.app);
   });
 });

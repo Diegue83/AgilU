@@ -2,8 +2,13 @@ part of 'agilu.dart';
 
 class CrearPerfilVariablesBuilder {
   String nombre;
+  Optional<String> _telefono = Optional.optional(nativeFromJson, nativeToJson);
 
-  final FirebaseDataConnect _dataConnect;
+  final FirebaseDataConnect _dataConnect;  CrearPerfilVariablesBuilder telefono(String? t) {
+   _telefono.value = t;
+   return this;
+  }
+
   CrearPerfilVariablesBuilder(this._dataConnect, {required  this.nombre,});
   Deserializer<CrearPerfilData> dataDeserializer = (dynamic json)  => CrearPerfilData.fromJson(jsonDecode(json));
   Serializer<CrearPerfilVariables> varsSerializer = (CrearPerfilVariables vars) => jsonEncode(vars.toJson());
@@ -12,7 +17,7 @@ class CrearPerfilVariablesBuilder {
   }
 
   MutationRef<CrearPerfilData, CrearPerfilVariables> ref() {
-    CrearPerfilVariables vars= CrearPerfilVariables(nombre: nombre,);
+    CrearPerfilVariables vars= CrearPerfilVariables(nombre: nombre,telefono: _telefono,);
     return _dataConnect.mutation("CrearPerfil", dataDeserializer, varsSerializer, vars);
   }
 }
@@ -127,10 +132,18 @@ class CrearPerfilData {
 @immutable
 class CrearPerfilVariables {
   final String nombre;
+  late final Optional<String>telefono;
   @Deprecated('fromJson is deprecated for Variable classes as they are no longer required for deserialization.')
   CrearPerfilVariables.fromJson(Map<String, dynamic> json):
   
-  nombre = nativeFromJson<String>(json['nombre']);
+  nombre = nativeFromJson<String>(json['nombre']) {
+  
+  
+  
+    telefono = Optional.optional(nativeFromJson, nativeToJson);
+    telefono.value = json['telefono'] == null ? null : nativeFromJson<String>(json['telefono']);
+  
+  }
   @override
   bool operator ==(Object other) {
     if(identical(this, other)) {
@@ -141,21 +154,26 @@ class CrearPerfilVariables {
     }
 
     final CrearPerfilVariables otherTyped = other as CrearPerfilVariables;
-    return nombre == otherTyped.nombre;
+    return nombre == otherTyped.nombre && 
+    telefono == otherTyped.telefono;
     
   }
   @override
-  int get hashCode => nombre.hashCode;
+  int get hashCode => Object.hashAll([nombre.hashCode, telefono.hashCode]);
   
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
     json['nombre'] = nativeToJson<String>(nombre);
+    if(telefono.state == OptionalState.set) {
+      json['telefono'] = telefono.toJson();
+    }
     return json;
   }
 
   CrearPerfilVariables({
     required this.nombre,
+    required this.telefono,
   });
 }
 
