@@ -23,6 +23,7 @@ y pull request.
   de 6 o más caracteres y confirmación igual. El servidor vuelve a validar nombre y
   teléfono en `CrearPerfil` y toda cuenta nueva queda con rol alumno.
 - Mensajes de error de Firebase traducidos sin detalles internos.
+- Bandeja de avisos: cada usuario ve y marca como leídos solo sus avisos.
 - Mi cuenta: cambiar la contraseña y eliminar la cuenta piden la contraseña actual
   (reautenticación). Al eliminarla se borran nombre, teléfono, avisos, dispositivos y
   el acceso; los pedidos quedan anónimos para los reportes. El servidor rechaza la

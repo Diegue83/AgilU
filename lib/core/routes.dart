@@ -10,6 +10,7 @@ class Routes {
   static const reporte = '/reporte';
   static const admin = '/admin';
   static const cuenta = '/cuenta';
+  static const avisos = '/avisos';
 
   /// Pantalla de inicio según el rol de quien inició sesión.
   static String inicioPara(Perfil? perfil) {

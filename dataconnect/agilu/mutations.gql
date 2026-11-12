@@ -670,3 +670,14 @@ mutation EliminarMiCuenta @auth(level: USER) @transaction {
   )
   autenticacion_delete(key: { firebaseAuthUid_expr: "auth.uid" })
 }
+
+# Bandeja de avisos: marca como leídos todos los avisos del usuario con sesión.
+mutation MarcarAvisosLeidos @auth(level: USER) {
+  notificacion_updateMany(
+    where: {
+      usuario: { autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } } }
+      leido: { eq: false }
+    }
+    data: { leido: true }
+  )
+}

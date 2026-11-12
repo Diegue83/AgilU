@@ -1416,3 +1416,29 @@ describe('mi cuenta', () => {
     await deleteApp(hugo.app);
   });
 });
+
+describe('bandeja de avisos', () => {
+  async function avisoPara(quien, titulo) {
+    const { data } = await quien.query('MiPerfil');
+    await adminDataConnect.executeGraphql(
+      'mutation A($u: UUID!, $t: String!) { notificacion_insert(data: { titulo: $t, mensaje: "Pasa por tu pedido", usuario: { id: $u } }) }',
+      { variables: { u: data.autenticacion.usuario.id, t: titulo } },
+    );
+  }
+
+  test('cada usuario ve solo sus avisos y los marca como leídos', async () => {
+    await avisoPara(ana, 'Tu pedido está listo');
+    await avisoPara(beto, 'Aviso de Beto');
+
+    const deAna = (await ana.query('MisNotificaciones')).data.notificacions;
+    assert.ok(deAna.some((n) => n.titulo === 'Tu pedido está listo' && n.leido === false));
+    assert.ok(deAna.every((n) => n.titulo !== 'Aviso de Beto'));
+
+    await ana.mutation('MarcarAvisosLeidos');
+    const despues = (await ana.query('MisNotificaciones')).data.notificacions;
+    assert.ok(despues.every((n) => n.leido));
+
+    const deBeto = (await beto.query('MisNotificaciones')).data.notificacions;
+    assert.ok(deBeto.some((n) => n.titulo === 'Aviso de Beto' && n.leido === false));
+  });
+});

@@ -3,6 +3,7 @@ import 'package:agilu/core/routes.dart';
 import 'package:agilu/data/models/perfil.dart';
 import 'package:agilu/data/repositories/auth_repository.dart';
 import 'package:agilu/data/repositories/avisos_repository.dart';
+import 'package:agilu/data/repositories/bandeja_repository.dart';
 import 'package:agilu/data/repositories/cafeteria_repository.dart';
 import 'package:agilu/data/repositories/estacion_repository.dart';
 import 'package:agilu/data/repositories/foto_repository.dart';
@@ -36,6 +37,7 @@ Widget _app(AuthRepository auth,
         Provider<ReporteRepository>(create: (_) => MockReporteRepository()),
         Provider<PerfilRepository>.value(
             value: perfiles ?? MockPerfilRepository()),
+        Provider<BandejaRepository>(create: (_) => MockBandejaRepository()),
         Provider<PersonalRepository>(create: (_) => MockPersonalRepository()),
         Provider<AdminRepository>(create: (_) => MockAdminRepository()),
         Provider<EstacionRepository>(create: (_) => MockEstacionRepository()),
@@ -328,6 +330,7 @@ void main() {
       providers: [
         Provider<AuthRepository>.value(value: MockAuthRepository()),
         Provider<AvisosRepository>.value(value: avisos),
+        Provider<BandejaRepository>(create: (_) => MockBandejaRepository()),
         Provider<PerfilRepository>.value(value: MockPerfilRepository()),
         Provider<MenuRepository>(create: (_) => MockMenuRepository()),
         Provider<PedidoRepository>(create: (_) => MockPedidoRepository()),
@@ -514,5 +517,19 @@ void main() {
     expect(find.text('Nivel de confianza'), findsNothing);
     expect(find.text('Eliminar mi cuenta'), findsNothing);
     expect(find.text('Cambiar contraseña'), findsOneWidget);
+  });
+
+  testWidgets('la campana muestra los avisos sin leer y los marca al abrir',
+      (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository(), ruta: Routes.menu));
+    await tester.pumpAndSettle();
+    expect(find.text('1'), findsOneWidget);
+    await tester.tap(find.byTooltip('Avisos'));
+    await tester.pumpAndSettle();
+    expect(find.text('Tu pedido está listo'), findsOneWidget);
+    expect(find.text('Pago validado'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text('1'), findsNothing);
   });
 }

@@ -51,6 +51,8 @@ part 'editar_mi_perfil.dart';
 
 part 'eliminar_mi_cuenta.dart';
 
+part 'marcar_avisos_leidos.dart';
+
 part 'cafeterias_admin.dart';
 
 part 'personal_admin.dart';
@@ -223,6 +225,11 @@ class AgiluConnector {
   
   EliminarMiCuentaVariablesBuilder eliminarMiCuenta () {
     return EliminarMiCuentaVariablesBuilder(dataConnect, );
+  }
+  
+  
+  MarcarAvisosLeidosVariablesBuilder marcarAvisosLeidos () {
+    return MarcarAvisosLeidosVariablesBuilder(dataConnect, );
   }
   
   

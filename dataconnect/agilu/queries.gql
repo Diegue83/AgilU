@@ -385,6 +385,9 @@ query MisNotificaciones @auth(level: USER) {
     mensaje
     fechaEnvio
     leido
+    pedido {
+      folio
+    }
   }
 }
 
