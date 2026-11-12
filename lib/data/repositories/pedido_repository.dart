@@ -29,7 +29,14 @@ abstract class PedidoRepository {
 
   /// HU-08: sube el comprobante de la transferencia.
   Future<void> subirComprobante(String pedidoId, Uint8List bytes, String tipo);
+
+  /// Cancela el pedido del alumno. Devuelve true si ya estaba pagado (toca
+  /// reembolso). Si ya se empezó a preparar lanza [PedidoRechazado].
+  Future<bool> cancelar(String pedidoId);
 }
+
+const motivoNoCancelable =
+    'Ya no se puede cancelar: la cocina empezó a preparar tu pedido.';
 
 class MockPedidoRepository implements PedidoRepository {
   int _contador = 0;
@@ -88,6 +95,26 @@ class MockPedidoRepository implements PedidoRepository {
 
   @override
   Future<int> noRecogidos() async => sinRecoger;
+
+  @override
+  Future<bool> cancelar(String pedidoId) async {
+    final t = tickets[pedidoId];
+    if (t == null || !t.sePuedeCancelar) {
+      throw const PedidoRechazado(motivoNoCancelable);
+    }
+    tickets[pedidoId] = TicketPedido(
+      id: t.id,
+      folio: t.folio,
+      referencia: t.referencia,
+      estado: EstadoPedido.cancelado,
+      recogerA: t.recogerA,
+      total: t.total,
+      cafeteria: t.cafeteria,
+      pagadoEn: t.pagadoEn,
+      lineas: t.lineas,
+    );
+    return t.pagado;
+  }
 
   @override
   Future<void> subirComprobante(

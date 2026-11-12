@@ -53,6 +53,29 @@ class _Ticket extends StatelessWidget {
     await vm.subirComprobante(bytes, tipo);
   }
 
+  Future<void> _confirmarCancelar(
+      BuildContext context, TicketViewModel vm, TicketPedido t) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('¿Cancelar el pedido ${t.folio}?'),
+        content: Text(t.pagado
+            ? 'Tu pago ya se validó. Al cancelar, pide tu reembolso en la '
+                'cafetería mostrando el folio.'
+            : 'El pedido se cancela y ya no tienes que pagarlo.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('No')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Sí, cancelar')),
+        ],
+      ),
+    );
+    if (ok == true) await vm.cancelar();
+  }
+
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<TicketViewModel>();
@@ -78,9 +101,12 @@ class _Ticket extends StatelessWidget {
                   children: [
                     Center(
                       child: Chip(
-                        avatar: Icon(t.pagado
-                            ? Icons.check_circle
-                            : Icons.hourglass_bottom),
+                        avatar: Icon(switch (t.estado) {
+                          EstadoPedido.cancelado => Icons.cancel_outlined,
+                          EstadoPedido.noRecogido => Icons.event_busy,
+                          _ when t.pagado => Icons.check_circle,
+                          _ => Icons.hourglass_bottom,
+                        }),
                         label: Text(t.etiquetaEstado),
                       ),
                     ),
@@ -94,11 +120,7 @@ class _Ticket extends StatelessWidget {
                           .displaySmall
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),
-                    Text(
-                      'Recoge hoy a las ${ReglasPedido.formatearHora(t.recogerA)} en ${t.cafeteria}'
-                      '${t.ubicacion == null ? '' : ' (${t.ubicacion})'}',
-                      textAlign: TextAlign.center,
-                    ),
+                    Text(t.detalleRecogida, textAlign: TextAlign.center),
                     const Divider(height: 32),
                     for (final l in t.lineas)
                       Row(
@@ -190,12 +212,32 @@ class _Ticket extends StatelessWidget {
                           style: TextStyle(
                               color: Theme.of(context).colorScheme.error)),
                     ],
+                    if (t.estado == EstadoPedido.cancelado && vm.estabaPagado)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 12),
+                        child: Text(
+                          'Tu pedido ya estaba pagado: pide tu reembolso en la '
+                          'cafetería mostrando este folio.',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
                     const SizedBox(height: 24),
                     OutlinedButton(
                       onPressed: () => Navigator.pushNamedAndRemoveUntil(
                           context, Routes.menu, (_) => false),
                       child: const Text('Volver al menú'),
                     ),
+                    if (t.sePuedeCancelar)
+                      TextButton.icon(
+                        onPressed: vm.cancelando
+                            ? null
+                            : () => _confirmarCancelar(context, vm, t),
+                        icon: const Icon(Icons.cancel_outlined),
+                        label: const Text('Cancelar pedido'),
+                        style: TextButton.styleFrom(
+                            foregroundColor:
+                                Theme.of(context).colorScheme.error),
+                      ),
                   ],
                 ),
     );

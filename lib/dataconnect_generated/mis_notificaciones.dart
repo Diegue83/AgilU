@@ -23,13 +23,15 @@ class MisNotificacionesNotificacions {
   final String mensaje;
   final Timestamp fechaEnvio;
   final bool leido;
+  final MisNotificacionesNotificacionsPedido? pedido;
   MisNotificacionesNotificacions.fromJson(dynamic json):
   
   id = nativeFromJson<String>(json['id']),
   titulo = nativeFromJson<String>(json['titulo']),
   mensaje = nativeFromJson<String>(json['mensaje']),
   fechaEnvio = Timestamp.fromJson(json['fechaEnvio']),
-  leido = nativeFromJson<bool>(json['leido']);
+  leido = nativeFromJson<bool>(json['leido']),
+  pedido = json['pedido'] == null ? null : MisNotificacionesNotificacionsPedido.fromJson(json['pedido']);
   @override
   bool operator ==(Object other) {
     if(identical(this, other)) {
@@ -44,11 +46,12 @@ class MisNotificacionesNotificacions {
     titulo == otherTyped.titulo && 
     mensaje == otherTyped.mensaje && 
     fechaEnvio == otherTyped.fechaEnvio && 
-    leido == otherTyped.leido;
+    leido == otherTyped.leido && 
+    pedido == otherTyped.pedido;
     
   }
   @override
-  int get hashCode => Object.hashAll([id.hashCode, titulo.hashCode, mensaje.hashCode, fechaEnvio.hashCode, leido.hashCode]);
+  int get hashCode => Object.hashAll([id.hashCode, titulo.hashCode, mensaje.hashCode, fechaEnvio.hashCode, leido.hashCode, pedido.hashCode]);
   
 
   Map<String, dynamic> toJson() {
@@ -58,6 +61,9 @@ class MisNotificacionesNotificacions {
     json['mensaje'] = nativeToJson<String>(mensaje);
     json['fechaEnvio'] = fechaEnvio.toJson();
     json['leido'] = nativeToJson<bool>(leido);
+    if (pedido != null) {
+      json['pedido'] = pedido!.toJson();
+    }
     return json;
   }
 
@@ -67,6 +73,41 @@ class MisNotificacionesNotificacions {
     required this.mensaje,
     required this.fechaEnvio,
     required this.leido,
+    this.pedido,
+  });
+}
+
+@immutable
+class MisNotificacionesNotificacionsPedido {
+  final int folio;
+  MisNotificacionesNotificacionsPedido.fromJson(dynamic json):
+  
+  folio = nativeFromJson<int>(json['folio']);
+  @override
+  bool operator ==(Object other) {
+    if(identical(this, other)) {
+      return true;
+    }
+    if(other.runtimeType != runtimeType) {
+      return false;
+    }
+
+    final MisNotificacionesNotificacionsPedido otherTyped = other as MisNotificacionesNotificacionsPedido;
+    return folio == otherTyped.folio;
+    
+  }
+  @override
+  int get hashCode => folio.hashCode;
+  
+
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> json = {};
+    json['folio'] = nativeToJson<int>(folio);
+    return json;
+  }
+
+  MisNotificacionesNotificacionsPedido({
+    required this.folio,
   });
 }
 

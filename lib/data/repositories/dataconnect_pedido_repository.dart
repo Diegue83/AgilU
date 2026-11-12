@@ -119,6 +119,14 @@ class DataConnectPedidoRepository implements PedidoRepository {
   }
 
   @override
+  Future<bool> cancelar(String pedidoId) async {
+    final res = await _conector.cancelarMiPedido(id: pedidoId).execute();
+    final fila = res.data.resultado?.value as Map?;
+    if (fila == null) throw const PedidoRechazado(motivoNoCancelable);
+    return fila['pagado'] == true;
+  }
+
+  @override
   Future<void> subirComprobante(
       String pedidoId, Uint8List bytes, String tipo) async {
     final functions =

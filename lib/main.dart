@@ -10,12 +10,14 @@ import 'core/conector.dart';
 import 'core/routes.dart';
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/avisos_repository.dart';
+import 'data/repositories/bandeja_repository.dart';
 import 'data/repositories/cafeteria_repository.dart';
 import 'data/repositories/dataconnect_menu_repository.dart';
 import 'data/repositories/dataconnect_pedido_repository.dart';
 import 'data/repositories/estacion_repository.dart';
 import 'data/repositories/firebase_auth_repository.dart';
 import 'data/repositories/foto_repository.dart';
+import 'data/repositories/historial_repository.dart';
 import 'data/repositories/menu_repository.dart';
 import 'data/repositories/pagos_repository.dart';
 import 'data/repositories/panel_repository.dart';
@@ -68,6 +70,16 @@ Future<void> main() async {
           create: (_) => AppConfig.usarFirebase
               ? FcmAvisosRepository()
               : MockAvisosRepository(),
+        ),
+        Provider<HistorialRepository>(
+          create: (_) => AppConfig.usarFirebase
+              ? DataConnectHistorialRepository()
+              : MockHistorialRepository(),
+        ),
+        Provider<BandejaRepository>(
+          create: (_) => AppConfig.usarFirebase
+              ? DataConnectBandejaRepository()
+              : MockBandejaRepository(),
         ),
         Provider<PersonalRepository>(
           create: (_) => AppConfig.usarFirebase

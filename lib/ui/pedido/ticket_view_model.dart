@@ -30,6 +30,34 @@ class TicketViewModel extends ChangeNotifier {
     }
   }
 
+  bool cancelando = false;
+
+  /// Cancela el pedido. Devuelve true si se canceló; [estabaPagado] indica si
+  /// toca pedir el reembolso en la cafetería.
+  bool estabaPagado = false;
+
+  Future<bool> cancelar() async {
+    if (cancelando || !(ticket?.sePuedeCancelar ?? false)) return false;
+    cancelando = true;
+    error = null;
+    notifyListeners();
+    try {
+      estabaPagado = await _repo.cancelar(pedidoId);
+      await cargar();
+      return true;
+    } on PedidoRechazado catch (e) {
+      await cargar();
+      error = e.motivo;
+      return false;
+    } catch (_) {
+      error = 'No se pudo cancelar el pedido.';
+      return false;
+    } finally {
+      cancelando = false;
+      notifyListeners();
+    }
+  }
+
   Future<bool> subirComprobante(Uint8List bytes, String tipo) async {
     if (subiendo || !(ticket?.esperaComprobante ?? false)) return false;
     subiendo = true;

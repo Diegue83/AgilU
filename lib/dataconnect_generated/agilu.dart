@@ -51,6 +51,10 @@ part 'editar_mi_perfil.dart';
 
 part 'eliminar_mi_cuenta.dart';
 
+part 'marcar_avisos_leidos.dart';
+
+part 'cancelar_mi_pedido.dart';
+
 part 'cafeterias_admin.dart';
 
 part 'personal_admin.dart';
@@ -96,6 +100,8 @@ part 'mi_confianza.dart';
 part 'mis_notificaciones.dart';
 
 part 'reporte_beneficiaria.dart';
+
+part 'historial_pedidos.dart';
 
 
 
@@ -226,6 +232,16 @@ class AgiluConnector {
   }
   
   
+  MarcarAvisosLeidosVariablesBuilder marcarAvisosLeidos () {
+    return MarcarAvisosLeidosVariablesBuilder(dataConnect, );
+  }
+  
+  
+  CancelarMiPedidoVariablesBuilder cancelarMiPedido ({required String id, }) {
+    return CancelarMiPedidoVariablesBuilder(dataConnect, id: id,);
+  }
+  
+  
   CafeteriasAdminVariablesBuilder cafeteriasAdmin () {
     return CafeteriasAdminVariablesBuilder(dataConnect, );
   }
@@ -338,6 +354,11 @@ class AgiluConnector {
   
   ReporteBeneficiariaVariablesBuilder reporteBeneficiaria ({required Timestamp desde, required Timestamp hasta, }) {
     return ReporteBeneficiariaVariablesBuilder(dataConnect, desde: desde,hasta: hasta,);
+  }
+  
+  
+  HistorialPedidosVariablesBuilder historialPedidos ({required Timestamp desde, required Timestamp hasta, }) {
+    return HistorialPedidosVariablesBuilder(dataConnect, desde: desde,hasta: hasta,);
   }
   
 
