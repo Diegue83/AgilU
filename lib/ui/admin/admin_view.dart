@@ -1,3 +1,4 @@
+import '../cuenta/cuenta_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -38,6 +39,7 @@ class _AdminState extends State<_Admin> {
       appBar: AppBar(
         title: Text(_seccion == 0 ? 'Cafeterías' : 'Personal'),
         actions: [
+          const BotonMiCuenta(),
           IconButton(
             tooltip: 'Cerrar sesión',
             icon: const Icon(Icons.logout),

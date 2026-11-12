@@ -30,6 +30,9 @@ configuración de Firebase. No se encontraron credenciales.
   nunca se recibe el id del usuario como variable. Un alumno solo ve su perfil,
   sus pedidos, sus avisos y su ticket; un encargado solo administra su
   cafetería; la beneficiaria solo ve totales.
+- **Datos personales**: el usuario ve y corrige su nombre y teléfono en *Mi cuenta*
+  (validados también en el servidor) y puede eliminar su cuenta; la baja borra sus
+  datos personales y deja sus pedidos anónimos.
 - **Roles y personal** (`dataconnect/agilu/personal.gql`): el rol se lee de la
   base en cada operación, nunca de la app. El administrador crea cafeterías y
   asigna roles, pero no puede cambiar el suyo. El encargado solo da de alta

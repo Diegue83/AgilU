@@ -9,6 +9,12 @@ abstract class PerfilRepository {
 
   /// Perfil y rol del usuario con sesión, o null si aún no tiene perfil.
   Future<Perfil?> miPerfil();
+
+  Future<void> editar(String nombre, String? telefono);
+
+  /// Borra los datos personales del alumno con sesión. Si el servidor lo
+  /// rechaza (pedidos en curso o cuenta del personal) lanza el motivo.
+  Future<void> eliminarMiCuenta();
 }
 
 class DataConnectPerfilRepository implements PerfilRepository {
@@ -30,6 +36,26 @@ class DataConnectPerfilRepository implements PerfilRepository {
     final res = await _conector.miPerfil().execute();
     final a = res.data.autenticacion;
     return a == null ? null : aPerfil(a);
+  }
+
+  @override
+  Future<void> editar(String nombre, String? telefono) =>
+      _conector.editarMiPerfil(nombre: nombre).telefono(telefono).execute();
+
+  static const motivosBaja = [
+    'Tienes pedidos en curso: espera a recogerlos o cancélalos',
+    'Las cuentas del personal no se eliminan desde la app',
+  ];
+
+  @override
+  Future<void> eliminarMiCuenta() async {
+    try {
+      await _conector.eliminarMiCuenta().execute();
+    } catch (e) {
+      final texto = e.toString();
+      throw Exception(motivosBaja.firstWhere(texto.contains,
+          orElse: () => 'No se pudo eliminar la cuenta.'));
+    }
   }
 
   static Perfil aPerfil(MiPerfilAutenticacion a) => Perfil(
@@ -55,4 +81,26 @@ class MockPerfilRepository implements PerfilRepository {
 
   @override
   Future<Perfil?> miPerfil() async => perfil;
+
+  /// Lo que respondería el servidor al pedir la baja.
+  bool permitirBaja = true;
+  bool eliminado = false;
+
+  @override
+  Future<void> editar(String nombre, String? telefono) async => perfil = Perfil(
+        nombre: nombre,
+        correo: perfil.correo,
+        telefono: telefono,
+        rol: perfil.rol,
+        cafeteriaId: perfil.cafeteriaId,
+        cafeteria: perfil.cafeteria,
+      );
+
+  @override
+  Future<void> eliminarMiCuenta() async {
+    if (!permitirBaja) {
+      throw Exception(DataConnectPerfilRepository.motivosBaja.first);
+    }
+    eliminado = true;
+  }
 }
