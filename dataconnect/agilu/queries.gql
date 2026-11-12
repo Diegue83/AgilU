@@ -463,3 +463,36 @@ query HistorialPedidos($desde: Timestamp!, $hasta: Timestamp!) @auth(level: USER
     }
   }
 }
+
+# Puntos rojos de la navegación: cuántas cosas esperan al usuario con sesión.
+# Cada conteo depende del rol: el encargado ve pagos por validar, pedidos en
+# espera y solicitudes de su cafetería; el empleado, pedidos en espera; el
+# alumno, sus pedidos listos y sus avisos sin leer.
+query MisPendientes @auth(level: USER) {
+  pendientes: _selectFirst(
+    sql: """
+    WITH yo AS (
+      SELECT u.id AS usuario_id, u.cafeteria_id, coalesce(r.nombre, 'alumno') AS rol
+      FROM autenticacion a
+      JOIN usuario u ON u.id = a.usuario_id
+      LEFT JOIN rol r ON r.id = u.rol_id
+      WHERE a.firebase_auth_uid = $1
+    )
+    SELECT
+      yo.rol AS "rol",
+      CASE WHEN yo.rol = 'encargado' THEN
+        (SELECT count(*) FROM pedido p WHERE p.cafeteria_id = yo.cafeteria_id AND p.estado = 'pago_en_revision')
+      ELSE 0 END::int AS "pagos",
+      CASE WHEN yo.rol IN ('encargado', 'empleado') THEN
+        (SELECT count(*) FROM pedido p WHERE p.cafeteria_id = yo.cafeteria_id AND p.estado = 'pendiente')
+      ELSE 0 END::int AS "enEspera",
+      CASE WHEN yo.rol = 'encargado' THEN
+        (SELECT count(*) FROM solicitud_empleo s WHERE s.cafeteria_id = yo.cafeteria_id)
+      ELSE 0 END::int AS "solicitudes",
+      (SELECT count(*) FROM pedido p WHERE p.usuario_id = yo.usuario_id AND p.estado = 'listo')::int AS "listos",
+      (SELECT count(*) FROM notificacion n WHERE n.usuario_id = yo.usuario_id AND NOT n.leido)::int AS "avisos"
+    FROM yo
+    """
+    params: [{ _expr: "auth.uid" }]
+  )
+}

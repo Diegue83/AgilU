@@ -33,6 +33,12 @@ configuración de Firebase. No se encontraron credenciales.
 - **Datos personales**: el usuario ve y corrige su nombre y teléfono en *Mi cuenta*
   (validados también en el servidor) y puede eliminar su cuenta; la baja borra sus
   datos personales y deja sus pedidos anónimos.
+- **Avisos push** (`supabase/functions/avisar`): la función rechaza llamadas sin un
+  token válido de Firebase del proyecto. Antes de avisar comprueba en SQL Connect que
+  quien llama puede hacerlo (dueño del pedido, encargado o empleado de esa cafetería)
+  y que el pedido esté en el estado del aviso, así nadie puede mandar avisos falsos.
+  La cuenta de servicio que usa para SQL Connect y FCM vive solo como secreto de
+  Supabase. Los tokens de dispositivo inválidos se borran.
 - **Solicitudes de trabajo**: quien se registra como empleado queda sin rol y con una
   solicitud; el servidor le impide hacer pedidos y solo el encargado de esa cafetería
   la aprueba (pasa a empleado) o la rechaza. La única consulta sin sesión expone

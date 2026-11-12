@@ -45,6 +45,8 @@ jobs:
         working-directory: test_dataconnect
       - run: npm test
         working-directory: test_dataconnect
+      - name: Reglas de avisos (Edge Function de Supabase)
+        run: node --experimental-strip-types --test supabase/functions/avisar/
 
   dependencias:
     name: Revisión de dependencias

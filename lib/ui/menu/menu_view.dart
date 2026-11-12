@@ -1,4 +1,5 @@
 import '../avisos/avisos_view.dart';
+import '../comun/contadores.dart';
 import '../cuenta/cuenta_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -18,6 +19,10 @@ class MenuView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ConContadores(child: _menu(context));
+  }
+
+  Widget _menu(BuildContext context) {
     return ChangeNotifierProvider(
       create: (ctx) => MenuViewModel(ctx.read<MenuRepository>(),
           pedidos: ctx.read<PedidoRepository>()),
@@ -40,7 +45,8 @@ class _MenuScaffold extends StatelessWidget {
         actions: [
           IconButton(
             tooltip: 'Mis pedidos',
-            icon: const Icon(Icons.receipt_long),
+            icon: IconoConPunto(Icons.receipt_long,
+                context.watch<ContadoresController>().actual.listos),
             onPressed: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const MisPedidosView())),
           ),

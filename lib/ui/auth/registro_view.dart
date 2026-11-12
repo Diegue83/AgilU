@@ -1,3 +1,4 @@
+import '../../data/repositories/notificador.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -16,7 +17,9 @@ class RegistroView extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (ctx) => RegistroViewModel(ctx.read<AuthRepository>(),
-          perfiles: ctx.read<PerfilRepository>(), empleado: empleado),
+          perfiles: ctx.read<PerfilRepository>(),
+          empleado: empleado,
+          avisos: ctx.read<Notificador>()),
       child: const _Registro(),
     );
   }
