@@ -75,7 +75,10 @@ class _RegistroState extends State<_Registro> {
     return Scaffold(
       appBar: AppBar(title: const Text('Crear cuenta')),
       body: SafeArea(
-        child: Center(
+        // Arriba y no centrado: el Stepper es una lista y, centrado, dejaba un
+        // hueco grande sobre el formulario.
+        child: Align(
+          alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 480),
             child: Stepper(
