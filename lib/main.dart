@@ -22,6 +22,7 @@ import 'data/repositories/panel_repository.dart';
 import 'data/repositories/pedido_repository.dart';
 import 'data/repositories/producto_repository.dart';
 import 'data/repositories/perfil_repository.dart';
+import 'data/repositories/personal_repository.dart';
 import 'data/repositories/reporte_repository.dart';
 import 'firebase_options.dart';
 import 'ui/cart/cart_view_model.dart';
@@ -67,6 +68,16 @@ Future<void> main() async {
           create: (_) => AppConfig.usarFirebase
               ? FcmAvisosRepository()
               : MockAvisosRepository(),
+        ),
+        Provider<PersonalRepository>(
+          create: (_) => AppConfig.usarFirebase
+              ? DataConnectPersonalRepository()
+              : MockPersonalRepository(),
+        ),
+        Provider<AdminRepository>(
+          create: (_) => AppConfig.usarFirebase
+              ? DataConnectAdminRepository()
+              : MockAdminRepository(),
         ),
         Provider<EstacionRepository>(
           create: (_) => AppConfig.usarFirebase

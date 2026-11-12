@@ -1240,3 +1240,126 @@ describe('catálogo', () => {
     );
   });
 });
+
+describe('administrador y personal', () => {
+  let admin;
+  let luis;
+  let eva;
+  let pedidoListo;
+
+  before(async () => {
+    admin = await alumno('admin');
+    luis = await alumno('luis');
+    eva = await alumno('eva');
+    await admin.mutation('CrearPerfil', { nombre: 'Admin' });
+    await luis.mutation('CrearPerfil', { nombre: 'Luis' });
+    await eva.mutation('CrearPerfil', { nombre: 'Eva' });
+    // El primer administrador se nombra desde la consola.
+    await comoAdmin('../dataconnect/agilu/mutations.gql', 'AsignarRol', {
+      correo: 'admin@utng.edu.mx', rol: 'admin',
+    });
+    pedidoListo = pedido();
+    await ana.mutation('CrearPedido', pedidoListo);
+    await pagado(pedidoListo);
+  });
+
+  after(async () => {
+    for (const a of [admin, luis, eva]) {
+      await signOut(a.auth);
+      await deleteApp(a.app);
+    }
+  });
+
+  test('solo el administrador ve cafeterías y personal', async () => {
+    const a = await admin.query('CafeteriasAdmin');
+    assert.ok(a.data.cafeterias.some((c) => sinGuiones(c.id) === CAFETERIA));
+    const p = await admin.query('PersonalAdmin');
+    assert.ok(p.data.personal.some((m) => m.correo === 'beto@utng.edu.mx' && m.rol === 'encargado'));
+    for (const u of [ana, beto]) {
+      assert.equal((await u.query('CafeteriasAdmin')).data.cafeterias.length, 0);
+      assert.equal((await u.query('PersonalAdmin')).data.personal.length, 0);
+    }
+  });
+
+  test('el administrador crea y desactiva una cafetería; nadie más puede', async () => {
+    const r = await admin.mutation('CrearCafeteriaAdmin', { nombre: 'Kiosco', ubicacion: 'Gimnasio' });
+    const id = r.data.cafeteria_insert.id;
+    await admin.mutation('EditarCafeteriaAdmin', { id, nombre: 'Kiosco', ubicacion: 'Gimnasio', activa: false });
+    const { data } = await admin.query('CafeteriasAdmin');
+    assert.equal(data.cafeterias.find((c) => sinGuiones(c.id) === sinGuiones(id)).activa, false);
+    await assert.rejects(admin.mutation('CrearCafeteriaAdmin', { nombre: '   ' }));
+    await assert.rejects(ana.mutation('CrearCafeteriaAdmin', { nombre: 'Pirata' }));
+    await assert.rejects(beto.mutation('EditarCafeteriaAdmin', { id, nombre: 'X', activa: true }));
+  });
+
+  test('el administrador asigna roles; encargado y empleado exigen cafetería activa', async () => {
+    const sinCafeteria = await admin.mutation('AsignarRolAdmin', { correo: 'luis@utng.edu.mx', rol: 'empleado' });
+    assert.equal(sinCafeteria.data.resultado, null);
+    const ok = await admin.mutation('AsignarRolAdmin', {
+      correo: 'LUIS@utng.edu.mx', rol: 'empleado', cafeteriaId: CAFETERIA,
+    });
+    assert.ok(ok.data.resultado);
+    const { data } = await luis.query('MiPerfil');
+    assert.equal(data.autenticacion.usuario.rol.nombre, 'empleado');
+    assert.equal(data.autenticacion.usuario.cafeteria.id, CAFETERIA);
+    await assert.rejects(admin.mutation('AsignarRolAdmin', { correo: 'luis@utng.edu.mx', rol: 'superusuario' }));
+  });
+
+  test('el administrador no puede cambiar su propio rol y los demás no asignan roles', async () => {
+    const r = await admin.mutation('AsignarRolAdmin', { correo: 'admin@utng.edu.mx', rol: 'alumno' });
+    assert.equal(r.data.resultado, null);
+    const a = await ana.mutation('AsignarRolAdmin', { correo: 'ana@utng.edu.mx', rol: 'admin' });
+    assert.equal(a.data.resultado, null);
+    const b = await beto.mutation('AsignarRolAdmin', { correo: 'eva@utng.edu.mx', rol: 'encargado', cafeteriaId: CAFETERIA });
+    assert.equal(b.data.resultado, null);
+    assert.equal((await eva.query('MiPerfil')).data.autenticacion.usuario.rol, null);
+  });
+
+  test('el empleado atiende pedidos pero no pagos, menú ni ajustes', async () => {
+    const { data } = await luis.query('PanelPedidos', {
+      desde: new Date(Date.now() - 864e5).toISOString(),
+      hasta: new Date(Date.now() + 864e5).toISOString(),
+    });
+    assert.ok(data.pedidos.some((p) => p.id === sinGuiones(pedidoListo.id)));
+    const r = await luis.mutation('AvanzarPedido', { id: pedidoListo.id, estado: 'preparando' });
+    assert.equal(r.data._execute, 1);
+
+    assert.equal((await luis.query('PagosPorValidar')).data.pedidos.length, 0);
+    await assert.rejects(luis.mutation('CrearEstacion', { nombre: 'Falsa', orden: 9 }));
+    await assert.rejects(luis.mutation('EditarMiCafeteria', {
+      aperturaMinutos: 0, cierreMinutos: 1439, anticipacionMinutos: 0,
+      intervaloMinutos: 15, capacidadPorFranja: 10, permitirInmediatos: false,
+    }));
+    assert.equal((await luis.query('MiPersonal')).data.personal.length, 0);
+  });
+
+  test('el encargado da de alta y quita empleados de su cafetería', async () => {
+    const alta = await beto.mutation('AgregarEmpleado', { correo: 'eva@utng.edu.mx' });
+    assert.ok(alta.data.resultado);
+    const { data } = await beto.query('MiPersonal');
+    const correos = data.personal.map((m) => m.correo);
+    assert.deepEqual(correos.sort(), ['beto@utng.edu.mx', 'eva@utng.edu.mx', 'luis@utng.edu.mx']);
+
+    const baja = await beto.mutation('QuitarEmpleado', { usuarioId: alta.data.resultado.usuarioId });
+    assert.ok(baja.data.resultado);
+    assert.equal((await eva.query('MiPerfil')).data.autenticacion.usuario.rol, null);
+  });
+
+  test('el encargado no puede ascender a otros roles ni tocar cuentas con rol', async () => {
+    for (const correo of ['admin@utng.edu.mx', 'elena@utng.edu.mx', 'beto@utng.edu.mx', 'nadie@utng.edu.mx']) {
+      const r = await beto.mutation('AgregarEmpleado', { correo });
+      assert.equal(r.data.resultado, null, correo);
+    }
+    const yo = (await beto.query('MiPersonal')).data.personal.find((m) => m.rol === 'encargado');
+    const r = await beto.mutation('QuitarEmpleado', { usuarioId: yo.usuarioId });
+    assert.equal(r.data.resultado, null);
+  });
+
+  test('un alumno o un empleado no dan de alta personal', async () => {
+    assert.equal((await ana.mutation('AgregarEmpleado', { correo: 'eva@utng.edu.mx' })).data.resultado, null);
+    assert.equal((await luis.mutation('AgregarEmpleado', { correo: 'eva@utng.edu.mx' })).data.resultado, null);
+    const luisId = (await admin.query('PersonalAdmin')).data.personal
+      .find((m) => m.correo === 'luis@utng.edu.mx').usuarioId;
+    assert.equal((await ana.mutation('QuitarEmpleado', { usuarioId: luisId })).data.resultado, null);
+  });
+});

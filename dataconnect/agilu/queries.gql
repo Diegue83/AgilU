@@ -291,14 +291,14 @@ query MiCafeteria @auth(level: USER) {
   }
 }
 
-# HU-06: pedidos de hoy de la cafetería del encargado, en orden de recogida.
+# HU-06: pedidos de hoy de la cafetería del encargado o empleado, en orden de recogida.
 query PanelPedidos($desde: Timestamp!, $hasta: Timestamp!) @auth(level: USER) {
   pedidos(
     where: {
       cafeteria: {
         usuarios_on_cafeteria: {
           exist: {
-            rol: { nombre: { eq: "encargado" } }
+            rol: { nombre: { in: ["encargado", "empleado"] } }
             autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
           }
         }

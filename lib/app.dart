@@ -7,6 +7,7 @@ import 'core/routes.dart';
 import 'core/theme.dart';
 import 'data/models/pedido.dart';
 import 'data/repositories/avisos_repository.dart';
+import 'ui/admin/admin_view.dart';
 import 'ui/auth/login_view.dart';
 import 'ui/cart/cart_view.dart';
 import 'ui/encargado/encargado_view.dart';
@@ -47,6 +48,7 @@ class _AgilUAppState extends State<AgilUApp> {
     Routes.carrito: (_) => const CartView(),
     Routes.encargado: (_) => const EncargadoView(),
     Routes.reporte: (_) => const ReporteView(),
+    Routes.admin: (_) => const AdminView(),
     Routes.confirmacion: (ctx) => ConfirmacionView(
           resultado: ModalRoute.of(ctx)!.settings.arguments as ResultadoPedido,
         ),

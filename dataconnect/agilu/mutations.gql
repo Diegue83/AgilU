@@ -113,7 +113,8 @@ mutation CrearPuesto($nombre: String!, $cafeteriaId: UUID!) @auth(level: NO_ACCE
   puesto_insert(data: { nombre: $nombre, cafeteria: { id: $cafeteriaId } })
 }
 
-# Asigna un rol (encargado, beneficiaria) y su cafetería al usuario con ese correo.
+# Asigna un rol y su cafetería al usuario con ese correo. Solo desde la consola
+# o el Admin SDK; sirve para nombrar al primer admin. Desde la app se usa AsignarRolAdmin.
 mutation AsignarRol($correo: String!, $rol: String!, $cafeteriaId: UUID)
   @auth(level: NO_ACCESS)
   @transaction {
@@ -471,7 +472,7 @@ mutation EditarMiCafeteria(
   )
 }
 
-# HU-06: el encargado avanza un pedido de su cafetería un paso a la vez:
+# HU-06: el encargado o un empleado avanza un pedido de su cafetería un paso a la vez:
 # pendiente -> preparando -> listo. Si el pedido ya cambió, no se toca.
 mutation AvanzarPedido($id: UUID!, $estado: String!)
   @auth(expr: "vars.estado in ['preparando', 'listo']") {
@@ -485,7 +486,7 @@ mutation AvanzarPedido($id: UUID!, $estado: String!)
         FROM usuario u
         JOIN autenticacion a ON a.usuario_id = u.id
         JOIN rol r ON r.id = u.rol_id
-        WHERE a.firebase_auth_uid = $1 AND r.nombre = 'encargado'
+        WHERE a.firebase_auth_uid = $1 AND r.nombre IN ('encargado', 'empleado')
       )
     """
     params: [{ _expr: "auth.uid" }, $id, $estado]
@@ -521,7 +522,7 @@ mutation ValidarPago($id: UUID!, $aprobado: Boolean!, $motivo: String)
   )
 }
 
-# HU-09: el encargado entrega un pedido listo de su cafetería con el código del
+# HU-09: el encargado o un empleado entrega un pedido listo de su cafetería con el código del
 # alumno. Un código equivocado suma un intento; con 5 intentos el pedido ya no
 # se puede entregar con código. Devuelve el estado y los intentos resultantes.
 mutation EntregarPedido($id: UUID!, $codigo: String!) @auth(level: USER) {
@@ -540,7 +541,7 @@ mutation EntregarPedido($id: UUID!, $codigo: String!) @auth(level: USER) {
         FROM usuario u
         JOIN autenticacion a ON a.usuario_id = u.id
         JOIN rol r ON r.id = u.rol_id
-        WHERE a.firebase_auth_uid = $1 AND r.nombre = 'encargado'
+        WHERE a.firebase_auth_uid = $1 AND r.nombre IN ('encargado', 'empleado')
       )
     RETURNING estado, intentos_entrega AS "intentos"
     """
@@ -548,7 +549,7 @@ mutation EntregarPedido($id: UUID!, $codigo: String!) @auth(level: USER) {
   )
 }
 
-# HU-23: el encargado registra que el alumno no recogió un pedido listo cuya
+# HU-23: el encargado o un empleado registra que el alumno no recogió un pedido listo cuya
 # hora ya pasó. Cuenta para el sistema de confianza.
 mutation MarcarNoRecogido($id: UUID!) @auth(level: USER) {
   _execute(
@@ -562,7 +563,7 @@ mutation MarcarNoRecogido($id: UUID!) @auth(level: USER) {
         FROM usuario u
         JOIN autenticacion a ON a.usuario_id = u.id
         JOIN rol r ON r.id = u.rol_id
-        WHERE a.firebase_auth_uid = $1 AND r.nombre = 'encargado'
+        WHERE a.firebase_auth_uid = $1 AND r.nombre IN ('encargado', 'empleado')
       )
     """
     params: [{ _expr: "auth.uid" }, $id]

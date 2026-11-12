@@ -24,11 +24,18 @@ configuración de Firebase. No se encontraron credenciales.
 
 - **Autenticación**: Firebase Authentication (correo y contraseña). Toda
   operación de SQL Connect exige sesión (`@auth(level: USER)` o una expresión
-  más estricta); las de administrador son `NO_ACCESS` (solo Admin SDK).
+  más estricta). Las de consola (`AsignarRol`, `CrearCafeteria`…) son
+  `NO_ACCESS` (solo Admin SDK); sirven para nombrar al primer administrador.
 - **Autorización por objeto**: cada consulta y mutación filtra con `auth.uid`;
   nunca se recibe el id del usuario como variable. Un alumno solo ve su perfil,
   sus pedidos, sus avisos y su ticket; un encargado solo administra su
   cafetería; la beneficiaria solo ve totales.
+- **Roles y personal** (`dataconnect/agilu/personal.gql`): el rol se lee de la
+  base en cada operación, nunca de la app. El administrador crea cafeterías y
+  asigna roles, pero no puede cambiar el suyo. El encargado solo da de alta
+  como empleado a cuentas de alumno de su propia cafetería y solo quita
+  empleados. El empleado atiende y entrega pedidos, sin acceso a pagos, menú,
+  personal ni ajustes. Encargado y empleado exigen una cafetería activa.
 - **Validación en el servidor**: precios, total, folio, horario, anticipación,
   capacidad por franja, disponibilidad y bloqueo por pedidos no recogidos se
   calculan o validan en `CrearPedido` (SQL dentro de la base), no en la app.

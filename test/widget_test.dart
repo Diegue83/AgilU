@@ -11,6 +11,7 @@ import 'package:agilu/data/repositories/pagos_repository.dart';
 import 'package:agilu/data/repositories/panel_repository.dart';
 import 'package:agilu/data/repositories/pedido_repository.dart';
 import 'package:agilu/data/repositories/perfil_repository.dart';
+import 'package:agilu/data/repositories/personal_repository.dart';
 import 'package:agilu/data/repositories/producto_repository.dart';
 import 'package:agilu/data/repositories/reporte_repository.dart';
 import 'package:agilu/ui/cart/cart_view_model.dart';
@@ -35,6 +36,8 @@ Widget _app(AuthRepository auth,
         Provider<ReporteRepository>(create: (_) => MockReporteRepository()),
         Provider<PerfilRepository>.value(
             value: perfiles ?? MockPerfilRepository()),
+        Provider<PersonalRepository>(create: (_) => MockPersonalRepository()),
+        Provider<AdminRepository>(create: (_) => MockAdminRepository()),
         Provider<EstacionRepository>(create: (_) => MockEstacionRepository()),
         Provider<ProductoRepository>(create: (_) => MockProductoRepository()),
         Provider<FotoRepository>(create: (_) => MockFotoRepository()),
@@ -368,5 +371,64 @@ void main() {
     await _iniciarSesion(tester);
     expect(find.text('Menú de hoy'), findsOneWidget);
     expect(find.byType(BackButton), findsNothing);
+  });
+
+  testWidgets('un empleado solo ve el panel de pedidos', (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository(),
+        perfiles: MockPerfilRepository(
+            perfil: const Perfil(
+                nombre: 'Luis',
+                correo: 'luis@utng.edu.mx',
+                rol: RolUsuario.empleado,
+                cafeteriaId: 'c1'))));
+    await _iniciarSesion(tester);
+    expect(find.text('En espera (1)'), findsOneWidget);
+    expect(find.byType(NavigationBar), findsNothing);
+    expect(find.text('Pagos'), findsNothing);
+    expect(find.text('Productos'), findsNothing);
+    expect(find.text('Personal'), findsNothing);
+  });
+
+  testWidgets('el encargado da de alta a un empleado con su correo',
+      (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository(),
+        perfiles: MockPerfilRepository(perfil: _encargado)));
+    await _iniciarSesion(tester);
+    await tester.tap(find.text('Personal'));
+    await tester.pumpAndSettle();
+    expect(find.text('Luis'), findsOneWidget);
+
+    await tester.tap(find.text('Empleado'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Correo de la cuenta'),
+        'nuevo@utng.edu.mx');
+    await tester.tap(find.text('Agregar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Empleado · nuevo@utng.edu.mx'), findsOneWidget);
+  });
+
+  testWidgets('el administrador entra a cafeterías y crea una', (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository(),
+        perfiles: MockPerfilRepository(
+            perfil: const Perfil(
+                nombre: 'Admin',
+                correo: 'admin@utng.edu.mx',
+                rol: RolUsuario.admin))));
+    await _iniciarSesion(tester);
+    expect(find.text('Cafetería central'), findsOneWidget);
+    expect(find.text('Menú de hoy'), findsNothing);
+
+    await tester.tap(find.text('Cafetería'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+        find.widgetWithText(TextField, 'Nombre'), 'Barra de café');
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Barra de café'), findsOneWidget);
+
+    await tester.tap(find.text('Personal').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Nadie tiene un rol todavía.'), findsOneWidget);
   });
 }

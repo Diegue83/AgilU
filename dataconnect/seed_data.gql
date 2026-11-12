@@ -4,6 +4,8 @@ mutation SembrarCatalogo @transaction {
       { id: "d0000000-0000-4000-8000-000000000001", nombre: "alumno", descripcion: "Pide en la app" }
       { id: "d0000000-0000-4000-8000-000000000002", nombre: "encargado", descripcion: "Administra el menú y los pedidos de su cafetería" }
       { id: "d0000000-0000-4000-8000-000000000003", nombre: "beneficiaria", descripcion: "Consulta los reportes" }
+      { id: "d0000000-0000-4000-8000-000000000004", nombre: "empleado", descripcion: "Atiende los pedidos de su cafetería" }
+      { id: "d0000000-0000-4000-8000-000000000005", nombre: "admin", descripcion: "Da de alta cafeterías y asigna roles" }
     ]
   )
   cafeteria_insertMany(

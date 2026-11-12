@@ -47,6 +47,22 @@ part 'registrar_dispositivo.dart';
 
 part 'olvidar_dispositivo.dart';
 
+part 'cafeterias_admin.dart';
+
+part 'personal_admin.dart';
+
+part 'crear_cafeteria_admin.dart';
+
+part 'editar_cafeteria_admin.dart';
+
+part 'asignar_rol_admin.dart';
+
+part 'mi_personal.dart';
+
+part 'agregar_empleado.dart';
+
+part 'quitar_empleado.dart';
+
 part 'listar_menu.dart';
 
 part 'mi_perfil.dart';
@@ -193,6 +209,46 @@ class AgiluConnector {
   
   OlvidarDispositivoVariablesBuilder olvidarDispositivo ({required String token, }) {
     return OlvidarDispositivoVariablesBuilder(dataConnect, token: token,);
+  }
+  
+  
+  CafeteriasAdminVariablesBuilder cafeteriasAdmin () {
+    return CafeteriasAdminVariablesBuilder(dataConnect, );
+  }
+  
+  
+  PersonalAdminVariablesBuilder personalAdmin () {
+    return PersonalAdminVariablesBuilder(dataConnect, );
+  }
+  
+  
+  CrearCafeteriaAdminVariablesBuilder crearCafeteriaAdmin ({required String nombre, }) {
+    return CrearCafeteriaAdminVariablesBuilder(dataConnect, nombre: nombre,);
+  }
+  
+  
+  EditarCafeteriaAdminVariablesBuilder editarCafeteriaAdmin ({required String id, required String nombre, required bool activa, }) {
+    return EditarCafeteriaAdminVariablesBuilder(dataConnect, id: id,nombre: nombre,activa: activa,);
+  }
+  
+  
+  AsignarRolAdminVariablesBuilder asignarRolAdmin ({required String correo, required String rol, }) {
+    return AsignarRolAdminVariablesBuilder(dataConnect, correo: correo,rol: rol,);
+  }
+  
+  
+  MiPersonalVariablesBuilder miPersonal () {
+    return MiPersonalVariablesBuilder(dataConnect, );
+  }
+  
+  
+  AgregarEmpleadoVariablesBuilder agregarEmpleado ({required String correo, }) {
+    return AgregarEmpleadoVariablesBuilder(dataConnect, correo: correo,);
+  }
+  
+  
+  QuitarEmpleadoVariablesBuilder quitarEmpleado ({required String usuarioId, }) {
+    return QuitarEmpleadoVariablesBuilder(dataConnect, usuarioId: usuarioId,);
   }
   
   

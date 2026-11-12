@@ -26,7 +26,14 @@ y pull request.
 - Un alumno no puede crear, editar, eliminar ni cambiar la disponibilidad de productos,
   administrar estaciones, validar pagos, avanzar o entregar pedidos, ni ver el reporte.
 - Un encargado no puede tocar productos, estaciones o pedidos de otra cafetería.
-- Las operaciones de administrador se rechazan a cualquier cliente.
+- Las operaciones de consola (`NO_ACCESS`) se rechazan a cualquier cliente.
+- Solo el administrador lista cafeterías y personal, crea o desactiva cafeterías y
+  asigna roles; no puede cambiar su propio rol. Encargado y empleado exigen una
+  cafetería activa y no se aceptan roles inventados.
+- El encargado da de alta y quita empleados solo en su cafetería y solo a cuentas de
+  alumno; no puede nombrar encargados ni quitarse a sí mismo.
+- El empleado ve y avanza los pedidos de su cafetería, pero no ve pagos ni personal y
+  no puede crear estaciones ni cambiar los ajustes.
 
 **Entradas inválidas y reglas de negocio en el servidor**
 - El precio enviado por el cliente se ignora; el total sale del catálogo y la oferta vigente.
@@ -54,6 +61,8 @@ Ejecución local del 2026-11-10 en la rama `feature/hu-11-reporte-beneficiaria`:
 | --- | --- |
 | `flutter test` | 112 pruebas aprobadas, 0 fallidas |
 | `test_dataconnect` (emuladores Auth y SQL Connect) | 102 pruebas aprobadas, 0 fallidas |
+| `flutter test` (2026-11-12, gestión de personal) | 135 pruebas aprobadas, 0 fallidas |
+| `test_dataconnect` (2026-11-12, gestión de personal) | 110 pruebas aprobadas, 0 fallidas |
 | `integration_test` en Windows (2026-11-11) | 2 pruebas aprobadas tras corregir App Check en escritorio (ver abajo) |
 
 Limitación conocida: el emulador de Functions aún no ejecuta disparadores de SQL
