@@ -829,7 +829,25 @@ AgiluConnector.instance.crearPerfil(
 ).execute();
 ```
 
+#### Optional Arguments
+We return a builder for each query. For CrearPerfil, we created `CrearPerfilBuilder`. For queries and mutations with optional parameters, we return a builder class.
+The builder pattern allows Data Connect to distinguish between fields that haven't been set and fields that have been set to null. A field can be set by calling its respective setter method like below:
+```dart
+class CrearPerfilVariablesBuilder {
+  ...
+   CrearPerfilVariablesBuilder telefono(String? t) {
+   _telefono.value = t;
+   return this;
+  }
 
+  ...
+}
+AgiluConnector.instance.crearPerfil(
+  nombre: nombre,
+)
+.telefono(telefono)
+.execute();
+```
 
 #### Return Type
 `execute()` returns a `OperationResult<CrearPerfilData, CrearPerfilVariables>`

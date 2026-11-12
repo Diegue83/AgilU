@@ -3,8 +3,9 @@ import '../../dataconnect_generated/agilu.dart';
 import '../models/perfil.dart';
 
 abstract class PerfilRepository {
-  /// Crea el perfil del alumno con sesión si todavía no existe.
-  Future<void> asegurarPerfil(String nombre);
+  /// Crea el perfil del alumno con sesión si todavía no existe. Todo perfil
+  /// nuevo es de alumno.
+  Future<void> asegurarPerfil(String nombre, {String? telefono});
 
   /// Perfil y rol del usuario con sesión, o null si aún no tiene perfil.
   Future<Perfil?> miPerfil();
@@ -16,10 +17,12 @@ class DataConnectPerfilRepository implements PerfilRepository {
       : _conector = conector ?? conectorAgilu;
 
   @override
-  Future<void> asegurarPerfil(String nombre) async {
+  Future<void> asegurarPerfil(String nombre, {String? telefono}) async {
     final actual = await _conector.miPerfil().execute();
     if (actual.data.autenticacion != null) return;
-    await _conector.crearPerfil(nombre: nombre).execute();
+    var op = _conector.crearPerfil(nombre: nombre);
+    if (telefono != null) op = op.telefono(telefono);
+    await op.execute();
   }
 
   @override
@@ -32,6 +35,7 @@ class DataConnectPerfilRepository implements PerfilRepository {
   static Perfil aPerfil(MiPerfilAutenticacion a) => Perfil(
         nombre: a.usuario.nombre,
         correo: a.correoElectronico,
+        telefono: a.usuario.numeroDeTelefono,
         rol: RolUsuario.desdeNombre(a.usuario.rol?.nombre),
         cafeteriaId: a.usuario.cafeteria?.id,
         cafeteria: a.usuario.cafeteria?.nombre,
@@ -47,7 +51,7 @@ class MockPerfilRepository implements PerfilRepository {
   });
 
   @override
-  Future<void> asegurarPerfil(String nombre) async {}
+  Future<void> asegurarPerfil(String nombre, {String? telefono}) async {}
 
   @override
   Future<Perfil?> miPerfil() async => perfil;

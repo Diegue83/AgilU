@@ -1,5 +1,21 @@
-mutation CrearPerfil($nombre: String!) @auth(level: USER) @transaction {
-  usuario_insert(data: { nombre: $nombre })
+# Todo registro nuevo es alumno. Los demás roles los asigna el administrador
+# (o el encargado, para empleados). El servidor valida nombre y teléfono.
+mutation CrearPerfil($nombre: String!, $telefono: String)
+  @auth(expr: "auth != null && vars.nombre.trim().size() >= 2 && vars.nombre.size() <= 80 && (!has(vars.telefono) || vars.telefono == null || vars.telefono.matches('^[0-9]{10}$'))")
+  @transaction {
+  query @redact {
+    rols(where: { nombre: { eq: "alumno" } }, limit: 1)
+      @check(expr: "this.size() == 1", message: "Falta el rol alumno") {
+      id
+    }
+  }
+  usuario_insert(
+    data: {
+      nombre: $nombre
+      numeroDeTelefono: $telefono
+      rolId_expr: "response.query.rols[0].id"
+    }
+  )
   autenticacion_insert(
     data: {
       firebaseAuthUid_expr: "auth.uid"

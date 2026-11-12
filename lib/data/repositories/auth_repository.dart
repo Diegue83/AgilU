@@ -1,10 +1,15 @@
+import '../models/perfil.dart';
+
 abstract class AuthRepository {
   String? get uidActual;
 
   /// uid de la sesión que quedó abierta en el dispositivo, o null.
   Future<String?> sesionGuardada();
   Future<String> iniciarSesion(String correo, String contrasena);
-  Future<String> registrar(String correo, String contrasena, String nombre);
+
+  /// Crea la cuenta y su perfil de alumno con los datos personales.
+  Future<String> registrar(
+      String correo, String contrasena, DatosPersonales datos);
   Future<void> cerrarSesion();
 }
 
@@ -31,9 +36,15 @@ class MockAuthRepository implements AuthRepository {
   Future<String> iniciarSesion(String correo, String contrasena) =>
       _simular(correo, contrasena);
 
+  /// Datos del último registro, para revisar en pruebas.
+  DatosPersonales? registrado;
+
   @override
-  Future<String> registrar(String correo, String contrasena, String nombre) =>
-      _simular(correo, contrasena);
+  Future<String> registrar(
+      String correo, String contrasena, DatosPersonales datos) {
+    registrado = datos;
+    return _simular(correo, contrasena);
+  }
 
   @override
   Future<void> cerrarSesion() async => _uid = null;

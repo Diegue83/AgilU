@@ -12,7 +12,8 @@ type Usuario @table {
   cafeteria: Cafeteria
 }
 
-# alumno, encargado, beneficiaria. Un usuario sin rol es alumno.
+# alumno, empleado, encargado, beneficiaria, admin. Todo registro nuevo es
+# alumno; un usuario sin rol (cuentas anteriores) también se trata como alumno.
 type Rol @table {
   nombre: String! @unique
   descripcion: String

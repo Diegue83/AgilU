@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../models/perfil.dart';
 import 'auth_repository.dart';
 import 'perfil_repository.dart';
 
@@ -31,21 +32,21 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<String> registrar(
-      String correo, String contrasena, String nombre) async {
+      String correo, String contrasena, DatosPersonales datos) async {
     try {
       final cred = await _auth.createUserWithEmailAndPassword(
           email: correo, password: contrasena);
-      await _asegurarPerfil(nombre);
+      await _asegurarPerfil(datos.nombreCompleto, telefono: datos.telefono);
       return cred.user!.uid;
     } on FirebaseAuthException catch (e) {
       throw Exception(mensajeDeError(e.code));
     }
   }
 
-  Future<void> _asegurarPerfil(String nombre) async {
+  Future<void> _asegurarPerfil(String nombre, {String? telefono}) async {
     if (_perfil == null) return;
     try {
-      await _perfil.asegurarPerfil(nombre);
+      await _perfil.asegurarPerfil(nombre, telefono: telefono);
     } catch (_) {
       throw Exception(
           'Tu cuenta está lista, pero no se pudo crear tu perfil. Inicia sesión de nuevo.');

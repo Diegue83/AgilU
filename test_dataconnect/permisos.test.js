@@ -276,9 +276,21 @@ describe('leer pedidos', () => {
 });
 
 describe('roles', () => {
-  test('un alumno nuevo no tiene rol', async () => {
+  test('toda cuenta nueva queda como alumno', async () => {
     const { data } = await beto.query('MiPerfil');
-    assert.equal(data.autenticacion.usuario.rol, null);
+    assert.equal(data.autenticacion.usuario.rol.nombre, 'alumno');
+  });
+
+  test('el registro guarda el teléfono y el servidor valida los datos', async () => {
+    const fer = await alumno('fer');
+    await assert.rejects(fer.mutation('CrearPerfil', { nombre: 'F' }));
+    await assert.rejects(fer.mutation('CrearPerfil', { nombre: 'Fer Ruiz', telefono: '12-34' }));
+    await fer.mutation('CrearPerfil', { nombre: 'Fer Ruiz', telefono: '4181234567' });
+    const { data } = await fer.query('MiPerfil');
+    assert.equal(data.autenticacion.usuario.numeroDeTelefono, '4181234567');
+    assert.equal(data.autenticacion.usuario.rol.nombre, 'alumno');
+    await signOut(fer.auth);
+    await deleteApp(fer.app);
   });
 
   test('el administrador asigna el rol de encargado con su cafetería', async () => {
@@ -1312,7 +1324,7 @@ describe('administrador y personal', () => {
     assert.equal(a.data.resultado, null);
     const b = await beto.mutation('AsignarRolAdmin', { correo: 'eva@utng.edu.mx', rol: 'encargado', cafeteriaId: CAFETERIA });
     assert.equal(b.data.resultado, null);
-    assert.equal((await eva.query('MiPerfil')).data.autenticacion.usuario.rol, null);
+    assert.equal((await eva.query('MiPerfil')).data.autenticacion.usuario.rol.nombre, 'alumno');
   });
 
   test('el empleado atiende pedidos pero no pagos, menú ni ajustes', async () => {
@@ -1342,7 +1354,7 @@ describe('administrador y personal', () => {
 
     const baja = await beto.mutation('QuitarEmpleado', { usuarioId: alta.data.resultado.usuarioId });
     assert.ok(baja.data.resultado);
-    assert.equal((await eva.query('MiPerfil')).data.autenticacion.usuario.rol, null);
+    assert.equal((await eva.query('MiPerfil')).data.autenticacion.usuario.rol.nombre, 'alumno');
   });
 
   test('el encargado no puede ascender a otros roles ni tocar cuentas con rol', async () => {
