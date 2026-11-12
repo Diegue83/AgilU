@@ -2,12 +2,47 @@ import 'package:flutter/foundation.dart';
 
 import '../../data/models/perfil.dart';
 import '../../data/repositories/auth_repository.dart';
+import '../../data/repositories/perfil_repository.dart';
 
 /// Registro en dos pasos: primero los datos personales y después las
-/// credenciales de inicio de sesión. Toda cuenta nueva es de alumno.
+/// credenciales de inicio de sesión.
+/// - Alumno (registro normal): la cuenta nueva es de alumno.
+/// - Empleado ("Solicitar trabajo"): puede ser alguien externo; la cuenta no
+///   es de alumno y queda en espera de que el encargado de la cafetería la
+///   apruebe.
 class RegistroViewModel extends ChangeNotifier {
   final AuthRepository _auth;
-  RegistroViewModel(this._auth);
+  final PerfilRepository? _perfiles;
+  final bool empleado;
+  RegistroViewModel(this._auth,
+      {PerfilRepository? perfiles, this.empleado = false})
+      : _perfiles = perfiles {
+    if (empleado) cargarCafeterias();
+  }
+
+  List<OpcionCafeteria> cafeterias = [];
+  String? cafeteriaId;
+  bool cargandoCafeterias = false;
+
+  void elegirCafeteria(String? id) {
+    cafeteriaId = id;
+    notifyListeners();
+  }
+
+  Future<void> cargarCafeterias() async {
+    final perfiles = _perfiles;
+    if (perfiles == null) return;
+    cargandoCafeterias = true;
+    notifyListeners();
+    try {
+      cafeterias = await perfiles.cafeteriasParaRegistro();
+    } catch (_) {
+      error = 'No se pudieron cargar las cafeterías.';
+    } finally {
+      cargandoCafeterias = false;
+      notifyListeners();
+    }
+  }
 
   static final _formatoCorreo = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
   static final _soloLetras = RegExp(r"^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ' .-]+$");
@@ -57,13 +92,17 @@ class RegistroViewModel extends ChangeNotifier {
 
   /// Paso 1 → paso 2. Devuelve false si los datos tienen un problema.
   bool continuar(String nombre, String apellidos, String telefono) {
-    final problema = validarDatos(nombre, apellidos, telefono);
+    final problema = validarDatos(nombre, apellidos, telefono) ??
+        (empleado && cafeteriaId == null
+            ? 'Elige la cafetería donde trabajas.'
+            : null);
     error = problema;
     if (problema == null) {
       _datos = DatosPersonales(
         nombre: nombre.trim(),
         apellidos: apellidos.trim(),
         telefono: limpiarTelefono(telefono),
+        cafeteriaSolicitada: empleado ? cafeteriaId : null,
       );
       paso = 1;
     }

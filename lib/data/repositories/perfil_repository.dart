@@ -12,6 +12,14 @@ abstract class PerfilRepository {
 
   Future<void> editar(String nombre, String? telefono);
 
+  /// Cafeterías activas para el registro (no requiere sesión).
+  Future<List<OpcionCafeteria>> cafeteriasParaRegistro();
+
+  /// Registro como empleado: perfil sin rol de alumno y solicitud para esa
+  /// cafetería, en espera de que el encargado la apruebe.
+  Future<void> crearPerfilEmpleado(
+      String nombre, String? telefono, String cafeteriaId);
+
   /// Borra los datos personales del alumno con sesión. Si el servidor lo
   /// rechaza (pedidos en curso o cuenta del personal) lanza el motivo.
   Future<void> eliminarMiCuenta();
@@ -58,6 +66,22 @@ class DataConnectPerfilRepository implements PerfilRepository {
     }
   }
 
+  @override
+  Future<List<OpcionCafeteria>> cafeteriasParaRegistro() async {
+    final res = await _conector.cafeteriasParaRegistro().execute();
+    return res.data.cafeterias
+        .map((c) => OpcionCafeteria(c.id, c.nombre, ubicacion: c.ubicacion))
+        .toList();
+  }
+
+  @override
+  Future<void> crearPerfilEmpleado(
+          String nombre, String? telefono, String cafeteriaId) =>
+      _conector
+          .crearPerfilEmpleado(nombre: nombre, cafeteriaId: cafeteriaId)
+          .telefono(telefono)
+          .execute();
+
   static Perfil aPerfil(MiPerfilAutenticacion a) => Perfil(
         nombre: a.usuario.nombre,
         correo: a.correoElectronico,
@@ -65,6 +89,8 @@ class DataConnectPerfilRepository implements PerfilRepository {
         rol: RolUsuario.desdeNombre(a.usuario.rol?.nombre),
         cafeteriaId: a.usuario.cafeteria?.id,
         cafeteria: a.usuario.cafeteria?.nombre,
+        solicitudCafeteria:
+            a.usuario.solicitudEmpleo_on_usuario?.cafeteria.nombre,
       );
 }
 
@@ -81,6 +107,26 @@ class MockPerfilRepository implements PerfilRepository {
 
   @override
   Future<Perfil?> miPerfil() async => perfil;
+
+  final List<OpcionCafeteria> cafeterias = const [
+    OpcionCafeteria('c1', 'Cafetería central', ubicacion: 'Edificio A'),
+    OpcionCafeteria('c2', 'Barra de café'),
+  ];
+
+  @override
+  Future<List<OpcionCafeteria>> cafeteriasParaRegistro() async =>
+      List.of(cafeterias);
+
+  @override
+  Future<void> crearPerfilEmpleado(
+      String nombre, String? telefono, String cafeteriaId) async {
+    final c = cafeterias.firstWhere((c) => c.id == cafeteriaId);
+    perfil = Perfil(
+        nombre: nombre,
+        correo: perfil.correo,
+        telefono: telefono,
+        solicitudCafeteria: c.nombre);
+  }
 
   /// Lo que respondería el servidor al pedir la baja.
   bool permitirBaja = true;

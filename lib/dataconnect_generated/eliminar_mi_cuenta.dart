@@ -88,12 +88,14 @@ class EliminarMiCuentaAutenticacionDelete {
 class EliminarMiCuentaData {
   final int dispositivoToken_deleteMany;
   final int notificacion_deleteMany;
+  final int solicitudEmpleo_deleteMany;
   final EliminarMiCuentaUsuarioUpdate? usuario_update;
   final EliminarMiCuentaAutenticacionDelete? autenticacion_delete;
   EliminarMiCuentaData.fromJson(dynamic json):
   
   dispositivoToken_deleteMany = nativeFromJson<int>(json['dispositivoToken_deleteMany']),
   notificacion_deleteMany = nativeFromJson<int>(json['notificacion_deleteMany']),
+  solicitudEmpleo_deleteMany = nativeFromJson<int>(json['solicitudEmpleo_deleteMany']),
   usuario_update = json['usuario_update'] == null ? null : EliminarMiCuentaUsuarioUpdate.fromJson(json['usuario_update']),
   autenticacion_delete = json['autenticacion_delete'] == null ? null : EliminarMiCuentaAutenticacionDelete.fromJson(json['autenticacion_delete']);
   @override
@@ -108,18 +110,20 @@ class EliminarMiCuentaData {
     final EliminarMiCuentaData otherTyped = other as EliminarMiCuentaData;
     return dispositivoToken_deleteMany == otherTyped.dispositivoToken_deleteMany && 
     notificacion_deleteMany == otherTyped.notificacion_deleteMany && 
+    solicitudEmpleo_deleteMany == otherTyped.solicitudEmpleo_deleteMany && 
     usuario_update == otherTyped.usuario_update && 
     autenticacion_delete == otherTyped.autenticacion_delete;
     
   }
   @override
-  int get hashCode => Object.hashAll([dispositivoToken_deleteMany.hashCode, notificacion_deleteMany.hashCode, usuario_update.hashCode, autenticacion_delete.hashCode]);
+  int get hashCode => Object.hashAll([dispositivoToken_deleteMany.hashCode, notificacion_deleteMany.hashCode, solicitudEmpleo_deleteMany.hashCode, usuario_update.hashCode, autenticacion_delete.hashCode]);
   
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
     json['dispositivoToken_deleteMany'] = nativeToJson<int>(dispositivoToken_deleteMany);
     json['notificacion_deleteMany'] = nativeToJson<int>(notificacion_deleteMany);
+    json['solicitudEmpleo_deleteMany'] = nativeToJson<int>(solicitudEmpleo_deleteMany);
     if (usuario_update != null) {
       json['usuario_update'] = usuario_update!.toJson();
     }
@@ -132,6 +136,7 @@ class EliminarMiCuentaData {
   EliminarMiCuentaData({
     required this.dispositivoToken_deleteMany,
     required this.notificacion_deleteMany,
+    required this.solicitudEmpleo_deleteMany,
     this.usuario_update,
     this.autenticacion_delete,
   });

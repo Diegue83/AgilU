@@ -144,6 +144,14 @@ type DispositivoToken @table(key: "token") {
   usuario: Usuario!
 }
 
+# Quien se registra como empleado queda como alumno hasta que el encargado de
+# esa cafetería apruebe su solicitud. Una solicitud por usuario.
+type SolicitudEmpleo @table(key: "usuario") {
+  usuario: Usuario!
+  cafeteria: Cafeteria!
+  fechaSolicitud: Timestamp! @default(expr: "request.time")
+}
+
 type Notificacion @table {
   titulo: String!
   mensaje: String!
