@@ -59,12 +59,14 @@ class MiPerfilAutenticacion {
 class MiPerfilAutenticacionUsuario {
   final String id;
   final String nombre;
+  final String? numeroDeTelefono;
   final MiPerfilAutenticacionUsuarioRol? rol;
   final MiPerfilAutenticacionUsuarioCafeteria? cafeteria;
   MiPerfilAutenticacionUsuario.fromJson(dynamic json):
   
   id = nativeFromJson<String>(json['id']),
   nombre = nativeFromJson<String>(json['nombre']),
+  numeroDeTelefono = json['numeroDeTelefono'] == null ? null : nativeFromJson<String>(json['numeroDeTelefono']),
   rol = json['rol'] == null ? null : MiPerfilAutenticacionUsuarioRol.fromJson(json['rol']),
   cafeteria = json['cafeteria'] == null ? null : MiPerfilAutenticacionUsuarioCafeteria.fromJson(json['cafeteria']);
   @override
@@ -79,18 +81,22 @@ class MiPerfilAutenticacionUsuario {
     final MiPerfilAutenticacionUsuario otherTyped = other as MiPerfilAutenticacionUsuario;
     return id == otherTyped.id && 
     nombre == otherTyped.nombre && 
+    numeroDeTelefono == otherTyped.numeroDeTelefono && 
     rol == otherTyped.rol && 
     cafeteria == otherTyped.cafeteria;
     
   }
   @override
-  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, rol.hashCode, cafeteria.hashCode]);
+  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, numeroDeTelefono.hashCode, rol.hashCode, cafeteria.hashCode]);
   
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
     json['id'] = nativeToJson<String>(id);
     json['nombre'] = nativeToJson<String>(nombre);
+    if (numeroDeTelefono != null) {
+      json['numeroDeTelefono'] = nativeToJson<String?>(numeroDeTelefono);
+    }
     if (rol != null) {
       json['rol'] = rol!.toJson();
     }
@@ -103,6 +109,7 @@ class MiPerfilAutenticacionUsuario {
   MiPerfilAutenticacionUsuario({
     required this.id,
     required this.nombre,
+    this.numeroDeTelefono,
     this.rol,
     this.cafeteria,
   });

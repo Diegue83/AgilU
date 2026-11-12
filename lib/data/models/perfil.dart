@@ -1,7 +1,9 @@
 enum RolUsuario {
   alumno,
+  empleado,
   encargado,
-  beneficiaria;
+  beneficiaria,
+  admin;
 
   static RolUsuario desdeNombre(String? nombre) => RolUsuario.values.firstWhere(
         (r) => r.name == nombre,
@@ -12,6 +14,7 @@ enum RolUsuario {
 class Perfil {
   final String nombre;
   final String correo;
+  final String? telefono;
   final RolUsuario rol;
 
   /// Cafetería que administra un encargado; null para alumnos.
@@ -21,6 +24,7 @@ class Perfil {
   const Perfil({
     required this.nombre,
     required this.correo,
+    this.telefono,
     this.rol = RolUsuario.alumno,
     this.cafeteriaId,
     this.cafeteria,
@@ -28,5 +32,28 @@ class Perfil {
 
   bool get esEncargado => rol == RolUsuario.encargado && cafeteriaId != null;
 
+  /// Atiende pedidos de su cafetería, sin acceso a pagos, precios ni ajustes.
+  bool get esEmpleado => rol == RolUsuario.empleado && cafeteriaId != null;
+
+  /// Encargado o empleado: entra al panel de la cafetería.
+  bool get esPersonal => esEncargado || esEmpleado;
+
+  bool get esAdmin => rol == RolUsuario.admin;
+
   bool get esBeneficiaria => rol == RolUsuario.beneficiaria;
+}
+
+/// Lo que el alumno captura en el primer paso del registro.
+class DatosPersonales {
+  final String nombre;
+  final String apellidos;
+  final String? telefono;
+
+  const DatosPersonales({
+    required this.nombre,
+    required this.apellidos,
+    this.telefono,
+  });
+
+  String get nombreCompleto => '${nombre.trim()} ${apellidos.trim()}'.trim();
 }

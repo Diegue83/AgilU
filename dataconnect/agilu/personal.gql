@@ -1,0 +1,183 @@
+# Gestión de personal y de cafeterías.
+#
+# Roles: alumno (o sin rol), empleado, encargado, beneficiaria y admin.
+# - admin: da de alta cafeterías y asigna cualquier rol.
+# - encargado: da de alta y quita empleados de su propia cafetería.
+# - empleado: atiende los pedidos de su cafetería (panel, entrega), sin acceso
+#   a pagos, precios ni ajustes.
+#
+# Toda comprobación de rol se hace aquí, en el servidor, con el uid del token.
+# El primer admin se asigna desde la consola con la mutación AsignarRol.
+
+# ---------- Administrador ----------
+
+query CafeteriasAdmin @auth(level: USER) {
+  cafeterias: _select(
+    sql: """
+    SELECT c.id, c.nombre, c.ubicacion, c.activa
+    FROM cafeteria c
+    WHERE EXISTS (
+      SELECT 1 FROM usuario u
+      JOIN autenticacion a ON a.usuario_id = u.id
+      JOIN rol r ON r.id = u.rol_id
+      WHERE a.firebase_auth_uid = $1 AND r.nombre = 'admin'
+    )
+    ORDER BY c.nombre
+    """
+    params: [{ _expr: "auth.uid" }]
+  )
+}
+
+query PersonalAdmin @auth(level: USER) {
+  personal: _select(
+    sql: """
+    SELECT u.id AS "usuarioId", u.nombre, a.correo_electronico AS "correo",
+           r.nombre AS "rol", c.id AS "cafeteriaId", c.nombre AS "cafeteria"
+    FROM usuario u
+    JOIN autenticacion a ON a.usuario_id = u.id
+    JOIN rol r ON r.id = u.rol_id
+    LEFT JOIN cafeteria c ON c.id = u.cafeteria_id
+    WHERE r.nombre <> 'alumno'
+      AND EXISTS (
+        SELECT 1 FROM usuario yo
+        JOIN autenticacion ya ON ya.usuario_id = yo.id
+        JOIN rol yr ON yr.id = yo.rol_id
+        WHERE ya.firebase_auth_uid = $1 AND yr.nombre = 'admin'
+      )
+    ORDER BY r.nombre, u.nombre
+    """
+    params: [{ _expr: "auth.uid" }]
+  )
+}
+
+mutation CrearCafeteriaAdmin($nombre: String!, $ubicacion: String)
+  @auth(expr: "auth != null && vars.nombre.trim().size() > 0 && vars.nombre.size() <= 80")
+  @transaction {
+  query @redact {
+    autenticacion(key: { firebaseAuthUid_expr: "auth.uid" })
+      @check(expr: "this != null", message: "No tienes perfil") {
+      usuario {
+        rol @check(expr: "this != null && this.nombre == 'admin'", message: "Solo el administrador puede hacer esto") {
+          nombre
+        }
+      }
+    }
+  }
+  cafeteria_insert(data: { nombre: $nombre, ubicacion: $ubicacion })
+}
+
+mutation EditarCafeteriaAdmin($id: UUID!, $nombre: String!, $ubicacion: String, $activa: Boolean!)
+  @auth(expr: "auth != null && vars.nombre.trim().size() > 0 && vars.nombre.size() <= 80")
+  @transaction {
+  query @redact {
+    autenticacion(key: { firebaseAuthUid_expr: "auth.uid" })
+      @check(expr: "this != null", message: "No tienes perfil") {
+      usuario {
+        rol @check(expr: "this != null && this.nombre == 'admin'", message: "Solo el administrador puede hacer esto") {
+          nombre
+        }
+      }
+    }
+  }
+  cafeteria_update(id: $id, data: { nombre: $nombre, ubicacion: $ubicacion, activa: $activa })
+    @check(expr: "this != null", message: "La cafetería no existe")
+}
+
+# Asigna un rol a la cuenta con ese correo. Encargado y empleado necesitan una
+# cafetería activa; los demás roles la dejan vacía. El admin no puede cambiarse
+# su propio rol, así no se queda el sistema sin administrador por error.
+# Devuelve el id del usuario, o null si no se cumplió alguna condición.
+mutation AsignarRolAdmin($correo: String!, $rol: String!, $cafeteriaId: UUID)
+  @auth(expr: "auth != null && vars.rol in ['alumno', 'empleado', 'encargado', 'beneficiaria', 'admin']") {
+  resultado: _executeReturningFirst(
+    sql: """
+    UPDATE usuario u
+    SET rol_id = (SELECT id FROM rol WHERE nombre = $3),
+        cafeteria_id = CASE WHEN $3 IN ('encargado', 'empleado') THEN $4::uuid ELSE NULL END
+    FROM autenticacion a
+    WHERE a.usuario_id = u.id
+      AND lower(a.correo_electronico) = lower(trim($2))
+      AND a.firebase_auth_uid <> $1
+      AND EXISTS (SELECT 1 FROM rol WHERE nombre = $3)
+      AND ($3 NOT IN ('encargado', 'empleado')
+           OR EXISTS (SELECT 1 FROM cafeteria WHERE id = $4::uuid AND activa))
+      AND EXISTS (
+        SELECT 1 FROM usuario yo
+        JOIN autenticacion ya ON ya.usuario_id = yo.id
+        JOIN rol yr ON yr.id = yo.rol_id
+        WHERE ya.firebase_auth_uid = $1 AND yr.nombre = 'admin'
+      )
+    RETURNING u.id AS "usuarioId"
+    """
+    params: [{ _expr: "auth.uid" }, $correo, $rol, $cafeteriaId]
+  )
+}
+
+# ---------- Encargado: empleados de su cafetería ----------
+
+query MiPersonal @auth(level: USER) {
+  personal: _select(
+    sql: """
+    SELECT u.id AS "usuarioId", u.nombre, a.correo_electronico AS "correo", r.nombre AS "rol"
+    FROM usuario u
+    JOIN autenticacion a ON a.usuario_id = u.id
+    JOIN rol r ON r.id = u.rol_id
+    WHERE r.nombre IN ('encargado', 'empleado')
+      AND u.cafeteria_id = (
+        SELECT yo.cafeteria_id FROM usuario yo
+        JOIN autenticacion ya ON ya.usuario_id = yo.id
+        JOIN rol yr ON yr.id = yo.rol_id
+        WHERE ya.firebase_auth_uid = $1 AND yr.nombre = 'encargado'
+      )
+    ORDER BY r.nombre DESC, u.nombre
+    """
+    params: [{ _expr: "auth.uid" }]
+  )
+}
+
+# El encargado da de alta como empleado a una cuenta que ya existe y que no
+# tiene otro rol (alumno). No puede nombrar encargados ni tocar otras cafeterías.
+mutation AgregarEmpleado($correo: String!) @auth(level: USER) {
+  resultado: _executeReturningFirst(
+    sql: """
+    WITH mia AS (
+      SELECT yo.cafeteria_id AS id FROM usuario yo
+      JOIN autenticacion ya ON ya.usuario_id = yo.id
+      JOIN rol yr ON yr.id = yo.rol_id
+      WHERE ya.firebase_auth_uid = $1 AND yr.nombre = 'encargado' AND yo.cafeteria_id IS NOT NULL
+    )
+    UPDATE usuario u
+    SET rol_id = (SELECT id FROM rol WHERE nombre = 'empleado'),
+        cafeteria_id = (SELECT id FROM mia)
+    FROM autenticacion a
+    WHERE a.usuario_id = u.id
+      AND lower(a.correo_electronico) = lower(trim($2))
+      AND a.firebase_auth_uid <> $1
+      AND (u.rol_id IS NULL OR u.rol_id = (SELECT id FROM rol WHERE nombre = 'alumno'))
+      AND EXISTS (SELECT 1 FROM mia)
+      AND EXISTS (SELECT 1 FROM rol WHERE nombre = 'empleado')
+    RETURNING u.id AS "usuarioId"
+    """
+    params: [{ _expr: "auth.uid" }, $correo]
+  )
+}
+
+# Quita el rol a un empleado de su cafetería; la cuenta vuelve a ser de alumno.
+mutation QuitarEmpleado($usuarioId: UUID!) @auth(level: USER) {
+  resultado: _executeReturningFirst(
+    sql: """
+    UPDATE usuario u
+    SET rol_id = (SELECT id FROM rol WHERE nombre = 'alumno'), cafeteria_id = NULL
+    WHERE u.id = $2::uuid
+      AND u.rol_id = (SELECT id FROM rol WHERE nombre = 'empleado')
+      AND u.cafeteria_id = (
+        SELECT yo.cafeteria_id FROM usuario yo
+        JOIN autenticacion ya ON ya.usuario_id = yo.id
+        JOIN rol yr ON yr.id = yo.rol_id
+        WHERE ya.firebase_auth_uid = $1 AND yr.nombre = 'encargado'
+      )
+    RETURNING u.id AS "usuarioId"
+    """
+    params: [{ _expr: "auth.uid" }, $usuarioId]
+  )
+}

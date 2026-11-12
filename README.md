@@ -70,8 +70,16 @@ adb reverse tcp:9099 tcp:9099
 adb reverse tcp:9399 tcp:9399
 flutter run --dart-define=EMULADORES=true --dart-define=FIREBASE_HOST=127.0.0.2
 ```
-Para probar como encargado o beneficiaria, asigna el rol a una cuenta de prueba con
-la mutación de administrador `AsignarRol` (ver `docs/integracion-nube.md`).
+
+**Registro:** en dos pasos, primero datos personales (nombre, apellidos y teléfono
+opcional) y después las credenciales (correo y contraseña con confirmación). Toda
+cuenta nueva es de **alumno**.
+
+**Roles:** alumno (al registrarse), empleado, encargado, beneficiaria y administrador.
+El primer administrador se nombra una sola vez desde la consola de SQL Connect con
+la mutación `AsignarRol` (`rol: "admin"`). Después, desde la app, el administrador
+crea cafeterías y asigna roles, y cada encargado da de alta a sus empleados con el
+correo con el que se registraron (ver `docs/integracion-nube.md`).
 
 **Contra el proyecto real:** `flutter run`. Antes hay que publicar el backend:
 ```bash

@@ -1,5 +1,21 @@
-mutation CrearPerfil($nombre: String!) @auth(level: USER) @transaction {
-  usuario_insert(data: { nombre: $nombre })
+# Todo registro nuevo es alumno. Los demás roles los asigna el administrador
+# (o el encargado, para empleados). El servidor valida nombre y teléfono.
+mutation CrearPerfil($nombre: String!, $telefono: String)
+  @auth(expr: "auth != null && vars.nombre.trim().size() >= 2 && vars.nombre.size() <= 80 && (!has(vars.telefono) || vars.telefono == null || vars.telefono.matches('^[0-9]{10}$'))")
+  @transaction {
+  query @redact {
+    rols(where: { nombre: { eq: "alumno" } }, limit: 1)
+      @check(expr: "this.size() == 1", message: "Falta el rol alumno") {
+      id
+    }
+  }
+  usuario_insert(
+    data: {
+      nombre: $nombre
+      numeroDeTelefono: $telefono
+      rolId_expr: "response.query.rols[0].id"
+    }
+  )
   autenticacion_insert(
     data: {
       firebaseAuthUid_expr: "auth.uid"
@@ -113,7 +129,8 @@ mutation CrearPuesto($nombre: String!, $cafeteriaId: UUID!) @auth(level: NO_ACCE
   puesto_insert(data: { nombre: $nombre, cafeteria: { id: $cafeteriaId } })
 }
 
-# Asigna un rol (encargado, beneficiaria) y su cafetería al usuario con ese correo.
+# Asigna un rol y su cafetería al usuario con ese correo. Solo desde la consola
+# o el Admin SDK; sirve para nombrar al primer admin. Desde la app se usa AsignarRolAdmin.
 mutation AsignarRol($correo: String!, $rol: String!, $cafeteriaId: UUID)
   @auth(level: NO_ACCESS)
   @transaction {
@@ -471,7 +488,7 @@ mutation EditarMiCafeteria(
   )
 }
 
-# HU-06: el encargado avanza un pedido de su cafetería un paso a la vez:
+# HU-06: el encargado o un empleado avanza un pedido de su cafetería un paso a la vez:
 # pendiente -> preparando -> listo. Si el pedido ya cambió, no se toca.
 mutation AvanzarPedido($id: UUID!, $estado: String!)
   @auth(expr: "vars.estado in ['preparando', 'listo']") {
@@ -485,7 +502,7 @@ mutation AvanzarPedido($id: UUID!, $estado: String!)
         FROM usuario u
         JOIN autenticacion a ON a.usuario_id = u.id
         JOIN rol r ON r.id = u.rol_id
-        WHERE a.firebase_auth_uid = $1 AND r.nombre = 'encargado'
+        WHERE a.firebase_auth_uid = $1 AND r.nombre IN ('encargado', 'empleado')
       )
     """
     params: [{ _expr: "auth.uid" }, $id, $estado]
@@ -521,7 +538,7 @@ mutation ValidarPago($id: UUID!, $aprobado: Boolean!, $motivo: String)
   )
 }
 
-# HU-09: el encargado entrega un pedido listo de su cafetería con el código del
+# HU-09: el encargado o un empleado entrega un pedido listo de su cafetería con el código del
 # alumno. Un código equivocado suma un intento; con 5 intentos el pedido ya no
 # se puede entregar con código. Devuelve el estado y los intentos resultantes.
 mutation EntregarPedido($id: UUID!, $codigo: String!) @auth(level: USER) {
@@ -540,7 +557,7 @@ mutation EntregarPedido($id: UUID!, $codigo: String!) @auth(level: USER) {
         FROM usuario u
         JOIN autenticacion a ON a.usuario_id = u.id
         JOIN rol r ON r.id = u.rol_id
-        WHERE a.firebase_auth_uid = $1 AND r.nombre = 'encargado'
+        WHERE a.firebase_auth_uid = $1 AND r.nombre IN ('encargado', 'empleado')
       )
     RETURNING estado, intentos_entrega AS "intentos"
     """
@@ -548,7 +565,7 @@ mutation EntregarPedido($id: UUID!, $codigo: String!) @auth(level: USER) {
   )
 }
 
-# HU-23: el encargado registra que el alumno no recogió un pedido listo cuya
+# HU-23: el encargado o un empleado registra que el alumno no recogió un pedido listo cuya
 # hora ya pasó. Cuenta para el sistema de confianza.
 mutation MarcarNoRecogido($id: UUID!) @auth(level: USER) {
   _execute(
@@ -562,7 +579,7 @@ mutation MarcarNoRecogido($id: UUID!) @auth(level: USER) {
         FROM usuario u
         JOIN autenticacion a ON a.usuario_id = u.id
         JOIN rol r ON r.id = u.rol_id
-        WHERE a.firebase_auth_uid = $1 AND r.nombre = 'encargado'
+        WHERE a.firebase_auth_uid = $1 AND r.nombre IN ('encargado', 'empleado')
       )
     """
     params: [{ _expr: "auth.uid" }, $id]
@@ -600,4 +617,56 @@ mutation OlvidarDispositivo($token: String!) @auth(level: USER) {
       usuario: { autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } } }
     }
   )
+}
+
+# Mi cuenta: el usuario con sesión cambia su nombre y teléfono.
+mutation EditarMiPerfil($nombre: String!, $telefono: String)
+  @auth(expr: "auth != null && vars.nombre.trim().size() >= 2 && vars.nombre.size() <= 80 && (!has(vars.telefono) || vars.telefono == null || vars.telefono.matches('^[0-9]{10}$'))")
+  @transaction {
+  query @redact {
+    autenticacion(key: { firebaseAuthUid_expr: "auth.uid" })
+      @check(expr: "this != null", message: "No tienes perfil") {
+      usuario {
+        id
+      }
+    }
+  }
+  usuario_update(
+    key: { id_expr: "response.query.autenticacion.usuario.id" }
+    data: { nombre: $nombre, numeroDeTelefono: $telefono }
+  )
+}
+
+# Mi cuenta: el alumno borra sus datos personales antes de que la app borre su
+# cuenta de Firebase Auth. Sus pedidos se conservan para los reportes, ligados
+# a un usuario anónimo ("Cuenta eliminada"). Se rechaza si tiene pedidos en
+# curso o si la cuenta tiene un rol del personal: a esas primero se les quita.
+mutation EliminarMiCuenta @auth(level: USER) @transaction {
+  query @redact {
+    autenticacion(key: { firebaseAuthUid_expr: "auth.uid" })
+      @check(expr: "this != null", message: "No tienes perfil") {
+      usuario {
+        id
+        rol @check(expr: "this == null || this.nombre == 'alumno'", message: "Las cuentas del personal no se eliminan desde la app") {
+          nombre
+        }
+        pedidos_on_usuario(
+          where: { estado: { in: ["por_pagar", "pago_en_revision", "pendiente", "preparando", "listo"] } }
+        ) @check(expr: "this.size() == 0", message: "Tienes pedidos en curso: espera a recogerlos o cancélalos") {
+          id
+        }
+      }
+    }
+  }
+  dispositivoToken_deleteMany(
+    where: { usuario: { autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } } } }
+  )
+  notificacion_deleteMany(
+    where: { usuario: { autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } } } }
+  )
+  usuario_update(
+    key: { id_expr: "response.query.autenticacion.usuario.id" }
+    data: { nombre: "Cuenta eliminada", numeroDeTelefono: null, direccion: null }
+  )
+  autenticacion_delete(key: { firebaseAuthUid_expr: "auth.uid" })
 }
