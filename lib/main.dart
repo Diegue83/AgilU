@@ -8,6 +8,7 @@ import 'app.dart';
 import 'core/app_config.dart';
 import 'core/conector.dart';
 import 'core/routes.dart';
+import 'data/repositories/almacen_archivos.dart';
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/avisos_repository.dart';
 import 'data/repositories/bandeja_repository.dart';
@@ -52,6 +53,18 @@ Future<void> main() async {
   final AuthRepository auth = AppConfig.usarFirebase
       ? FirebaseAuthRepository(perfil: perfiles)
       : MockAuthRepository();
+  // Comprobantes y fotos en Supabase Storage cuando está configurado; si no,
+  // por Cloud Functions. Cada petición lleva el token de Firebase.
+  final AlmacenArchivos? almacen = AppConfig.usarFirebase &&
+          AppConfig.usarSupabase
+      ? SupabaseAlmacen(
+          url: AppConfig.supabaseUrl,
+          llave: AppConfig.supabaseKey,
+          token: () async => FirebaseAuth.instance.currentUser?.getIdToken(),
+        )
+      : null;
+  String? uidActual() => FirebaseAuth.instance.currentUser?.uid;
+
   final sesion = await auth.sesionGuardada();
   final perfil = sesion == null
       ? null
@@ -99,7 +112,7 @@ Future<void> main() async {
         ),
         Provider<PagosRepository>(
           create: (_) => AppConfig.usarFirebase
-              ? DataConnectPagosRepository()
+              ? DataConnectPagosRepository(almacen: almacen)
               : MockPagosRepository(),
         ),
         Provider<PanelRepository>(
@@ -113,9 +126,11 @@ Future<void> main() async {
               : MockCafeteriaRepository(),
         ),
         Provider<FotoRepository>(
-          create: (_) => AppConfig.usarFirebase
-              ? CloudFunctionsFotoRepository()
-              : MockFotoRepository(),
+          create: (_) => !AppConfig.usarFirebase
+              ? MockFotoRepository()
+              : almacen != null
+                  ? SupabaseFotoRepository(almacen, uid: uidActual)
+                  : CloudFunctionsFotoRepository(),
         ),
         Provider<ProductoRepository>(
           create: (_) => AppConfig.usarFirebase
@@ -129,7 +144,7 @@ Future<void> main() async {
         ),
         Provider<PedidoRepository>(
           create: (_) => AppConfig.usarFirebase
-              ? DataConnectPedidoRepository()
+              ? DataConnectPedidoRepository(almacen: almacen, uid: uidActual)
               : MockPedidoRepository(),
         ),
         // Estado compartido del carrito.

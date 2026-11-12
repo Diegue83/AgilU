@@ -55,6 +55,10 @@ part 'marcar_avisos_leidos.dart';
 
 part 'cancelar_mi_pedido.dart';
 
+part 'enviar_comprobante.dart';
+
+part 'guardar_foto_producto.dart';
+
 part 'cafeterias_admin.dart';
 
 part 'personal_admin.dart';
@@ -239,6 +243,16 @@ class AgiluConnector {
   
   CancelarMiPedidoVariablesBuilder cancelarMiPedido ({required String id, }) {
     return CancelarMiPedidoVariablesBuilder(dataConnect, id: id,);
+  }
+  
+  
+  EnviarComprobanteVariablesBuilder enviarComprobante ({required String pedidoId, required String ruta, }) {
+    return EnviarComprobanteVariablesBuilder(dataConnect, pedidoId: pedidoId,ruta: ruta,);
+  }
+  
+  
+  GuardarFotoProductoVariablesBuilder guardarFotoProducto ({required String id, required String url, }) {
+    return GuardarFotoProductoVariablesBuilder(dataConnect, id: id,url: url,);
   }
   
   

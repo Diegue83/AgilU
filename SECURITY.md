@@ -44,6 +44,13 @@ configuración de Firebase. No se encontraron credenciales.
   calculan o validan en `CrearPedido` (SQL dentro de la base), no en la app.
   Las fotos y comprobantes se validan por tipo (firma de bytes) y tamaño en las
   Cloud Functions.
+- **Archivos en Supabase Storage** (`supabase/almacenamiento.sql`): Supabase solo
+  acepta tokens del proyecto de Firebase `agilu-a232a`, y las políticas exigen ese
+  token en cada operación. Cada usuario sube solo a su carpeta `<uid>/`, no hay
+  permisos para reemplazar ni borrar, los comprobantes no se pueden listar (solo
+  descargar por su ruta, que lleva 128 bits aleatorios) y el bucket limita a 1 MB y
+  JPG/PNG. La URL y la llave publicable de Supabase no son secretas; nunca se usa la
+  llave de servicio en la app.
 - **Mínimo privilegio en recursos**: las reglas de Storage niegan todo acceso
   directo; Firestore ya no se usa y sus reglas niegan todo.
 - **Comunicación segura**: HTTPS/TLS 1.3 con Firebase; en Android no se permite

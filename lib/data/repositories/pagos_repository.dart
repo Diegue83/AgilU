@@ -1,7 +1,10 @@
+import 'dart:typed_data';
+
 import '../../core/conector.dart';
 import '../../core/reglas_pedido.dart';
 import '../../dataconnect_generated/agilu.dart';
 import '../models/ticket.dart';
+import 'almacen_archivos.dart';
 
 /// El pago ya se validó o cambió de estado en otro dispositivo.
 class PagoDesactualizado implements Exception {
@@ -13,12 +16,27 @@ abstract class PagosRepository {
   Future<List<PagoPorValidar>> porValidar();
   Future<void> validar(String pedidoId,
       {required bool aprobado, String? motivo});
+
+  /// Imagen de un comprobante guardado en Supabase (su ruta en el bucket).
+  Future<Uint8List> comprobante(String ruta);
 }
 
 class DataConnectPagosRepository implements PagosRepository {
   final AgiluConnector _conector;
-  DataConnectPagosRepository({AgiluConnector? conector})
-      : _conector = conector ?? conectorAgilu;
+  final AlmacenArchivos? _almacen;
+  DataConnectPagosRepository(
+      {AgiluConnector? conector, AlmacenArchivos? almacen})
+      : _conector = conector ?? conectorAgilu,
+        _almacen = almacen;
+
+  @override
+  Future<Uint8List> comprobante(String ruta) {
+    final almacen = _almacen;
+    if (almacen == null) {
+      throw Exception('El almacenamiento de comprobantes no está configurado.');
+    }
+    return almacen.descargar('comprobantes', ruta);
+  }
 
   @override
   Future<List<PagoPorValidar>> porValidar() async {
@@ -69,5 +87,15 @@ class MockPagosRepository implements PagosRepository {
     if (!pagos.any((p) => p.pedidoId == pedidoId)) throw PagoDesactualizado();
     pagos.removeWhere((p) => p.pedidoId == pedidoId);
     resultados[pedidoId] = aprobado ? null : motivo;
+  }
+
+  /// Imágenes de comprobante por ruta, para pruebas.
+  final Map<String, Uint8List> imagenes = {};
+
+  @override
+  Future<Uint8List> comprobante(String ruta) async {
+    final i = imagenes[ruta];
+    if (i == null) throw Exception('No existe el comprobante.');
+    return i;
   }
 }

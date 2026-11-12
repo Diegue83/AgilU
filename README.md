@@ -46,6 +46,8 @@ Tablero: https://trello.com/b/Hbim6YjX
 
    | Variable | Valores | Efecto |
    | --- | --- | --- |
+   | `SUPABASE_URL` | `https://<ref>.supabase.co` / sin definir | Comprobantes y fotos en Supabase Storage (sin plan Blaze) |
+   | `SUPABASE_KEY` | llave publicable de Supabase | Va junto con `SUPABASE_URL`; es un valor público, no un secreto |
    | `EMULADORES` | `true` / sin definir | Conecta Auth, SQL Connect y Functions a los emuladores locales |
 
    No hay llaves ni contraseñas que configurar en la app. Las funciones usan las
@@ -80,6 +82,12 @@ El primer administrador se nombra una sola vez desde la consola de SQL Connect c
 la mutación `AsignarRol` (`rol: "admin"`). Después, desde la app, el administrador
 crea cafeterías y asigna roles, y cada encargado da de alta a sus empleados con el
 correo con el que se registraron (ver `docs/integracion-nube.md`).
+
+**Archivos en Supabase (sin plan Blaze):** en el proyecto de Supabase agrega Firebase
+como proveedor externo (Authentication > Third-party Auth, proyecto `agilu-a232a`),
+ejecuta `supabase/almacenamiento.sql` en el editor SQL y compila con
+`--dart-define=SUPABASE_URL=... --dart-define=SUPABASE_KEY=...`. Sin esos valores,
+comprobantes y fotos siguen usando las Cloud Functions.
 
 **Contra el proyecto real:** `flutter run`. Antes hay que publicar el backend:
 ```bash

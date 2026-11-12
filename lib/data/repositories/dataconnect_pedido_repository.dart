@@ -11,6 +11,7 @@ import '../../dataconnect_generated/agilu.dart';
 import '../models/pedido.dart';
 import '../models/pedido_panel.dart';
 import '../models/ticket.dart';
+import 'almacen_archivos.dart';
 import 'pedido_repository.dart';
 
 /// Envía el pedido con la operación CrearPedido. El servidor toma los precios
@@ -21,11 +22,22 @@ class DataConnectPedidoRepository implements PedidoRepository {
   final Random _azar;
   final FirebaseFunctions? _functions;
 
+  /// Con Supabase, el comprobante se sube al bucket privado "comprobantes" y se
+  /// liga al pedido con EnviarComprobante. Sin él, se usa la Cloud Function.
+  final AlmacenArchivos? _almacen;
+  final String? Function()? _uid;
+
   DataConnectPedidoRepository(
-      {AgiluConnector? conector, Random? azar, FirebaseFunctions? functions})
+      {AgiluConnector? conector,
+      Random? azar,
+      FirebaseFunctions? functions,
+      AlmacenArchivos? almacen,
+      String? Function()? uid})
       : _conector = conector ?? conectorAgilu,
         _azar = azar ?? Random.secure(),
-        _functions = functions;
+        _functions = functions,
+        _almacen = almacen,
+        _uid = uid;
 
   @override
   Future<PedidoCreado> crearPedido(Pedido pedido) async {
@@ -129,6 +141,8 @@ class DataConnectPedidoRepository implements PedidoRepository {
   @override
   Future<void> subirComprobante(
       String pedidoId, Uint8List bytes, String tipo) async {
+    final almacen = _almacen;
+    if (almacen != null) return _subirASupabase(almacen, pedidoId, bytes, tipo);
     final functions =
         _functions ?? FirebaseFunctions.instanceFor(region: 'us-east4');
     try {
@@ -139,6 +153,26 @@ class DataConnectPedidoRepository implements PedidoRepository {
       });
     } on FirebaseFunctionsException catch (e) {
       throw Exception(e.message ?? 'No se pudo subir el comprobante.');
+    }
+  }
+
+  Future<void> _subirASupabase(AlmacenArchivos almacen, String pedidoId,
+      Uint8List bytes, String tipo) async {
+    final problema = validarImagen(bytes, tipo);
+    if (problema != null) throw Exception(problema);
+    final uid = _uid?.call();
+    if (uid == null) throw Exception('Inicia sesión de nuevo.');
+    final ruta = rutaArchivo(uid, pedidoId, tipo);
+    try {
+      await almacen.subir('comprobantes', ruta, bytes, tipo);
+    } catch (_) {
+      throw Exception('No se pudo subir el comprobante.');
+    }
+    final res = await _conector
+        .enviarComprobante(pedidoId: pedidoId, ruta: ruta)
+        .execute();
+    if (res.data.resultado == null) {
+      throw Exception('Este pedido ya no espera comprobante.');
     }
   }
 

@@ -16,6 +16,17 @@ class AppConfig {
       String.fromEnvironment('FIREBASE_HOST', defaultValue: 'localhost');
   static const String cafeteriaPorDefecto = 'cafeteria-central';
 
+  /// Supabase Storage para comprobantes y fotos de productos. Son valores
+  /// públicos del proyecto de Supabase (URL y llave publicable), no secretos;
+  /// los permisos los dan las políticas de supabase/almacenamiento.sql.
+  /// --dart-define=SUPABASE_URL=https://<ref>.supabase.co
+  /// --dart-define=SUPABASE_KEY=<llave publicable>
+  /// Sin ellos, comprobantes y fotos usan las Cloud Functions.
+  static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  static const String supabaseKey = String.fromEnvironment('SUPABASE_KEY');
+  static bool get usarSupabase =>
+      supabaseUrl.isNotEmpty && supabaseKey.isNotEmpty;
+
   /// HU-23: pedidos sin recoger en 30 días que bloquean nuevos pedidos.
   /// Debe coincidir con CrearPedido en dataconnect/agilu/mutations.gql.
   static const int limiteNoRecogidos = 3;

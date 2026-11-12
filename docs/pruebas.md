@@ -23,6 +23,11 @@ y pull request.
   de 6 o más caracteres y confirmación igual. El servidor vuelve a validar nombre y
   teléfono en `CrearPerfil` y toda cuenta nueva queda con rol alumno.
 - Mensajes de error de Firebase traducidos sin detalles internos.
+- Supabase Storage: el alumno solo liga a su pedido por pagar un comprobante de su
+  propia carpeta (sin `..`), nadie lo liga a un pedido ajeno, y solo el encargado de
+  la cafetería liga a un producto una foto de su carpeta del bucket `productos`. En la
+  app se prueban la ruta aleatoria, los límites de tipo y tamaño y la vista del
+  comprobante en el panel de pagos.
 - Historial: el encargado ve los pedidos terminados de su cafetería (hoy, 7 o 30 días);
   un alumno no ve ninguno.
 - Cancelar pedido: el alumno cancela el suyo por pagar, en revisión o pagado en espera
