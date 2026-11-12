@@ -67,3 +67,20 @@ String etiquetaRol(RolUsuario rol) => switch (rol) {
       RolUsuario.beneficiaria => 'Beneficiaria',
       RolUsuario.admin => 'Administrador',
     };
+
+/// Alguien que se registró como empleado y espera la aprobación del encargado.
+class SolicitudEmpleo {
+  final String usuarioId;
+  final String nombre;
+  final String correo;
+  final String? telefono;
+  final DateTime fecha;
+
+  const SolicitudEmpleo({
+    required this.usuarioId,
+    required this.nombre,
+    required this.correo,
+    this.telefono,
+    required this.fecha,
+  });
+}

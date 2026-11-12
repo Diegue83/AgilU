@@ -75,6 +75,16 @@ part 'agregar_empleado.dart';
 
 part 'quitar_empleado.dart';
 
+part 'cafeterias_para_registro.dart';
+
+part 'crear_perfil_empleado.dart';
+
+part 'solicitudes_pendientes.dart';
+
+part 'aprobar_solicitud.dart';
+
+part 'rechazar_solicitud.dart';
+
 part 'listar_menu.dart';
 
 part 'mi_perfil.dart';
@@ -293,6 +303,31 @@ class AgiluConnector {
   
   QuitarEmpleadoVariablesBuilder quitarEmpleado ({required String usuarioId, }) {
     return QuitarEmpleadoVariablesBuilder(dataConnect, usuarioId: usuarioId,);
+  }
+  
+  
+  CafeteriasParaRegistroVariablesBuilder cafeteriasParaRegistro () {
+    return CafeteriasParaRegistroVariablesBuilder(dataConnect, );
+  }
+  
+  
+  CrearPerfilEmpleadoVariablesBuilder crearPerfilEmpleado ({required String nombre, required String cafeteriaId, }) {
+    return CrearPerfilEmpleadoVariablesBuilder(dataConnect, nombre: nombre,cafeteriaId: cafeteriaId,);
+  }
+  
+  
+  SolicitudesPendientesVariablesBuilder solicitudesPendientes () {
+    return SolicitudesPendientesVariablesBuilder(dataConnect, );
+  }
+  
+  
+  AprobarSolicitudVariablesBuilder aprobarSolicitud ({required String usuarioId, }) {
+    return AprobarSolicitudVariablesBuilder(dataConnect, usuarioId: usuarioId,);
+  }
+  
+  
+  RechazarSolicitudVariablesBuilder rechazarSolicitud ({required String usuarioId, }) {
+    return RechazarSolicitudVariablesBuilder(dataConnect, usuarioId: usuarioId,);
   }
   
   

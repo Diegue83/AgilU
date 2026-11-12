@@ -45,6 +45,11 @@ query MiPerfil @auth(level: USER) {
         id
         nombre
       }
+      solicitudEmpleo_on_usuario {
+        cafeteria {
+          nombre
+        }
+      }
     }
   }
 }
@@ -245,6 +250,8 @@ query DiagnosticarPedido($cafeteriaId: UUID!, $recogerA: Timestamp!, $items: Any
         FROM f
       )
     SELECT CASE
+      WHEN EXISTS (SELECT 1 FROM solicitud_empleo s JOIN cliente ON s.usuario_id = cliente.usuario_id)
+        THEN 'Tu cuenta de empleado está en espera de aprobación.'
       WHEN NOT EXISTS (SELECT 1 FROM cliente) THEN 'Tu perfil no está listo. Cierra sesión y vuelve a entrar.'
       WHEN (SELECT count(*) FROM pedido o JOIN cliente ON o.usuario_id = cliente.usuario_id
             WHERE o.estado = 'no_recogido' AND o.recoger_a > now() - interval '30 days') >= 3

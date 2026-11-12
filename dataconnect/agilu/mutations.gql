@@ -39,7 +39,9 @@ mutation CrearPedido(
     sql: """
     WITH
       cliente AS (
-        SELECT usuario_id FROM autenticacion WHERE firebase_auth_uid = $1
+        SELECT a.usuario_id FROM autenticacion a
+        WHERE a.firebase_auth_uid = $1
+          AND NOT EXISTS (SELECT 1 FROM solicitud_empleo s WHERE s.usuario_id = a.usuario_id)
       ),
       caf AS (
         SELECT * FROM cafeteria WHERE id = $3::uuid AND activa FOR UPDATE
@@ -662,6 +664,9 @@ mutation EliminarMiCuenta @auth(level: USER) @transaction {
     where: { usuario: { autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } } } }
   )
   notificacion_deleteMany(
+    where: { usuario: { autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } } } }
+  )
+  solicitudEmpleo_deleteMany(
     where: { usuario: { autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } } } }
   )
   usuario_update(

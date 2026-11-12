@@ -19,7 +19,9 @@ class PersonalViewModel extends ChangeNotifier {
     cargando = true;
     notifyListeners();
     try {
-      personal = await _repo.miPersonal();
+      final r = await Future.wait([_repo.miPersonal(), _repo.solicitudes()]);
+      personal = r[0] as List<MiembroPersonal>;
+      solicitudes = r[1] as List<SolicitudEmpleo>;
       error = null;
     } catch (e) {
       error = mensajeDeError(e, 'No se pudo cargar el personal.', const []);
@@ -44,6 +46,14 @@ class PersonalViewModel extends ChangeNotifier {
 
   Future<bool> agregar(String correo) =>
       _ejecutar(() => _repo.agregarEmpleado(correo));
+
+  List<SolicitudEmpleo> solicitudes = [];
+
+  Future<bool> aprobar(SolicitudEmpleo s) =>
+      _ejecutar(() => _repo.aprobarSolicitud(s.usuarioId));
+
+  Future<bool> rechazar(SolicitudEmpleo s) =>
+      _ejecutar(() => _repo.rechazarSolicitud(s.usuarioId));
 
   Future<bool> quitar(MiembroPersonal m) =>
       _ejecutar(() => _repo.quitarEmpleado(m.usuarioId));

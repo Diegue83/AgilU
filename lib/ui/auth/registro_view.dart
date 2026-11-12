@@ -8,12 +8,15 @@ import '../../data/repositories/perfil_repository.dart';
 import 'registro_view_model.dart';
 
 class RegistroView extends StatelessWidget {
-  const RegistroView({super.key});
+  /// true = "Solicitar trabajo": registro de empleado en espera de aprobación.
+  final bool empleado;
+  const RegistroView({super.key, this.empleado = false});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (ctx) => RegistroViewModel(ctx.read<AuthRepository>()),
+      create: (ctx) => RegistroViewModel(ctx.read<AuthRepository>(),
+          perfiles: ctx.read<PerfilRepository>(), empleado: empleado),
       child: const _Registro(),
     );
   }
@@ -73,7 +76,8 @@ class _RegistroState extends State<_Registro> {
                 style: TextStyle(color: Theme.of(context).colorScheme.error)),
           );
     return Scaffold(
-      appBar: AppBar(title: const Text('Crear cuenta')),
+      appBar: AppBar(
+          title: Text(vm.empleado ? 'Solicitar trabajo' : 'Crear cuenta')),
       body: SafeArea(
         // Arriba y no centrado: el Stepper es una lista y, centrado, dejaba un
         // hueco grande sobre el formulario.
@@ -143,6 +147,33 @@ class _RegistroState extends State<_Registro> {
                         decoration:
                             const InputDecoration(labelText: 'Apellidos'),
                       ),
+                      const SizedBox(height: 12),
+                      if (vm.empleado) ...[
+                        const SizedBox(height: 12),
+                        if (vm.cargandoCafeterias)
+                          const LinearProgressIndicator()
+                        else
+                          DropdownButtonFormField<String>(
+                            initialValue: vm.cafeteriaId,
+                            isExpanded: true,
+                            decoration: const InputDecoration(
+                                labelText: 'Cafetería donde trabajas'),
+                            items: [
+                              for (final c in vm.cafeterias)
+                                DropdownMenuItem(
+                                    value: c.id,
+                                    child: Text(c.etiqueta,
+                                        overflow: TextOverflow.ellipsis)),
+                            ],
+                            onChanged: vm.elegirCafeteria,
+                          ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'El encargado de la cafetería debe aprobar tu '
+                          'cuenta antes de que puedas atender pedidos.',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ],
                       const SizedBox(height: 12),
                       TextField(
                         controller: _telefono,

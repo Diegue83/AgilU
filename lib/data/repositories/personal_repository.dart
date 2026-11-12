@@ -20,6 +20,11 @@ abstract class PersonalRepository {
   /// Da de alta como empleado a una cuenta ya registrada que hoy es alumno.
   Future<void> agregarEmpleado(String correo);
   Future<void> quitarEmpleado(String usuarioId);
+
+  /// Solicitudes de empleo pendientes en la cafetería del encargado.
+  Future<List<SolicitudEmpleo>> solicitudes();
+  Future<void> aprobarSolicitud(String usuarioId);
+  Future<void> rechazarSolicitud(String usuarioId);
 }
 
 /// Operaciones del administrador: cafeterías y roles de cualquier cuenta.
@@ -65,6 +70,41 @@ class DataConnectPersonalRepository implements PersonalRepository {
     if (res.data.resultado == null) {
       throw const CambioRechazado(
           'Esa persona no es empleado de tu cafetería.');
+    }
+  }
+
+  @override
+  Future<List<SolicitudEmpleo>> solicitudes() async {
+    final res = await _conector.solicitudesPendientes().execute();
+    return res.data.solicitudEmpleos
+        .map((s) => SolicitudEmpleo(
+              usuarioId: s.usuario.id,
+              nombre: s.usuario.nombre,
+              correo:
+                  s.usuario.autenticacion_on_usuario?.correoElectronico ?? '',
+              telefono: s.usuario.numeroDeTelefono,
+              fecha: s.fechaSolicitud.toDateTime().toLocal(),
+            ))
+        .toList();
+  }
+
+  @override
+  Future<void> aprobarSolicitud(String usuarioId) async {
+    try {
+      await _conector.aprobarSolicitud(usuarioId: usuarioId).execute();
+    } catch (e) {
+      throw CambioRechazado(e.toString().contains('ya no existe')
+          ? 'Esa solicitud ya no existe.'
+          : 'No se pudo aprobar la solicitud.');
+    }
+  }
+
+  @override
+  Future<void> rechazarSolicitud(String usuarioId) async {
+    final res =
+        await _conector.rechazarSolicitud(usuarioId: usuarioId).execute();
+    if (res.data.solicitudEmpleo_deleteMany == 0) {
+      throw const CambioRechazado('Esa solicitud ya no existe.');
     }
   }
 }
@@ -161,6 +201,38 @@ class MockPersonalRepository implements PersonalRepository {
           'Esa persona no es empleado de tu cafetería.');
     }
     alumnos.add(personal.removeAt(i).correo);
+  }
+
+  final List<SolicitudEmpleo> pendientes = [
+    SolicitudEmpleo(
+        usuarioId: 's1',
+        nombre: 'Rosa Medina',
+        correo: 'rosa@utng.edu.mx',
+        fecha: DateTime(2026, 11, 12, 9)),
+  ];
+
+  @override
+  Future<List<SolicitudEmpleo>> solicitudes() async => List.of(pendientes);
+
+  @override
+  Future<void> aprobarSolicitud(String usuarioId) async {
+    final i = pendientes.indexWhere((s) => s.usuarioId == usuarioId);
+    if (i < 0) throw const CambioRechazado('Esa solicitud ya no existe.');
+    final s = pendientes.removeAt(i);
+    personal.add(MiembroPersonal(
+        usuarioId: s.usuarioId,
+        nombre: s.nombre,
+        correo: s.correo,
+        rol: RolUsuario.empleado));
+  }
+
+  @override
+  Future<void> rechazarSolicitud(String usuarioId) async {
+    final antes = pendientes.length;
+    pendientes.removeWhere((s) => s.usuarioId == usuarioId);
+    if (pendientes.length == antes) {
+      throw const CambioRechazado('Esa solicitud ya no existe.');
+    }
   }
 }
 

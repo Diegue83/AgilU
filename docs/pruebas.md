@@ -28,6 +28,10 @@ y pull request.
   la cafetería liga a un producto una foto de su carpeta del bucket `productos`. En la
   app se prueban la ruta aleatoria, los límites de tipo y tamaño y la vista del
   comprobante en el panel de pagos.
+- Solicitar trabajo: sin sesión solo se ven nombres de cafeterías activas; la cuenta
+  creada no es de alumno, no puede hacer pedidos mientras espera, y solo el encargado
+  de esa cafetería ve, aprueba o rechaza la solicitud; una cafetería inactiva no las
+  recibe.
 - Historial: el encargado ve los pedidos terminados de su cafetería (hoy, 7 o 30 días);
   un alumno no ve ninguno.
 - Cancelar pedido: el alumno cancela el suyo por pagar, en revisión o pagado en espera
