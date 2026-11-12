@@ -68,6 +68,13 @@ class TicketPedido {
 
   bool get esperaComprobante => estado == EstadoPedido.porPagar;
 
+  /// El alumno puede cancelar mientras la cocina no empiece a prepararlo.
+  bool get sePuedeCancelar => const [
+        EstadoPedido.porPagar,
+        EstadoPedido.pagoEnRevision,
+        EstadoPedido.pendiente,
+      ].contains(estado);
+
   /// Etiqueta del ticket: mientras se prepara dice "Pagado"; al final, cómo
   /// terminó el pedido.
   String get etiquetaEstado => switch (estado) {

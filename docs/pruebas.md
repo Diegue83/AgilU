@@ -23,6 +23,8 @@ y pull request.
   de 6 o más caracteres y confirmación igual. El servidor vuelve a validar nombre y
   teléfono en `CrearPerfil` y toda cuenta nueva queda con rol alumno.
 - Mensajes de error de Firebase traducidos sin detalles internos.
+- Cancelar pedido: el alumno cancela el suyo por pagar, en revisión o pagado en espera
+  (con aviso de reembolso); en preparación ya no, y nadie cancela pedidos ajenos.
 - Bandeja de avisos: cada usuario ve y marca como leídos solo sus avisos.
 - Mi cuenta: cambiar la contraseña y eliminar la cuenta piden la contraseña actual
   (reautenticación). Al eliminarla se borran nombre, teléfono, avisos, dispositivos y

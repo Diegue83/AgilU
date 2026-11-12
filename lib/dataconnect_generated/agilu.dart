@@ -53,6 +53,8 @@ part 'eliminar_mi_cuenta.dart';
 
 part 'marcar_avisos_leidos.dart';
 
+part 'cancelar_mi_pedido.dart';
+
 part 'cafeterias_admin.dart';
 
 part 'personal_admin.dart';
@@ -230,6 +232,11 @@ class AgiluConnector {
   
   MarcarAvisosLeidosVariablesBuilder marcarAvisosLeidos () {
     return MarcarAvisosLeidosVariablesBuilder(dataConnect, );
+  }
+  
+  
+  CancelarMiPedidoVariablesBuilder cancelarMiPedido ({required String id, }) {
+    return CancelarMiPedidoVariablesBuilder(dataConnect, id: id,);
   }
   
   
