@@ -35,10 +35,11 @@ Future<void> main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     if (AppConfig.usarEmuladores) {
-      await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
-      conectorAgilu.dataConnect.useDataConnectEmulator('localhost', 9399);
+      const host = AppConfig.hostFirebaseLocal;
+      await FirebaseAuth.instance.useAuthEmulator(host, 9099);
+      conectorAgilu.dataConnect.useDataConnectEmulator(host, 9399);
       FirebaseFunctions.instanceFor(region: 'us-east4')
-          .useFunctionsEmulator('localhost', 5001);
+          .useFunctionsEmulator(host, 5001);
     }
   }
 
