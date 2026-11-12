@@ -101,6 +101,8 @@ part 'mis_notificaciones.dart';
 
 part 'reporte_beneficiaria.dart';
 
+part 'historial_pedidos.dart';
+
 
 
 
@@ -352,6 +354,11 @@ class AgiluConnector {
   
   ReporteBeneficiariaVariablesBuilder reporteBeneficiaria ({required Timestamp desde, required Timestamp hasta, }) {
     return ReporteBeneficiariaVariablesBuilder(dataConnect, desde: desde,hasta: hasta,);
+  }
+  
+  
+  HistorialPedidosVariablesBuilder historialPedidos ({required Timestamp desde, required Timestamp hasta, }) {
+    return HistorialPedidosVariablesBuilder(dataConnect, desde: desde,hasta: hasta,);
   }
   
 
