@@ -7,6 +7,13 @@ class AppConfig {
   /// Conecta Auth y SQL Connect a los emuladores locales:
   /// flutter run --dart-define=EMULADORES=true
   static const bool usarEmuladores = bool.fromEnvironment('EMULADORES');
+
+  /// Host de los servicios locales de Firebase. En Android, los SDK de Firebase
+  /// cambian "localhost" y "127.0.0.1" por 10.0.2.2, que solo existe en la
+  /// máquina virtual de Android Studio. En un teléfono conectado por USB usa
+  /// `adb reverse` y --dart-define=FIREBASE_HOST=127.0.0.2
+  static const String hostFirebaseLocal =
+      String.fromEnvironment('FIREBASE_HOST', defaultValue: 'localhost');
   static const String cafeteriaPorDefecto = 'cafeteria-central';
 
   /// HU-23: pedidos sin recoger en 30 días que bloquean nuevos pedidos.
