@@ -7,6 +7,7 @@ import 'package:agilu/data/repositories/bandeja_repository.dart';
 import 'package:agilu/data/repositories/cafeteria_repository.dart';
 import 'package:agilu/data/repositories/estacion_repository.dart';
 import 'package:agilu/data/repositories/foto_repository.dart';
+import 'package:agilu/data/repositories/historial_repository.dart';
 import 'package:agilu/data/repositories/menu_repository.dart';
 import 'package:agilu/data/repositories/pagos_repository.dart';
 import 'package:agilu/data/repositories/panel_repository.dart';
@@ -37,6 +38,7 @@ Widget _app(AuthRepository auth,
         Provider<ReporteRepository>(create: (_) => MockReporteRepository()),
         Provider<PerfilRepository>.value(
             value: perfiles ?? MockPerfilRepository()),
+        Provider<HistorialRepository>(create: (_) => MockHistorialRepository()),
         Provider<BandejaRepository>(create: (_) => MockBandejaRepository()),
         Provider<PersonalRepository>(create: (_) => MockPersonalRepository()),
         Provider<AdminRepository>(create: (_) => MockAdminRepository()),
@@ -531,5 +533,20 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
     expect(find.text('1'), findsNothing);
+  });
+
+  testWidgets('el encargado consulta el historial de pedidos terminados',
+      (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository(),
+        perfiles: MockPerfilRepository(perfil: _encargado)));
+    await _iniciarSesion(tester);
+    await tester.tap(find.byTooltip('Historial'));
+    await tester.pumpAndSettle();
+    expect(find.text('Historial'), findsOneWidget);
+    expect(find.text('Entregados'), findsOneWidget);
+    expect(find.textContaining('AGU-00007'), findsOneWidget);
+    await tester.tap(find.text('30 días'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('AGU-00002'), findsOneWidget);
   });
 }

@@ -1442,3 +1442,65 @@ describe('bandeja de avisos', () => {
     assert.ok(deBeto.some((n) => n.titulo === 'Aviso de Beto' && n.leido === false));
   });
 });
+
+describe('cancelar pedido', () => {
+  const estadoDe = async (quien, id) =>
+    (await quien.query('MiPedido', { id })).data.pedidos[0].estado;
+
+  test('el alumno cancela su pedido por pagar', async () => {
+    const p = pedido();
+    await ana.mutation('CrearPedido', p);
+    const r = await ana.mutation('CancelarMiPedido', { id: p.id });
+    assert.equal(r.data.resultado.pagado, false);
+    assert.equal(await estadoDe(ana, p.id), 'cancelado');
+  });
+
+  test('un pedido pagado que espera cocina se cancela e indica reembolso', async () => {
+    const p = pedido();
+    await ana.mutation('CrearPedido', p);
+    await pagado(p);
+    const r = await ana.mutation('CancelarMiPedido', { id: p.id });
+    assert.equal(r.data.resultado.pagado, true);
+    const { data } = await ana.query('MiPedido', { id: p.id });
+    assert.equal(data.pedidos[0].estado, 'cancelado');
+    assert.equal(data.pedidos[0].codigoEntrega, null);
+  });
+
+  test('en preparación ya no se cancela', async () => {
+    const p = pedido();
+    await ana.mutation('CrearPedido', p);
+    await pagado(p);
+    await beto.mutation('AvanzarPedido', { id: p.id, estado: 'preparando' });
+    const r = await ana.mutation('CancelarMiPedido', { id: p.id });
+    assert.equal(r.data.resultado, null);
+    assert.equal(await estadoDe(ana, p.id), 'preparando');
+  });
+
+  test('nadie cancela un pedido ajeno', async () => {
+    const p = pedido();
+    await ana.mutation('CrearPedido', p);
+    assert.equal((await beto.mutation('CancelarMiPedido', { id: p.id })).data.resultado, null);
+    assert.equal(await estadoDe(ana, p.id), 'por_pagar');
+  });
+});
+
+describe('historial del encargado', () => {
+  const rango = () => ({
+    desde: new Date(Date.now() - 2 * 864e5).toISOString(),
+    hasta: new Date(Date.now() + 864e5).toISOString(),
+  });
+
+  test('el encargado ve los pedidos terminados de su cafetería', async () => {
+    const p = pedido();
+    await ana.mutation('CrearPedido', p);
+    await ana.mutation('CancelarMiPedido', { id: p.id });
+    const { data } = await beto.query('HistorialPedidos', rango());
+    assert.ok(data.pedidos.some((x) => x.id === sinGuiones(p.id) && x.estado === 'cancelado'));
+    assert.ok(data.pedidos.every((x) => ['entregado', 'cancelado', 'no_recogido'].includes(x.estado)));
+  });
+
+  test('un alumno no ve el historial de la cafetería', async () => {
+    const { data } = await ana.query('HistorialPedidos', rango());
+    assert.equal(data.pedidos.length, 0);
+  });
+});

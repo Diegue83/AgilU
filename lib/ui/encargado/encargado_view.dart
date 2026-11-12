@@ -60,6 +60,13 @@ class _EncargadoViewState extends State<EncargadoView> {
           appBar: AppBar(
             title: Text(titulo),
             actions: [
+              if (i == 0)
+                IconButton(
+                  tooltip: 'Historial',
+                  icon: const Icon(Icons.history),
+                  onPressed: () =>
+                      Navigator.pushNamed(context, Routes.historial),
+                ),
               const BotonMiCuenta(),
               IconButton(
                 tooltip: 'Cerrar sesión',

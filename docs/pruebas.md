@@ -23,6 +23,10 @@ y pull request.
   de 6 o más caracteres y confirmación igual. El servidor vuelve a validar nombre y
   teléfono en `CrearPerfil` y toda cuenta nueva queda con rol alumno.
 - Mensajes de error de Firebase traducidos sin detalles internos.
+- Historial: el encargado ve los pedidos terminados de su cafetería (hoy, 7 o 30 días);
+  un alumno no ve ninguno.
+- Cancelar pedido: el alumno cancela el suyo por pagar, en revisión o pagado en espera
+  (con aviso de reembolso); en preparación ya no, y nadie cancela pedidos ajenos.
 - Bandeja de avisos: cada usuario ve y marca como leídos solo sus avisos.
 - Mi cuenta: cambiar la contraseña y eliminar la cuenta piden la contraseña actual
   (reautenticación). Al eliminarla se borran nombre, teléfono, avisos, dispositivos y
@@ -71,6 +75,8 @@ Ejecución local del 2026-11-10 en la rama `feature/hu-11-reporte-beneficiaria`:
 | `test_dataconnect` (emuladores Auth y SQL Connect) | 102 pruebas aprobadas, 0 fallidas |
 | `flutter test` (2026-11-12, gestión de personal) | 135 pruebas aprobadas, 0 fallidas |
 | `test_dataconnect` (2026-11-12, gestión de personal) | 110 pruebas aprobadas, 0 fallidas |
+| `flutter test` (2026-11-12, cuenta, avisos, cancelar e historial) | 158 pruebas aprobadas, 0 fallidas |
+| `test_dataconnect` (2026-11-12, cuenta, avisos, cancelar e historial) | 121 pruebas aprobadas, 0 fallidas |
 | `integration_test` en Windows (2026-11-11) | 2 pruebas aprobadas tras corregir App Check en escritorio (ver abajo) |
 
 Limitación conocida: el emulador de Functions aún no ejecuta disparadores de SQL
