@@ -104,6 +104,14 @@ class _LoginFormState extends State<_LoginForm> {
                         : () => Navigator.pushNamed(context, Routes.registro),
                     child: const Text('¿No tienes cuenta? Regístrate'),
                   ),
+                  TextButton(
+                    onPressed: vm.cargando
+                        ? null
+                        : () => Navigator.pushNamed(
+                            context, Routes.registroEmpleado),
+                    child: const Text(
+                        '¿Trabajas en una cafetería? Solicitar trabajo'),
+                  ),
                 ],
               ),
             ),

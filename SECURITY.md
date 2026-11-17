@@ -33,6 +33,10 @@ configuración de Firebase. No se encontraron credenciales.
 - **Datos personales**: el usuario ve y corrige su nombre y teléfono en *Mi cuenta*
   (validados también en el servidor) y puede eliminar su cuenta; la baja borra sus
   datos personales y deja sus pedidos anónimos.
+- **Solicitudes de trabajo**: quien se registra como empleado queda sin rol y con una
+  solicitud; el servidor le impide hacer pedidos y solo el encargado de esa cafetería
+  la aprueba (pasa a empleado) o la rechaza. La única consulta sin sesión expone
+  nombres de cafeterías activas, sin horarios ni datos de cobro.
 - **Roles y personal** (`dataconnect/agilu/personal.gql`): el rol se lee de la
   base en cada operación, nunca de la app. El administrador crea cafeterías y
   asigna roles, pero no puede cambiar el suyo. El encargado solo da de alta

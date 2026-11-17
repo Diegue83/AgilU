@@ -36,7 +36,18 @@ class FirebaseAuthRepository implements AuthRepository {
     try {
       final cred = await _auth.createUserWithEmailAndPassword(
           email: correo, password: contrasena);
-      await _asegurarPerfil(datos.nombreCompleto, telefono: datos.telefono);
+      final cafeteria = datos.cafeteriaSolicitada;
+      if (cafeteria == null) {
+        await _asegurarPerfil(datos.nombreCompleto, telefono: datos.telefono);
+      } else if (_perfil != null) {
+        try {
+          await _perfil.crearPerfilEmpleado(
+              datos.nombreCompleto, datos.telefono, cafeteria);
+        } catch (_) {
+          throw Exception('Tu cuenta está lista, pero no se pudo enviar la '
+              'solicitud de trabajo. Inicia sesión e inténtalo de nuevo.');
+        }
+      }
       return cred.user!.uid;
     } on FirebaseAuthException catch (e) {
       throw Exception(mensajeDeError(e.code));

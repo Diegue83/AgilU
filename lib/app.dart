@@ -11,6 +11,7 @@ import 'ui/admin/admin_view.dart';
 import 'ui/auth/login_view.dart';
 import 'ui/avisos/avisos_view.dart';
 import 'ui/auth/registro_view.dart';
+import 'ui/auth/solicitud_view.dart';
 import 'ui/cart/cart_view.dart';
 import 'ui/cuenta/cuenta_view.dart';
 import 'ui/encargado/encargado_view.dart';
@@ -49,12 +50,14 @@ class _AgilUAppState extends State<AgilUApp> {
   static final Map<String, WidgetBuilder> _rutas = {
     Routes.login: (_) => const LoginView(),
     Routes.registro: (_) => const RegistroView(),
+    Routes.registroEmpleado: (_) => const RegistroView(empleado: true),
     Routes.menu: (_) => const MenuView(),
     Routes.carrito: (_) => const CartView(),
     Routes.encargado: (_) => const EncargadoView(),
     Routes.reporte: (_) => const ReporteView(),
     Routes.admin: (_) => const AdminView(),
     Routes.cuenta: (_) => const CuentaView(),
+    Routes.solicitud: (_) => const SolicitudView(),
     Routes.avisos: (_) => const AvisosView(),
     Routes.historial: (_) => const HistorialView(),
     Routes.confirmacion: (ctx) => ConfirmacionView(

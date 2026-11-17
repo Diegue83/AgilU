@@ -181,3 +181,120 @@ mutation QuitarEmpleado($usuarioId: UUID!) @auth(level: USER) {
     params: [{ _expr: "auth.uid" }, $usuarioId]
   )
 }
+
+# ---------- Registro como empleado ----------
+
+# Para el formulario de registro, antes de tener sesión: solo id, nombre y
+# ubicación de las cafeterías activas. Sin horarios ni datos de cobro.
+query CafeteriasParaRegistro
+  @auth(level: PUBLIC, insecureReason: "El registro necesita elegir cafetería antes de tener sesión; solo expone nombres de cafeterías activas.") {
+  cafeterias(where: { activa: { eq: true } }, orderBy: [{ nombre: ASC }]) {
+    id
+    nombre
+    ubicacion
+  }
+}
+
+# Registro como empleado (puede ser alguien externo, no alumno): crea el
+# perfil sin rol y la solicitud para esa cafetería. La cuenta solo ve su
+# perfil en espera y no puede hacer pedidos hasta que el encargado la apruebe.
+mutation CrearPerfilEmpleado($nombre: String!, $telefono: String, $cafeteriaId: UUID!)
+  @auth(expr: "auth != null && vars.nombre.trim().size() >= 2 && vars.nombre.size() <= 80 && (!has(vars.telefono) || vars.telefono == null || vars.telefono.matches('^[0-9]{10}$'))")
+  @transaction {
+  query @redact {
+    cafeteria(id: $cafeteriaId)
+      @check(expr: "this != null && this.activa", message: "La cafetería no está disponible") {
+      activa
+    }
+  }
+  usuario_insert(data: { nombre: $nombre, numeroDeTelefono: $telefono })
+  autenticacion_insert(
+    data: {
+      firebaseAuthUid_expr: "auth.uid"
+      correoElectronico_expr: "auth.token.email"
+      usuarioId_expr: "response.usuario_insert.id"
+    }
+  )
+  solicitudEmpleo_insert(
+    data: { usuarioId_expr: "response.usuario_insert.id", cafeteriaId: $cafeteriaId }
+  )
+}
+
+# Solicitudes pendientes de la cafetería del encargado con sesión.
+query SolicitudesPendientes @auth(level: USER) {
+  solicitudEmpleos(
+    where: {
+      cafeteria: {
+        usuarios_on_cafeteria: {
+          exist: {
+            rol: { nombre: { eq: "encargado" } }
+            autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+          }
+        }
+      }
+    }
+    orderBy: [{ fechaSolicitud: ASC }]
+  ) {
+    fechaSolicitud
+    usuario {
+      id
+      nombre
+      numeroDeTelefono
+      autenticacion_on_usuario {
+        correoElectronico
+      }
+    }
+  }
+}
+
+# El encargado aprueba una solicitud de su cafetería: la cuenta pasa a
+# empleado de esa cafetería y la solicitud se borra.
+mutation AprobarSolicitud($usuarioId: UUID!) @auth(level: USER) @transaction {
+  query @redact {
+    autenticacion(key: { firebaseAuthUid_expr: "auth.uid" })
+      @check(expr: "this != null", message: "No tienes perfil") {
+      usuario {
+        rol @check(expr: "this != null && this.nombre == 'encargado'", message: "Solo el encargado puede hacer esto") {
+          nombre
+        }
+        cafeteria @check(expr: "this != null", message: "No tienes cafetería asignada") {
+          id
+          solicitudEmpleos_on_cafeteria(where: { usuario: { id: { eq: $usuarioId } } })
+            @check(expr: "this.size() == 1", message: "La solicitud ya no existe") {
+            fechaSolicitud
+          }
+        }
+      }
+    }
+    rols(where: { nombre: { eq: "empleado" } }, limit: 1)
+      @check(expr: "this.size() == 1", message: "Falta el rol empleado") {
+      id
+    }
+  }
+  usuario_update(
+    id: $usuarioId
+    data: {
+      rolId_expr: "response.query.rols[0].id"
+      cafeteriaId_expr: "response.query.autenticacion.usuario.cafeteria.id"
+    }
+  )
+  solicitudEmpleo_delete(key: { usuarioId: $usuarioId })
+}
+
+# El encargado rechaza una solicitud de su cafetería; la cuenta sigue como
+# alumno. Devuelve cuántas borró (0 si no era de su cafetería).
+mutation RechazarSolicitud($usuarioId: UUID!) @auth(level: USER) {
+  solicitudEmpleo_deleteMany(
+    where: {
+      usuarioId: { eq: $usuarioId }
+      cafeteria: {
+        usuarios_on_cafeteria: {
+          exist: {
+            rol: { nombre: { eq: "encargado" } }
+            autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+          }
+        }
+      }
+    }
+  )
+}

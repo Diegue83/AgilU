@@ -128,6 +128,53 @@ class _Personal extends StatelessWidget {
                             child: const Text('Reintentar')),
                       ],
                     ),
+                  if (vm.solicitudes.isNotEmpty) ...[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                      child: Text(
+                          'Solicitudes de empleo (${vm.solicitudes.length})',
+                          style: Theme.of(context).textTheme.titleSmall),
+                    ),
+                    for (final s in vm.solicitudes)
+                      Card(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(s.nombre,
+                                  style:
+                                      Theme.of(context).textTheme.titleMedium),
+                              Text([
+                                s.correo,
+                                if (s.telefono != null) s.telefono!,
+                              ].join(' · ')),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: FilledButton(
+                                      onPressed: () => vm.aprobar(s),
+                                      child: const Text('Aprobar'),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: OutlinedButton(
+                                      onPressed: () => vm.rechazar(s),
+                                      child: const Text('Rechazar'),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    const Divider(height: 24),
+                  ],
                   for (final m in vm.personal)
                     ListTile(
                       leading: Icon(m.rol == RolUsuario.encargado

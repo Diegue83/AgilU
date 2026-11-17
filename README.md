@@ -77,6 +77,11 @@ flutter run --dart-define=EMULADORES=true --dart-define=FIREBASE_HOST=127.0.0.2
 opcional) y después las credenciales (correo y contraseña con confirmación). Toda
 cuenta nueva es de **alumno**.
 
+**Solicitar trabajo:** desde el inicio de sesión, quien trabaja en una cafetería (puede
+ser externo) se registra eligiendo la cafetería. La cuenta no es de alumno: solo ve su
+perfil con el aviso "En espera de aprobación" y no puede hacer pedidos hasta que el
+encargado de esa cafetería la apruebe en **Personal**.
+
 **Roles:** alumno (al registrarse), empleado, encargado, beneficiaria y administrador.
 El primer administrador se nombra una sola vez desde la consola de SQL Connect con
 la mutación `AsignarRol` (`rol: "admin"`). Después, desde la app, el administrador

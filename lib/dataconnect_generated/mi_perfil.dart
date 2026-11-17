@@ -62,13 +62,15 @@ class MiPerfilAutenticacionUsuario {
   final String? numeroDeTelefono;
   final MiPerfilAutenticacionUsuarioRol? rol;
   final MiPerfilAutenticacionUsuarioCafeteria? cafeteria;
+  final MiPerfilAutenticacionUsuarioSolicitudEmpleoOnUsuario? solicitudEmpleo_on_usuario;
   MiPerfilAutenticacionUsuario.fromJson(dynamic json):
   
   id = nativeFromJson<String>(json['id']),
   nombre = nativeFromJson<String>(json['nombre']),
   numeroDeTelefono = json['numeroDeTelefono'] == null ? null : nativeFromJson<String>(json['numeroDeTelefono']),
   rol = json['rol'] == null ? null : MiPerfilAutenticacionUsuarioRol.fromJson(json['rol']),
-  cafeteria = json['cafeteria'] == null ? null : MiPerfilAutenticacionUsuarioCafeteria.fromJson(json['cafeteria']);
+  cafeteria = json['cafeteria'] == null ? null : MiPerfilAutenticacionUsuarioCafeteria.fromJson(json['cafeteria']),
+  solicitudEmpleo_on_usuario = json['solicitudEmpleo_on_usuario'] == null ? null : MiPerfilAutenticacionUsuarioSolicitudEmpleoOnUsuario.fromJson(json['solicitudEmpleo_on_usuario']);
   @override
   bool operator ==(Object other) {
     if(identical(this, other)) {
@@ -83,11 +85,12 @@ class MiPerfilAutenticacionUsuario {
     nombre == otherTyped.nombre && 
     numeroDeTelefono == otherTyped.numeroDeTelefono && 
     rol == otherTyped.rol && 
-    cafeteria == otherTyped.cafeteria;
+    cafeteria == otherTyped.cafeteria && 
+    solicitudEmpleo_on_usuario == otherTyped.solicitudEmpleo_on_usuario;
     
   }
   @override
-  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, numeroDeTelefono.hashCode, rol.hashCode, cafeteria.hashCode]);
+  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, numeroDeTelefono.hashCode, rol.hashCode, cafeteria.hashCode, solicitudEmpleo_on_usuario.hashCode]);
   
 
   Map<String, dynamic> toJson() {
@@ -103,6 +106,9 @@ class MiPerfilAutenticacionUsuario {
     if (cafeteria != null) {
       json['cafeteria'] = cafeteria!.toJson();
     }
+    if (solicitudEmpleo_on_usuario != null) {
+      json['solicitudEmpleo_on_usuario'] = solicitudEmpleo_on_usuario!.toJson();
+    }
     return json;
   }
 
@@ -112,6 +118,7 @@ class MiPerfilAutenticacionUsuario {
     this.numeroDeTelefono,
     this.rol,
     this.cafeteria,
+    this.solicitudEmpleo_on_usuario,
   });
 }
 
@@ -184,6 +191,74 @@ class MiPerfilAutenticacionUsuarioCafeteria {
 
   MiPerfilAutenticacionUsuarioCafeteria({
     required this.id,
+    required this.nombre,
+  });
+}
+
+@immutable
+class MiPerfilAutenticacionUsuarioSolicitudEmpleoOnUsuario {
+  final MiPerfilAutenticacionUsuarioSolicitudEmpleoOnUsuarioCafeteria cafeteria;
+  MiPerfilAutenticacionUsuarioSolicitudEmpleoOnUsuario.fromJson(dynamic json):
+  
+  cafeteria = MiPerfilAutenticacionUsuarioSolicitudEmpleoOnUsuarioCafeteria.fromJson(json['cafeteria']);
+  @override
+  bool operator ==(Object other) {
+    if(identical(this, other)) {
+      return true;
+    }
+    if(other.runtimeType != runtimeType) {
+      return false;
+    }
+
+    final MiPerfilAutenticacionUsuarioSolicitudEmpleoOnUsuario otherTyped = other as MiPerfilAutenticacionUsuarioSolicitudEmpleoOnUsuario;
+    return cafeteria == otherTyped.cafeteria;
+    
+  }
+  @override
+  int get hashCode => cafeteria.hashCode;
+  
+
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> json = {};
+    json['cafeteria'] = cafeteria.toJson();
+    return json;
+  }
+
+  MiPerfilAutenticacionUsuarioSolicitudEmpleoOnUsuario({
+    required this.cafeteria,
+  });
+}
+
+@immutable
+class MiPerfilAutenticacionUsuarioSolicitudEmpleoOnUsuarioCafeteria {
+  final String nombre;
+  MiPerfilAutenticacionUsuarioSolicitudEmpleoOnUsuarioCafeteria.fromJson(dynamic json):
+  
+  nombre = nativeFromJson<String>(json['nombre']);
+  @override
+  bool operator ==(Object other) {
+    if(identical(this, other)) {
+      return true;
+    }
+    if(other.runtimeType != runtimeType) {
+      return false;
+    }
+
+    final MiPerfilAutenticacionUsuarioSolicitudEmpleoOnUsuarioCafeteria otherTyped = other as MiPerfilAutenticacionUsuarioSolicitudEmpleoOnUsuarioCafeteria;
+    return nombre == otherTyped.nombre;
+    
+  }
+  @override
+  int get hashCode => nombre.hashCode;
+  
+
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> json = {};
+    json['nombre'] = nativeToJson<String>(nombre);
+    return json;
+  }
+
+  MiPerfilAutenticacionUsuarioSolicitudEmpleoOnUsuarioCafeteria({
     required this.nombre,
   });
 }

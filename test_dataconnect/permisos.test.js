@@ -1546,3 +1546,82 @@ describe('almacenamiento en Supabase: ligar archivos', () => {
     await assert.rejects(beto.mutation('GuardarFotoProducto', { id: CAPUCHINO, url: url(uidDe(beto)) }));
   });
 });
+
+describe('registro como empleado', () => {
+  let rosa;
+  let nico;
+
+  before(async () => {
+    rosa = await alumno('rosa');
+    nico = await alumno('nico');
+  });
+
+  after(async () => {
+    for (const a of [rosa, nico]) {
+      await signOut(a.auth);
+      await deleteApp(a.app);
+    }
+  });
+
+  test('sin sesión se ven solo nombres de cafeterías activas', async () => {
+    const app = initializeApp({ projectId: 'demo-agilu', apiKey: 'demo' }, 'sin-sesion');
+    const dc = getDataConnect(app, CONECTOR);
+    connectDataConnectEmulator(dc, '127.0.0.1', 9399);
+    const { data } = await executeQuery(queryRef(dc, 'CafeteriasParaRegistro'));
+    assert.ok(data.cafeterias.some((c) => c.id === CAFETERIA));
+    assert.ok(data.cafeterias.every((c) => Object.keys(c).sort().join() === 'id,nombre,ubicacion'));
+    await deleteApp(app);
+  });
+
+  test('quien solicita trabajo no queda como alumno y espera aprobación', async () => {
+    await assert.rejects(rosa.mutation('CrearPerfilEmpleado', { nombre: 'R', cafeteriaId: CAFETERIA }));
+    await rosa.mutation('CrearPerfilEmpleado', { nombre: 'Rosa Medina', telefono: '4181231234', cafeteriaId: CAFETERIA });
+    const { data } = await rosa.query('MiPerfil');
+    assert.equal(data.autenticacion.usuario.rol, null);
+    assert.equal(data.autenticacion.usuario.solicitudEmpleo_on_usuario.cafeteria.nombre, 'Cafetería central');
+  });
+
+  test('mientras espera no puede hacer pedidos', async () => {
+    const { data } = await rosa.mutation('CrearPedido', pedido());
+    assert.equal(data._execute, 0);
+    const d = await rosa.query('DiagnosticarPedido', {
+      cafeteriaId: CAFETERIA, recogerA: enUnaHora(), items: pedido().items,
+    });
+    assert.equal(d.data.diagnostico.motivo, 'Tu cuenta de empleado está en espera de aprobación.');
+  });
+
+  test('solo el encargado de esa cafetería ve y resuelve la solicitud', async () => {
+    const { data } = await beto.query('SolicitudesPendientes');
+    const deRosa = data.solicitudEmpleos.find((s) => s.usuario.nombre === 'Rosa Medina');
+    assert.ok(deRosa);
+    assert.equal(deRosa.usuario.numeroDeTelefono, '4181231234');
+    assert.equal((await ana.query('SolicitudesPendientes')).data.solicitudEmpleos.length, 0);
+    assert.equal((await ana.mutation('RechazarSolicitud', { usuarioId: deRosa.usuario.id })).data.solicitudEmpleo_deleteMany, 0);
+    await assert.rejects(ana.mutation('AprobarSolicitud', { usuarioId: deRosa.usuario.id }));
+
+    await beto.mutation('AprobarSolicitud', { usuarioId: deRosa.usuario.id });
+    const perfil = (await rosa.query('MiPerfil')).data.autenticacion.usuario;
+    assert.equal(perfil.rol.nombre, 'empleado');
+    assert.equal(perfil.cafeteria.id, CAFETERIA);
+    assert.equal(perfil.solicitudEmpleo_on_usuario, null);
+    await assert.rejects(beto.mutation('AprobarSolicitud', { usuarioId: deRosa.usuario.id }), /ya no existe/);
+  });
+
+  test('una cafetería inactiva no recibe solicitudes; rechazar borra la solicitud', async () => {
+    await adminDataConnect.executeGraphql(
+      'mutation I($id: UUID!) { cafeteria_update(id: $id, data: { activa: false }) }',
+      { variables: { id: BARRA } },
+    );
+    await assert.rejects(nico.mutation('CrearPerfilEmpleado', { nombre: 'Nico Ruiz', cafeteriaId: BARRA }), /no está disponible/);
+    await adminDataConnect.executeGraphql(
+      'mutation A($id: UUID!) { cafeteria_update(id: $id, data: { activa: true }) }',
+      { variables: { id: BARRA } },
+    );
+    await nico.mutation('CrearPerfilEmpleado', { nombre: 'Nico Ruiz', cafeteriaId: CAFETERIA });
+    const nicoId = (await nico.query('MiPerfil')).data.autenticacion.usuario.id;
+    assert.equal((await beto.mutation('RechazarSolicitud', { usuarioId: nicoId })).data.solicitudEmpleo_deleteMany, 1);
+    const u = (await nico.query('MiPerfil')).data.autenticacion.usuario;
+    assert.equal(u.rol, null);
+    assert.equal(u.solicitudEmpleo_on_usuario, null);
+  });
+});

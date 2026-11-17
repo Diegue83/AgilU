@@ -549,4 +549,17 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('AGU-00002'), findsOneWidget);
   });
+
+  testWidgets('Solicitar trabajo abre el registro de empleado con cafetería',
+      (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.5;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(_app(MockAuthRepository()));
+    await tester
+        .tap(find.text('¿Trabajas en una cafetería? Solicitar trabajo'));
+    await tester.pumpAndSettle();
+    expect(find.text('Solicitar trabajo'), findsOneWidget);
+    expect(find.text('Cafetería donde trabajas'), findsOneWidget);
+  });
 }
