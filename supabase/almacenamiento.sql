@@ -51,6 +51,9 @@ with check (
 -- Comprobantes: se descargan solo por su ruta exacta y con sesión. No se
 -- permite listar ni firmar URLs. La ruta lleva un identificador aleatorio y
 -- solo SQL Connect la entrega al alumno dueño y al personal de la cafetería.
+-- El cliente de Storage pide primero la información del archivo
+-- (object.get_authenticated_info) y luego lo descarga
+-- (object.get_authenticated); las dos van por la misma ruta conocida.
 drop policy if exists "agilu: descargar comprobante por ruta" on storage.objects;
 create policy "agilu: descargar comprobante por ruta"
 on storage.objects for select
@@ -60,7 +63,9 @@ using (
   and public.es_usuario_agilu()
   and storage.allow_any_operation(array[
     'storage.object.get_authenticated',
-    'object.get_authenticated'
+    'object.get_authenticated',
+    'object.get_authenticated_info',
+    'object.head_authenticated_info'
   ])
 );
 
