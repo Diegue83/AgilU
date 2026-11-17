@@ -5,10 +5,12 @@ import 'package:agilu/data/repositories/auth_repository.dart';
 import 'package:agilu/data/repositories/avisos_repository.dart';
 import 'package:agilu/data/repositories/bandeja_repository.dart';
 import 'package:agilu/data/repositories/cafeteria_repository.dart';
+import 'package:agilu/data/repositories/contadores_repository.dart';
 import 'package:agilu/data/repositories/estacion_repository.dart';
 import 'package:agilu/data/repositories/foto_repository.dart';
 import 'package:agilu/data/repositories/historial_repository.dart';
 import 'package:agilu/data/repositories/menu_repository.dart';
+import 'package:agilu/data/repositories/notificador.dart';
 import 'package:agilu/data/repositories/pagos_repository.dart';
 import 'package:agilu/data/repositories/panel_repository.dart';
 import 'package:agilu/data/repositories/pedido_repository.dart';
@@ -17,6 +19,7 @@ import 'package:agilu/data/repositories/personal_repository.dart';
 import 'package:agilu/data/repositories/producto_repository.dart';
 import 'package:agilu/data/repositories/reporte_repository.dart';
 import 'package:agilu/ui/cart/cart_view_model.dart';
+import 'package:agilu/ui/comun/contadores.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -30,7 +33,9 @@ const _encargado = Perfil(
 );
 
 Widget _app(AuthRepository auth,
-        {String ruta = Routes.login, PerfilRepository? perfiles}) =>
+        {String ruta = Routes.login,
+        PerfilRepository? perfiles,
+        ContadoresRepository? contadores}) =>
     MultiProvider(
       providers: [
         Provider<AuthRepository>.value(value: auth),
@@ -51,6 +56,10 @@ Widget _app(AuthRepository auth,
         Provider<MenuRepository>(create: (_) => MockMenuRepository()),
         Provider<PedidoRepository>(create: (_) => MockPedidoRepository()),
         ChangeNotifierProvider(create: (_) => CartViewModel()),
+        Provider<Notificador>(create: (_) => MockNotificador()),
+        ChangeNotifierProvider(
+            create: (_) =>
+                ContadoresController(contadores ?? MockContadoresRepository())),
       ],
       child: AgilUApp(rutaInicial: ruta),
     );
@@ -337,6 +346,9 @@ void main() {
         Provider<MenuRepository>(create: (_) => MockMenuRepository()),
         Provider<PedidoRepository>(create: (_) => MockPedidoRepository()),
         ChangeNotifierProvider(create: (_) => CartViewModel()),
+        Provider<Notificador>(create: (_) => MockNotificador()),
+        ChangeNotifierProvider(
+            create: (_) => ContadoresController(MockContadoresRepository())),
       ],
       child: const AgilUApp(),
     ));
@@ -523,13 +535,18 @@ void main() {
 
   testWidgets('la campana muestra los avisos sin leer y los marca al abrir',
       (tester) async {
-    await tester.pumpWidget(_app(MockAuthRepository(), ruta: Routes.menu));
+    final contadores =
+        MockContadoresRepository(contadores: const Contadores(avisos: 1));
+    await tester.pumpWidget(
+        _app(MockAuthRepository(), ruta: Routes.menu, contadores: contadores));
     await tester.pumpAndSettle();
     expect(find.text('1'), findsOneWidget);
     await tester.tap(find.byTooltip('Avisos'));
     await tester.pumpAndSettle();
     expect(find.text('Tu pedido está listo'), findsOneWidget);
     expect(find.text('Pago validado'), findsOneWidget);
+    // Al abrir la bandeja los avisos quedan leídos en el servidor.
+    contadores.contadores = Contadores.ceros;
     await tester.pageBack();
     await tester.pumpAndSettle();
     expect(find.text('1'), findsNothing);
@@ -561,5 +578,32 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Solicitar trabajo'), findsOneWidget);
     expect(find.text('Cafetería donde trabajas'), findsOneWidget);
+  });
+
+  testWidgets('el panel marca con punto rojo pedidos, pagos y solicitudes',
+      (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository(),
+        perfiles: MockPerfilRepository(perfil: _encargado),
+        contadores: MockContadoresRepository(
+            contadores:
+                const Contadores(enEspera: 2, pagos: 3, solicitudes: 1))));
+    await _iniciarSesion(tester);
+    expect(find.text('2'), findsOneWidget);
+    expect(find.text('3'), findsOneWidget);
+    expect(find.text('1'), findsWidgets);
+  });
+
+  testWidgets('el alumno ve punto rojo en Mis pedidos y en la campana',
+      (tester) async {
+    await tester.pumpWidget(_app(MockAuthRepository(),
+        ruta: Routes.menu,
+        contadores: MockContadoresRepository(
+            contadores: const Contadores(listos: 1, avisos: 4))));
+    await tester.pumpAndSettle();
+    expect(find.text('4'), findsOneWidget);
+    expect(
+        find.descendant(
+            of: find.byTooltip('Mis pedidos'), matching: find.text('1')),
+        findsOneWidget);
   });
 }

@@ -1,3 +1,4 @@
+import '../../data/repositories/notificador.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../data/models/perfil.dart';
@@ -14,9 +15,11 @@ class RegistroViewModel extends ChangeNotifier {
   final AuthRepository _auth;
   final PerfilRepository? _perfiles;
   final bool empleado;
+  final Notificador? _avisos;
   RegistroViewModel(this._auth,
-      {PerfilRepository? perfiles, this.empleado = false})
-      : _perfiles = perfiles {
+      {PerfilRepository? perfiles, this.empleado = false, Notificador? avisos})
+      : _perfiles = perfiles,
+        _avisos = avisos {
     if (empleado) cargarCafeterias();
   }
 
@@ -132,6 +135,7 @@ class RegistroViewModel extends ChangeNotifier {
     notifyListeners();
     try {
       await _auth.registrar(correo.trim(), contrasena, _datos!);
+      if (empleado) _avisos?.avisar(EventoAviso.solicitud);
       return true;
     } catch (e) {
       error = e.toString().replaceFirst('Exception: ', '');

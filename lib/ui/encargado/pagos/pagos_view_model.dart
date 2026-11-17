@@ -1,3 +1,4 @@
+import '../../../data/repositories/notificador.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../../data/models/ticket.dart';
@@ -5,7 +6,8 @@ import '../../../data/repositories/pagos_repository.dart';
 
 class PagosViewModel extends ChangeNotifier {
   final PagosRepository _repo;
-  PagosViewModel(this._repo) {
+  final Notificador? _avisos;
+  PagosViewModel(this._repo, {Notificador? avisos}) : _avisos = avisos {
     cargar();
   }
 
@@ -42,6 +44,9 @@ class PagosViewModel extends ChangeNotifier {
   Future<bool> _validar(PagoPorValidar p, bool aprobado, String? motivo) async {
     try {
       await _repo.validar(p.pedidoId, aprobado: aprobado, motivo: motivo);
+      _avisos?.avisar(
+          aprobado ? EventoAviso.pagoValidado : EventoAviso.pagoRechazado,
+          pedidoId: p.pedidoId);
       await cargar();
       return true;
     } on PagoDesactualizado catch (e) {

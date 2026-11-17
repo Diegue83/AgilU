@@ -1,3 +1,4 @@
+import '../../data/repositories/notificador.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -29,7 +30,8 @@ class TicketView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (ctx) => TicketViewModel(ctx.read<PedidoRepository>(), pedidoId),
+      create: (ctx) => TicketViewModel(ctx.read<PedidoRepository>(), pedidoId,
+          avisos: ctx.read<Notificador>()),
       child: const _Ticket(),
     );
   }

@@ -1625,3 +1625,41 @@ describe('registro como empleado', () => {
     assert.equal(u.solicitudEmpleo_on_usuario, null);
   });
 });
+
+describe('puntos rojos (MisPendientes)', () => {
+  const pendientes = async (quien) => (await quien.query('MisPendientes')).data.pendientes;
+
+  test('el encargado ve los pagos por validar de su cafetería y el alumno no', async () => {
+    const antes = await pendientes(beto);
+    const p = pedido();
+    await ana.mutation('CrearPedido', p);
+    await adminDataConnect.executeGraphql(
+      'mutation R($id: UUID!) { pedido_update(id: $id, data: { estado: "pago_en_revision" }) }',
+      { variables: { id: p.id } },
+    );
+    const despues = await pendientes(beto);
+    assert.equal(despues.rol, 'encargado');
+    assert.equal(despues.pagos, antes.pagos + 1);
+    const deAna = await pendientes(ana);
+    assert.equal(deAna.pagos, 0);
+    assert.equal(deAna.enEspera, 0);
+    assert.equal(deAna.solicitudes, 0);
+  });
+
+  test('el alumno ve sus pedidos listos y sus avisos sin leer', async () => {
+    const antes = await pendientes(ana);
+    const p = pedido();
+    await ana.mutation('CrearPedido', p);
+    await pagado(p);
+    await beto.mutation('AvanzarPedido', { id: p.id, estado: 'preparando' });
+    await beto.mutation('AvanzarPedido', { id: p.id, estado: 'listo' });
+    const { data } = await ana.query('MiPerfil');
+    await adminDataConnect.executeGraphql(
+      'mutation N($u: UUID!) { notificacion_insert(data: { titulo: "Listo", mensaje: "x", usuario: { id: $u } }) }',
+      { variables: { u: data.autenticacion.usuario.id } },
+    );
+    const despues = await pendientes(ana);
+    assert.equal(despues.listos, antes.listos + 1);
+    assert.equal(despues.avisos, antes.avisos + 1);
+  });
+});

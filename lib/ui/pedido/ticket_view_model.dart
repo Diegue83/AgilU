@@ -1,3 +1,4 @@
+import '../../data/repositories/notificador.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../core/errores.dart';
@@ -7,7 +8,9 @@ import '../../data/repositories/pedido_repository.dart';
 class TicketViewModel extends ChangeNotifier {
   final PedidoRepository _repo;
   final String pedidoId;
-  TicketViewModel(this._repo, this.pedidoId) {
+  final Notificador? _avisos;
+  TicketViewModel(this._repo, this.pedidoId, {Notificador? avisos})
+      : _avisos = avisos {
     cargar();
   }
 
@@ -65,6 +68,7 @@ class TicketViewModel extends ChangeNotifier {
     notifyListeners();
     try {
       await _repo.subirComprobante(pedidoId, bytes, tipo);
+      _avisos?.avisar(EventoAviso.comprobante, pedidoId: pedidoId);
       await cargar();
       return true;
     } catch (e) {

@@ -94,6 +94,12 @@ ejecuta `supabase/almacenamiento.sql` en el editor SQL y compila con
 `--dart-define=SUPABASE_URL=... --dart-define=SUPABASE_KEY=...`. Sin esos valores,
 comprobantes y fotos siguen usando las Cloud Functions.
 
+**Avisos push y puntos rojos:** los puntos rojos de la navegación (pagos por validar,
+pedidos en espera, solicitudes, pedidos listos y avisos sin leer) funcionan siempre. Los
+push los envía la Edge Function `avisar` de Supabase: en Supabase guarda el secreto
+`FIREBASE_SERVICE_ACCOUNT` (JSON de una cuenta de servicio de Firebase) y publica la
+función con `npx supabase functions deploy avisar --no-verify-jwt --project-ref <ref>`.
+
 **Contra el proyecto real:** `flutter run`. Antes hay que publicar el backend:
 ```bash
 firebase deploy --only dataconnect,functions,storage,firestore:rules

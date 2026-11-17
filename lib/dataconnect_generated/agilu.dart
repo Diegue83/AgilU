@@ -117,6 +117,8 @@ part 'reporte_beneficiaria.dart';
 
 part 'historial_pedidos.dart';
 
+part 'mis_pendientes.dart';
+
 
 
 
@@ -408,6 +410,11 @@ class AgiluConnector {
   
   HistorialPedidosVariablesBuilder historialPedidos ({required Timestamp desde, required Timestamp hasta, }) {
     return HistorialPedidosVariablesBuilder(dataConnect, desde: desde,hasta: hasta,);
+  }
+  
+  
+  MisPendientesVariablesBuilder misPendientes () {
+    return MisPendientesVariablesBuilder(dataConnect, );
   }
   
 

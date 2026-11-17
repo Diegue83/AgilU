@@ -1,3 +1,4 @@
+import '../../../data/repositories/notificador.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -15,7 +16,8 @@ class PanelView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (ctx) => PanelViewModel(ctx.read<PanelRepository>()),
+      create: (ctx) => PanelViewModel(ctx.read<PanelRepository>(),
+          avisos: ctx.read<Notificador>()),
       child: const _Panel(),
     );
   }
