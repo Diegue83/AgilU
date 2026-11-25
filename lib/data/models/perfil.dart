@@ -29,7 +29,16 @@ class Perfil {
     this.cafeteriaId,
     this.cafeteria,
     this.solicitudCafeteria,
+    this.estacionId,
+    this.estacion,
   });
+
+  /// Estación que el encargado le asignó a un empleado.
+  final String? estacionId;
+  final String? estacion;
+
+  /// Empleado con estación: puede activarla y manejar sus productos.
+  bool get tieneEstacion => esEmpleado && estacionId != null;
 
   /// Cafetería a la que pidió entrar como empleado, mientras el encargado no
   /// apruebe o rechace la solicitud.

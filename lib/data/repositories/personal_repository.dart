@@ -21,6 +21,9 @@ abstract class PersonalRepository {
   Future<void> agregarEmpleado(String correo);
   Future<void> quitarEmpleado(String usuarioId);
 
+  /// Asigna a un empleado una estación de la cafetería; null se la quita.
+  Future<void> asignarEstacion(String usuarioId, String? estacionId);
+
   /// Solicitudes de empleo pendientes en la cafetería del encargado.
   Future<List<SolicitudEmpleo>> solicitudes();
   Future<void> aprobarSolicitud(String usuarioId);
@@ -70,6 +73,19 @@ class DataConnectPersonalRepository implements PersonalRepository {
     if (res.data.resultado == null) {
       throw const CambioRechazado(
           'Esa persona no es empleado de tu cafetería.');
+    }
+  }
+
+  @override
+  Future<void> asignarEstacion(String usuarioId, String? estacionId) async {
+    final res = await _conector
+        .asignarEstacion(usuarioId: usuarioId)
+        .estacionId(estacionId)
+        .execute();
+    if (res.data.resultado == null) {
+      throw const CambioRechazado(
+          'No se pudo asignar: la persona debe ser empleado y la estación de '
+          'tu cafetería.');
     }
   }
 
@@ -201,6 +217,19 @@ class MockPersonalRepository implements PersonalRepository {
           'Esa persona no es empleado de tu cafetería.');
     }
     alumnos.add(personal.removeAt(i).correo);
+  }
+
+  @override
+  Future<void> asignarEstacion(String usuarioId, String? estacionId) async {
+    final i = personal.indexWhere(
+        (p) => p.usuarioId == usuarioId && p.rol == RolUsuario.empleado);
+    if (i < 0) {
+      throw const CambioRechazado(
+          'No se pudo asignar: la persona debe ser empleado y la estación de '
+          'tu cafetería.');
+    }
+    personal[i] = personal[i]
+        .conEstacion(estacionId, estacionId == null ? null : 'Estación');
   }
 
   final List<SolicitudEmpleo> pendientes = [

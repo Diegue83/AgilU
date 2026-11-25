@@ -32,6 +32,10 @@ y pull request.
   creada no es de alumno, no puede hacer pedidos mientras espera, y solo el encargado
   de esa cafetería ve, aprueba o rechaza la solicitud; una cafetería inactiva no las
   recibe.
+- Estación del empleado: sin estación asignada no ve ni cambia nada; el encargado
+  solo asigna estaciones de su cafetería a sus empleados; el empleado activa su
+  estación y da de alta, edita y pone foto a productos solo de ella, sin eliminar ni
+  ofertas; al quitarle el rol pierde la estación.
 - Puntos rojos: `MisPendientes` da al encargado sus pagos por validar y al alumno sus
   pedidos listos y avisos sin leer, sin mezclar conteos de otros roles.
 - Avisos (`supabase/functions/avisar/reglas.test.ts`, en CI): el comprobante solo lo

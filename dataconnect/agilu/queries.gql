@@ -45,6 +45,10 @@ query MiPerfil @auth(level: USER) {
         id
         nombre
       }
+      puesto {
+        id
+        nombre
+      }
       solicitudEmpleo_on_usuario {
         cafeteria {
           nombre
@@ -119,18 +123,31 @@ query MisPedidos @auth(level: USER) {
   }
 }
 
-# Estaciones de la cafetería del encargado con sesión (HU-18).
+# Estaciones de la cafetería del encargado con sesión (HU-18). Al empleado
+# solo le llega la estación que tiene asignada.
 query MisEstaciones @auth(level: USER) {
   puestos(
     where: {
-      cafeteria: {
-        usuarios_on_cafeteria: {
-          exist: {
-            rol: { nombre: { eq: "encargado" } }
-            autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+      _or: [
+        {
+          cafeteria: {
+            usuarios_on_cafeteria: {
+              exist: {
+                rol: { nombre: { eq: "encargado" } }
+                autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+              }
+            }
           }
         }
-      }
+        {
+          usuarios_on_puesto: {
+            exist: {
+              rol: { nombre: { eq: "empleado" } }
+              autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+            }
+          }
+        }
+      ]
     }
     orderBy: [{ orden: ASC }, { nombre: ASC }]
   ) {
@@ -144,20 +161,33 @@ query MisEstaciones @auth(level: USER) {
   }
 }
 
-# Productos de la cafetería del encargado con sesión (HU-14).
+# Productos de la cafetería del encargado con sesión (HU-14). Al empleado
+# solo le llegan los de su estación.
 query MisProductos @auth(level: USER) {
   productos(
     where: {
       eliminado: { eq: false }
       puesto: {
-        cafeteria: {
-          usuarios_on_cafeteria: {
-            exist: {
-              rol: { nombre: { eq: "encargado" } }
-              autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+        _or: [
+          {
+            cafeteria: {
+              usuarios_on_cafeteria: {
+                exist: {
+                  rol: { nombre: { eq: "encargado" } }
+                  autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+                }
+              }
             }
           }
-        }
+          {
+            usuarios_on_puesto: {
+              exist: {
+                rol: { nombre: { eq: "empleado" } }
+                autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+              }
+            }
+          }
+        ]
       }
     }
     orderBy: [{ nombre: ASC }]

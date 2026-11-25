@@ -15,8 +15,9 @@ import 'personal/personal_view.dart';
 import 'productos/productos_view.dart';
 
 /// Pantalla principal del personal de la cafetería. El encargado ve todas las
-/// secciones; el empleado solo el panel de pedidos. El servidor aplica la
-/// misma regla en cada operación, esto solo decide qué se muestra.
+/// secciones; el empleado el panel de pedidos y, si tiene estación asignada,
+/// su estación y sus productos. El servidor aplica la misma regla en cada
+/// operación, esto solo decide qué se muestra.
 class EncargadoView extends StatefulWidget {
   const EncargadoView({super.key});
 
@@ -44,6 +45,12 @@ class _EncargadoViewState extends State<EncargadoView> {
     ('Pedidos', Icons.receipt_long, PanelView()),
   ];
 
+  static const _conEstacion = <(String, IconData, Widget)>[
+    ('Pedidos', Icons.receipt_long, PanelView()),
+    ('Productos', Icons.restaurant_menu, ProductosView(empleado: true)),
+    ('Mi estación', Icons.storefront, EstacionesView(empleado: true)),
+  ];
+
   /// Punto rojo de cada pestaña del panel.
   static int _cuenta(BuildContext context, String seccion) {
     final c = context.watch<ContadoresController>().actual;
@@ -68,8 +75,12 @@ class _EncargadoViewState extends State<EncargadoView> {
           return const Scaffold(
               body: Center(child: CircularProgressIndicator()));
         }
-        final secciones =
-            snap.data?.esEncargado == true ? _delEncargado : _delEmpleado;
+        final perfil = snap.data;
+        final secciones = perfil?.esEncargado == true
+            ? _delEncargado
+            : perfil?.tieneEstacion == true
+                ? _conEstacion
+                : _delEmpleado;
         final i = _seccion.clamp(0, secciones.length - 1);
         final (titulo, _, vista) = secciones[i];
         return Scaffold(

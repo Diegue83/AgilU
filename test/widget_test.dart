@@ -422,7 +422,7 @@ void main() {
         'nuevo@utng.edu.mx');
     await tester.tap(find.text('Agregar'));
     await tester.pumpAndSettle();
-    expect(find.text('Empleado · nuevo@utng.edu.mx'), findsOneWidget);
+    expect(find.text('Empleado · nuevo@utng.edu.mx · Sin estación'), findsOneWidget);
   });
 
   testWidgets('el administrador entra a cafeterías y crea una', (tester) async {

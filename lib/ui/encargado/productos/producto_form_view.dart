@@ -15,14 +15,24 @@ import 'producto_form_view_model.dart';
 class ProductoFormView extends StatelessWidget {
   final List<Estacion> estaciones;
   final Producto? producto;
-  const ProductoFormView({super.key, required this.estaciones, this.producto});
+
+  /// El empleado da de alta y edita productos de su estación, pero no los
+  /// elimina ni publica ofertas.
+  final bool empleado;
+  const ProductoFormView(
+      {super.key,
+      required this.estaciones,
+      this.producto,
+      this.empleado = false});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (ctx) => ProductoFormViewModel(
           ctx.read<ProductoRepository>(), estaciones,
-          actual: producto, fotos: ctx.read<FotoRepository>()),
+          actual: producto,
+          fotos: ctx.read<FotoRepository>(),
+          empleado: empleado),
       child: const _Formulario(),
     );
   }
@@ -54,6 +64,9 @@ class _FormularioState extends State<_Formulario> {
       _estacionId = p.estacionId;
       _disponible = p.disponible;
       _inmediato = p.preparacionInmediata;
+    } else {
+      final estaciones = context.read<ProductoFormViewModel>().estaciones;
+      if (estaciones.length == 1) _estacionId = estaciones.first.id;
     }
   }
 
@@ -122,7 +135,7 @@ class _FormularioState extends State<_Formulario> {
       appBar: AppBar(
           title: Text(vm.editando ? 'Editar producto' : 'Nuevo producto'),
           actions: [
-            if (vm.editando)
+            if (vm.puedeEliminar)
               IconButton(
                 tooltip: 'Eliminar producto',
                 icon: const Icon(Icons.delete_outline),
@@ -229,7 +242,7 @@ class _FormularioState extends State<_Formulario> {
                     child: CircularProgressIndicator(strokeWidth: 2))
                 : const Text('Guardar'),
           ),
-          if (vm.editando) const OfertaSeccion(),
+          if (vm.puedeEliminar) const OfertaSeccion(),
         ],
       ),
     );

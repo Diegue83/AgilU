@@ -25,8 +25,11 @@ class ProductoFormViewModel extends ChangeNotifier {
 
   final FotoRepository? _fotos;
 
+  /// Empleado: sin eliminar ni ofertas (el servidor también lo impide).
+  final bool empleado;
+
   ProductoFormViewModel(this._repo, List<Estacion> estaciones,
-      {this.actual, FotoRepository? fotos})
+      {this.actual, FotoRepository? fotos, this.empleado = false})
       : _fotos = fotos,
         urlImagen = actual?.urlImagen,
         estaciones = estaciones
@@ -62,6 +65,9 @@ class ProductoFormViewModel extends ChangeNotifier {
   }
 
   bool get editando => actual != null;
+
+  /// Eliminar y publicar ofertas es solo del encargado.
+  bool get puedeEliminar => editando && !empleado;
 
   static const _mensajes = [
     'El nombre es obligatorio',
@@ -159,7 +165,7 @@ class ProductoFormViewModel extends ChangeNotifier {
 
   /// Elimina el producto que se edita. Devuelve true si se eliminó.
   Future<bool> eliminar() async {
-    if (!editando || guardando) return false;
+    if (!puedeEliminar || guardando) return false;
     guardando = true;
     error = null;
     notifyListeners();

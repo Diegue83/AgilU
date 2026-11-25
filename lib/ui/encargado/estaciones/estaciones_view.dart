@@ -5,20 +5,24 @@ import '../../../data/models/estacion.dart';
 import '../../../data/repositories/estacion_repository.dart';
 import 'estaciones_view_model.dart';
 
+/// Estaciones de la cafetería. Con [empleado] solo se muestra la estación
+/// asignada y lo único que se puede hacer es activarla o desactivarla.
 class EstacionesView extends StatelessWidget {
-  const EstacionesView({super.key});
+  final bool empleado;
+  const EstacionesView({super.key, this.empleado = false});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (ctx) => EstacionesViewModel(ctx.read<EstacionRepository>()),
-      child: const _Estaciones(),
+      child: _Estaciones(empleado: empleado),
     );
   }
 }
 
 class _Estaciones extends StatelessWidget {
-  const _Estaciones();
+  final bool empleado;
+  const _Estaciones({required this.empleado});
 
   Future<String?> _pedirNombre(BuildContext context, EstacionesViewModel vm,
       {Estacion? actual}) {
@@ -82,6 +86,7 @@ class _Estaciones extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<EstacionesViewModel>();
+    if (empleado) return _deEmpleado(context, vm);
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
@@ -167,6 +172,41 @@ class _Estaciones extends StatelessWidget {
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _deEmpleado(BuildContext context, EstacionesViewModel vm) {
+    if (vm.cargando && vm.estaciones.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return RefreshIndicator(
+      onRefresh: vm.cargar,
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          if (vm.error != null)
+            MaterialBanner(
+              content: Text(vm.error!),
+              actions: [
+                TextButton(
+                    onPressed: vm.cargar, child: const Text('Reintentar')),
+              ],
+            ),
+          if (vm.estaciones.isEmpty && vm.error == null)
+            const Text('El encargado aún no te asigna una estación.'),
+          for (final e in vm.estaciones)
+            Card(
+              child: SwitchListTile(
+                title: Text(e.nombre),
+                subtitle: Text(e.activo
+                    ? 'Visible en el menú · ${e.productos} producto(s)'
+                    : 'Desactivada: los alumnos no la ven'),
+                value: e.activo,
+                onChanged: (_) => vm.alternarActiva(e),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

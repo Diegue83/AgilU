@@ -39,6 +39,11 @@ configuración de Firebase. No se encontraron credenciales.
   y que el pedido esté en el estado del aviso, así nadie puede mandar avisos falsos.
   La cuenta de servicio que usa para SQL Connect y FCM vive solo como secreto de
   Supabase. Los tokens de dispositivo inválidos se borran.
+- **Estación del empleado**: el encargado asigna a cada empleado una estación de su
+  propia cafetería (`AsignarEstacion`). Con ella el empleado puede activarla o
+  desactivarla, cambiar la disponibilidad, editar, poner foto y dar de alta productos
+  solo en esa estación; no puede renombrarla, borrarla, mover productos a otra
+  estación, eliminarlos ni publicar ofertas. Al dejar de ser empleado pierde la estación.
 - **Solicitudes de trabajo**: quien se registra como empleado queda sin rol y con una
   solicitud; el servidor le impide hacer pedidos y solo el encargado de esa cafetería
   la aprueba (pasa a empleado) o la rechaza. La única consulta sin sesión expone

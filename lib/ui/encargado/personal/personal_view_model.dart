@@ -1,15 +1,23 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../core/errores.dart';
+import '../../../data/models/estacion.dart';
 import '../../../data/models/personal.dart';
+import '../../../data/repositories/estacion_repository.dart';
 import '../../../data/repositories/personal_repository.dart';
 
-/// El encargado da de alta y quita a los empleados de su cafetería.
+/// El encargado da de alta y quita a los empleados de su cafetería y les
+/// asigna la estación que atienden.
 class PersonalViewModel extends ChangeNotifier {
   final PersonalRepository _repo;
-  PersonalViewModel(this._repo) {
+  final EstacionRepository? _estaciones;
+  PersonalViewModel(this._repo, {EstacionRepository? estaciones})
+      : _estaciones = estaciones {
     cargar();
   }
+
+  /// Estaciones de la cafetería, para elegir la de cada empleado.
+  List<Estacion> estaciones = [];
 
   List<MiembroPersonal> personal = [];
   bool cargando = true;
@@ -22,6 +30,7 @@ class PersonalViewModel extends ChangeNotifier {
       final r = await Future.wait([_repo.miPersonal(), _repo.solicitudes()]);
       personal = r[0] as List<MiembroPersonal>;
       solicitudes = r[1] as List<SolicitudEmpleo>;
+      estaciones = await _estaciones?.misEstaciones() ?? const [];
       error = null;
     } catch (e) {
       error = mensajeDeError(e, 'No se pudo cargar el personal.', const []);
@@ -54,6 +63,9 @@ class PersonalViewModel extends ChangeNotifier {
 
   Future<bool> rechazar(SolicitudEmpleo s) =>
       _ejecutar(() => _repo.rechazarSolicitud(s.usuarioId));
+
+  Future<bool> asignarEstacion(MiembroPersonal m, String? estacionId) =>
+      _ejecutar(() => _repo.asignarEstacion(m.usuarioId, estacionId));
 
   Future<bool> quitar(MiembroPersonal m) =>
       _ejecutar(() => _repo.quitarEmpleado(m.usuarioId));
