@@ -12,6 +12,7 @@ class PagosViewModel extends ChangeNotifier {
   }
 
   List<PagoPorValidar> pagos = [];
+  List<AdeudoPorCobrar> adeudos = [];
   bool cargando = true;
   String? error;
 
@@ -20,6 +21,7 @@ class PagosViewModel extends ChangeNotifier {
     notifyListeners();
     try {
       pagos = await _repo.porValidar();
+      adeudos = await _repo.adeudos();
       error = null;
     } catch (_) {
       error = 'No se pudieron cargar los pagos.';
@@ -30,6 +32,20 @@ class PagosViewModel extends ChangeNotifier {
   }
 
   Future<bool> aprobar(PagoPorValidar p) => _validar(p, true, null);
+
+  /// El alumno pagó en la cafetería un pedido que no recogió.
+  Future<bool> cobrar(AdeudoPorCobrar a) async {
+    try {
+      await _repo.cobrarAdeudo(a.pedidoId);
+      await cargar();
+      return true;
+    } catch (_) {
+      await cargar();
+      error = 'Ese adeudo ya estaba cobrado. Se actualizó la lista.';
+      notifyListeners();
+      return false;
+    }
+  }
 
   /// Rechazar exige un motivo, que verá el alumno en su ticket.
   Future<bool> rechazar(PagoPorValidar p, String motivo) {

@@ -59,6 +59,7 @@ class DataConnectPanelRepository implements PanelRepository {
               notas: p.notas,
               total: p.montoTotal,
               intentosEntrega: p.intentosEntrega,
+              alRecoger: p.esCredito,
               lineas: [
                 for (final d in p.detallePedidos_on_pedido)
                   LineaPanel(d.cantidad, d.producto.nombre),
@@ -199,6 +200,7 @@ class MockPanelRepository implements PanelRepository {
         total: p.total,
         intentosEntrega: p.intentosEntrega + 1,
         lineas: p.lineas,
+        alRecoger: p.alRecoger,
       );
       return ResultadoEntrega.codigoIncorrecto;
     }

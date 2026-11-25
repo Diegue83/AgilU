@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import '../../core/reglas_pedido.dart';
+import '../models/confianza.dart';
 import '../models/pedido.dart';
 import '../models/pedido_panel.dart';
 import '../models/ticket.dart';
@@ -26,6 +27,9 @@ abstract class PedidoRepository {
 
   /// HU-23: pedidos que el alumno no recogió en los últimos 30 días.
   Future<int> noRecogidos();
+
+  /// HU-23: confianza de 0 a 100, adeudo y si puede pagar al recoger.
+  Future<Confianza> confianza();
 
   /// HU-08: sube el comprobante de la transferencia.
   Future<void> subirComprobante(String pedidoId, Uint8List bytes, String tipo);
@@ -56,7 +60,10 @@ class MockPedidoRepository implements PedidoRepository {
       id: id,
       folio: folio,
       referencia: folio,
-      estado: EstadoPedido.porPagar,
+      estado:
+          pedido.pagoAlRecoger ? EstadoPedido.pendiente : EstadoPedido.porPagar,
+      alRecoger: pedido.pagoAlRecoger,
+      codigoEntrega: pedido.pagoAlRecoger ? '1234' : null,
       recogerA: pedido.recogerA,
       total: pedido.total,
       cafeteria: 'Cafetería central',
@@ -97,6 +104,17 @@ class MockPedidoRepository implements PedidoRepository {
   Future<int> noRecogidos() async => sinRecoger;
 
   @override
+  Future<Confianza> confianza() async {
+    final deudas = tickets.values.where((t) => t.debe);
+    return Confianza(
+      puntos: (100 - 20 * sinRecoger).clamp(0, 100),
+      noRecogidos: sinRecoger,
+      adeudo: deudas.fold(0.0, (s, t) => s + t.total),
+      creditosAbiertos: deudas.length,
+    );
+  }
+
+  @override
   Future<bool> cancelar(String pedidoId) async {
     final t = tickets[pedidoId];
     if (t == null || !t.sePuedeCancelar) {
@@ -112,6 +130,7 @@ class MockPedidoRepository implements PedidoRepository {
       cafeteria: t.cafeteria,
       pagadoEn: t.pagadoEn,
       lineas: t.lineas,
+      alRecoger: t.alRecoger,
     );
     return t.pagado;
   }

@@ -6,9 +6,14 @@ class CrearPedidoVariablesBuilder {
   Timestamp recogerA;
   Optional<String> _notas = Optional.optional(nativeFromJson, nativeToJson);
   AnyValue items;
+  Optional<bool> _pagoAlRecoger = Optional.optional(nativeFromJson, nativeToJson);
 
   final FirebaseDataConnect _dataConnect;  CrearPedidoVariablesBuilder notas(String? t) {
    _notas.value = t;
+   return this;
+  }
+  CrearPedidoVariablesBuilder pagoAlRecoger(bool? t) {
+   _pagoAlRecoger.value = t;
    return this;
   }
 
@@ -20,7 +25,7 @@ class CrearPedidoVariablesBuilder {
   }
 
   MutationRef<CrearPedidoData, CrearPedidoVariables> ref() {
-    CrearPedidoVariables vars= CrearPedidoVariables(id: id,cafeteriaId: cafeteriaId,recogerA: recogerA,notas: _notas,items: items,);
+    CrearPedidoVariables vars= CrearPedidoVariables(id: id,cafeteriaId: cafeteriaId,recogerA: recogerA,notas: _notas,items: items,pagoAlRecoger: _pagoAlRecoger,);
     return _dataConnect.mutation("CrearPedido", dataDeserializer, varsSerializer, vars);
   }
 }
@@ -68,6 +73,7 @@ class CrearPedidoVariables {
   final Timestamp recogerA;
   late final Optional<String>notas;
   final AnyValue items;
+  late final Optional<bool>pagoAlRecoger;
   @Deprecated('fromJson is deprecated for Variable classes as they are no longer required for deserialization.')
   CrearPedidoVariables.fromJson(Map<String, dynamic> json):
   
@@ -84,6 +90,10 @@ class CrearPedidoVariables {
     notas.value = json['notas'] == null ? null : nativeFromJson<String>(json['notas']);
   
   
+  
+    pagoAlRecoger = Optional.optional(nativeFromJson, nativeToJson);
+    pagoAlRecoger.value = json['pagoAlRecoger'] == null ? null : nativeFromJson<bool>(json['pagoAlRecoger']);
+  
   }
   @override
   bool operator ==(Object other) {
@@ -99,11 +109,12 @@ class CrearPedidoVariables {
     cafeteriaId == otherTyped.cafeteriaId && 
     recogerA == otherTyped.recogerA && 
     notas == otherTyped.notas && 
-    items == otherTyped.items;
+    items == otherTyped.items && 
+    pagoAlRecoger == otherTyped.pagoAlRecoger;
     
   }
   @override
-  int get hashCode => Object.hashAll([id.hashCode, cafeteriaId.hashCode, recogerA.hashCode, notas.hashCode, items.hashCode]);
+  int get hashCode => Object.hashAll([id.hashCode, cafeteriaId.hashCode, recogerA.hashCode, notas.hashCode, items.hashCode, pagoAlRecoger.hashCode]);
   
 
   Map<String, dynamic> toJson() {
@@ -115,6 +126,9 @@ class CrearPedidoVariables {
       json['notas'] = notas.toJson();
     }
     json['items'] = items.toJson();
+    if(pagoAlRecoger.state == OptionalState.set) {
+      json['pagoAlRecoger'] = pagoAlRecoger.toJson();
+    }
     return json;
   }
 
@@ -124,6 +138,7 @@ class CrearPedidoVariables {
     required this.recogerA,
     required this.notas,
     required this.items,
+    required this.pagoAlRecoger,
   });
 }
 

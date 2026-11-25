@@ -54,6 +54,9 @@ class PedidoPanel {
   final int intentosEntrega;
   final List<LineaPanel> lineas;
 
+  /// Se cobra al entregar.
+  final bool alRecoger;
+
   const PedidoPanel({
     required this.id,
     required this.folio,
@@ -64,6 +67,7 @@ class PedidoPanel {
     this.total = 0,
     this.intentosEntrega = 0,
     this.lineas = const [],
+    this.alRecoger = false,
   });
 
   /// HU-09: tras 5 códigos equivocados ya no se entrega con código.
@@ -79,5 +83,6 @@ class PedidoPanel {
         total: total,
         intentosEntrega: intentosEntrega,
         lineas: lineas,
+        alRecoger: alRecoger,
       );
 }

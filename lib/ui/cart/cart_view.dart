@@ -32,6 +32,9 @@ class CartView extends StatelessWidget {
             Text('Total: \$${vm.total.toStringAsFixed(2)}'),
             Text(
                 'Recoges hoy a las ${ReglasPedido.formatearHora(vm.recogerA!)}'),
+            if (vm.pagoAlRecoger)
+              const Text('Pagas en la cafetería al recoger. Si no lo recoges, '
+                  'queda como adeudo y baja tu confianza.'),
             const SizedBox(height: 8),
             const Text(
               'Una vez que el encargado empiece a prepararlo ya no podrás cancelarlo.',
@@ -136,6 +139,27 @@ class CartView extends StatelessWidget {
                           padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
                           child: Text(
                             'Los pedidos requieren un mínimo de ${vm.anticipacionMinutos} minutos de anticipación.',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
+                      if (vm.puedePagarAlRecoger)
+                        SwitchListTile(
+                          title: const Text('Pagar al recoger'),
+                          subtitle: const Text(
+                              'Tienes 100 de confianza: paga en la cafetería '
+                              'sin transferencia.'),
+                          value: vm.pagoAlRecoger,
+                          onChanged: vm.elegirPagoAlRecoger,
+                        )
+                      else if (vm.confianza != null)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                          child: Text(
+                            vm.confianza!.creditosAbiertos > 0
+                                ? 'Tienes un pedido a pagar al recoger sin pagar; '
+                                    'este se paga por transferencia.'
+                                : 'Con 100 de confianza puedes pagar al recoger '
+                                    '(tienes ${vm.confianza!.puntos}).',
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ),

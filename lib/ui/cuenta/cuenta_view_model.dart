@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../core/app_config.dart';
+import '../../data/models/confianza.dart';
 import '../../data/models/perfil.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/pedido_repository.dart';
@@ -39,6 +40,9 @@ class CuentaViewModel extends ChangeNotifier {
 
   Perfil? perfil;
   int noRecogidos = 0;
+
+  /// Puntos de 0 a 100 y adeudo del alumno.
+  Confianza datosConfianza = const Confianza();
   bool cargando = true;
   bool guardando = false;
   String? error;
@@ -52,7 +56,10 @@ class CuentaViewModel extends ChangeNotifier {
     notifyListeners();
     try {
       perfil = await _perfiles.miPerfil();
-      if (esAlumno) noRecogidos = await _pedidos.noRecogidos();
+      if (esAlumno) {
+        datosConfianza = await _pedidos.confianza();
+        noRecogidos = datosConfianza.noRecogidos;
+      }
       error = perfil == null ? 'No encontramos tu perfil.' : null;
     } catch (_) {
       error = 'No se pudo cargar tu cuenta.';

@@ -9,6 +9,9 @@ class Pedido {
   final String notas;
   final String estado;
 
+  /// Se paga en la cafetería al recoger (solo con 100 de confianza).
+  final bool pagoAlRecoger;
+
   const Pedido({
     required this.usuarioId,
     required this.cafeteriaId,
@@ -17,6 +20,7 @@ class Pedido {
     required this.recogerA,
     this.notas = '',
     this.estado = 'pendiente',
+    this.pagoAlRecoger = false,
   });
 
   Map<String, dynamic> toMap() => {

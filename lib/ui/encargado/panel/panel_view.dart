@@ -139,6 +139,11 @@ class _Tarjeta extends StatelessWidget {
               ],
             ),
             Text(pedido.alumno),
+            if (pedido.alRecoger)
+              Text('Cobrar \$${pedido.total.toStringAsFixed(2)} al entregar',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.error)),
             const SizedBox(height: 4),
             for (final l in pedido.lineas)
               Text('${l.cantidad} × ${l.producto}'),

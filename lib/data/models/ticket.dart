@@ -30,6 +30,9 @@ class TicketPedido {
   final String? codigoEntrega;
   final List<LineaTicket> lineas;
 
+  /// Se paga en la cafetería al recoger; cuenta como adeudo hasta pagarse.
+  final bool alRecoger;
+
   const TicketPedido({
     required this.id,
     required this.folio,
@@ -47,7 +50,12 @@ class TicketPedido {
     this.pagadoEn,
     this.codigoEntrega,
     this.lineas = const [],
+    this.alRecoger = false,
   });
+
+  /// Pedido a pagar al recoger que todavía no se paga.
+  bool get debe =>
+      alRecoger && pagadoEn == null && estado != EstadoPedido.cancelado;
 
   /// HU-09: el código se muestra mientras el pedido espera entregarse.
   bool get muestraCodigo =>
@@ -60,12 +68,13 @@ class TicketPedido {
 
   bool get pagado =>
       pagadoEn != null ||
-      const [
-        EstadoPedido.pendiente,
-        EstadoPedido.preparando,
-        EstadoPedido.listo,
-        EstadoPedido.entregado,
-      ].contains(estado);
+      !alRecoger &&
+          const [
+            EstadoPedido.pendiente,
+            EstadoPedido.preparando,
+            EstadoPedido.listo,
+            EstadoPedido.entregado,
+          ].contains(estado);
 
   bool get esperaComprobante => estado == EstadoPedido.porPagar;
 
@@ -95,6 +104,10 @@ class TicketPedido {
   String get etiquetaEstado => switch (estado) {
         EstadoPedido.pendiente ||
         EstadoPedido.preparando ||
+        EstadoPedido.listo when debe =>
+          'Pagas al recoger',
+        EstadoPedido.pendiente ||
+        EstadoPedido.preparando ||
         EstadoPedido.listo =>
           'Pagado',
         _ => estado.etiqueta,
@@ -120,6 +133,22 @@ class ResumenPedido {
 }
 
 /// Comprobante que espera validación del encargado.
+/// Pedido a pagar al recoger que no se recogió y sigue sin pagarse.
+class AdeudoPorCobrar {
+  final String pedidoId;
+  final String folio;
+  final double total;
+  final DateTime recogerA;
+  final String alumno;
+  const AdeudoPorCobrar({
+    required this.pedidoId,
+    required this.folio,
+    required this.total,
+    required this.recogerA,
+    required this.alumno,
+  });
+}
+
 class PagoPorValidar {
   final String pedidoId;
   final String folio;

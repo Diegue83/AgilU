@@ -207,6 +207,7 @@ class _MenuScaffold extends StatelessWidget {
           : FloatingActionButton.extended(
               onPressed: () {
                 carrito.cargarOcupacion(context.read<PedidoRepository>());
+                carrito.cargarConfianza(context.read<PedidoRepository>());
                 Navigator.pushNamed(context, Routes.carrito);
               },
               icon: const Icon(Icons.shopping_cart),

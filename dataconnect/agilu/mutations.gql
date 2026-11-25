@@ -34,6 +34,7 @@ mutation CrearPedido(
   $recogerA: Timestamp!
   $notas: String
   $items: Any!
+  $pagoAlRecoger: Boolean
 ) @auth(level: USER) {
   _execute(
     sql: """
@@ -76,6 +77,19 @@ mutation CrearPedido(
                WHERE o.usuario_id = cliente.usuario_id
                  AND o.estado = 'no_recogido'
                  AND o.recoger_a > now() - interval '30 days') < 3
+          /* Pagar al recoger: solo con 100 de confianza y sin otro pendiente. */
+          AND (NOT coalesce($7::boolean, false) OR (
+                greatest(0, 100 - coalesce((
+          SELECT sum(CASE
+                   WHEN n.es_credito AND n.pagado_en IS NULL THEN 20
+                   ELSE greatest(0, 20 - 5 * floor(extract(epoch FROM now() -
+                          CASE WHEN n.es_credito THEN n.pagado_en ELSE n.recoger_a END) / 86400))::int
+                 END)
+          FROM pedido n
+          WHERE n.usuario_id = cliente.usuario_id AND n.estado = 'no_recogido'), 0))::int = 100
+                AND (SELECT count(*) FROM pedido c
+          WHERE c.usuario_id = cliente.usuario_id AND c.es_credito AND c.pagado_en IS NULL
+            AND c.estado <> 'cancelado') = 0))
           AND (SELECT count(*) FROM lineas) = (SELECT count(*) FROM pedidos_items)
           AND (SELECT count(*) FROM pedidos_items) BETWEEN 1 AND 50
           AND coalesce(length($5::text), 0) <= 200
@@ -106,11 +120,15 @@ mutation CrearPedido(
       nuevo AS (
         INSERT INTO pedido (id, folio, monto_total, estado, fecha_creacion,
                             recoger_a, notas, es_credito, usuario_id, cafeteria_id,
-                            referencia_pago)
+                            referencia_pago, codigo_entrega)
         SELECT $2::uuid, folio.valor, (SELECT sum(precio * cantidad) FROM lineas),
-               'por_pagar', now(), $4::timestamptz, nullif(trim($5::text), ''),
-               false, cliente.usuario_id, $3::uuid,
-               'AGU-' || lpad(folio.valor::text, 5, '0')
+               /* Pagar al recoger entra directo a cocina con su código de entrega. */
+               CASE WHEN coalesce($7::boolean, false) THEN 'pendiente' ELSE 'por_pagar' END,
+               now(), $4::timestamptz, nullif(trim($5::text), ''),
+               coalesce($7::boolean, false), cliente.usuario_id, $3::uuid,
+               'AGU-' || lpad(folio.valor::text, 5, '0'),
+               CASE WHEN coalesce($7::boolean, false)
+                    THEN lpad((floor(random() * 10000))::int::text, 4, '0') END
         FROM folio, cliente
         RETURNING id
       )
@@ -118,7 +136,7 @@ mutation CrearPedido(
     SELECT gen_random_uuid(), lineas.cantidad, lineas.precio, nuevo.id, lineas.producto_id
     FROM lineas, nuevo
     """
-    params: [{ _expr: "auth.uid" }, $id, $cafeteriaId, $recogerA, $notas, $items]
+    params: [{ _expr: "auth.uid" }, $id, $cafeteriaId, $recogerA, $notas, $items, $pagoAlRecoger]
   )
 }
 
@@ -549,6 +567,9 @@ mutation EntregarPedido($id: UUID!, $codigo: String!) @auth(level: USER) {
     UPDATE pedido
     SET estado = CASE WHEN codigo_entrega = $3 THEN 'entregado' ELSE estado END,
         entregado_en = CASE WHEN codigo_entrega = $3 THEN now() ELSE entregado_en END,
+        /* Si se paga al recoger, entregar con el código es haber cobrado. */
+        pagado_en = CASE WHEN codigo_entrega = $3 AND es_credito AND pagado_en IS NULL
+                         THEN now() ELSE pagado_en END,
         intentos_entrega = CASE WHEN codigo_entrega = $3 THEN intentos_entrega
                                 ELSE intentos_entrega + 1 END
     WHERE id = $2::uuid
@@ -565,6 +586,30 @@ mutation EntregarPedido($id: UUID!, $codigo: String!) @auth(level: USER) {
     """
     params: [{ _expr: "auth.uid" }, $id, $codigo]
   )
+}
+
+# El encargado cobra un adeudo: un pedido a pagar al recoger que no se recogió.
+# Desde ese momento la confianza del alumno empieza a recuperarse.
+mutation CobrarAdeudo($id: UUID!) @auth(level: USER) @transaction {
+  pedido_update(
+    first: {
+      where: {
+        id: { eq: $id }
+        estado: { eq: "no_recogido" }
+        esCredito: { eq: true }
+        pagadoEn: { isNull: true }
+        cafeteria: {
+          usuarios_on_cafeteria: {
+            exist: {
+              rol: { nombre: { eq: "encargado" } }
+              autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+            }
+          }
+        }
+      }
+    }
+    data: { pagadoEn_expr: "request.time" }
+  ) @check(expr: "this != null", message: "Ese adeudo ya no está pendiente")
 }
 
 # HU-23: el encargado o un empleado registra que el alumno no recogió un pedido listo cuya

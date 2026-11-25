@@ -55,7 +55,7 @@ class _Pagos extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<PagosViewModel>();
-    if (vm.cargando && vm.pagos.isEmpty) {
+    if (vm.cargando && vm.pagos.isEmpty && vm.adeudos.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
     return RefreshIndicator(
@@ -115,6 +115,32 @@ class _Pagos extends StatelessWidget {
                 ),
               ),
             ),
+          if (vm.adeudos.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+              child: Text('Adeudos por cobrar',
+                  style: Theme.of(context).textTheme.titleMedium),
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Text('Pedidos a pagar al recoger que no se recogieron. '
+                  'Al cobrarlos, la confianza del alumno empieza a recuperarse.'),
+            ),
+            for (final a in vm.adeudos)
+              Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                child: ListTile(
+                  title: Text('${a.folio} · ${a.alumno}'),
+                  subtitle: Text('\$${a.total.toStringAsFixed(2)} · era para '
+                      'el ${a.recogerA.day}/${a.recogerA.month} a las '
+                      '${ReglasPedido.formatearHora(a.recogerA)}'),
+                  trailing: FilledButton(
+                    onPressed: () => vm.cobrar(a),
+                    child: const Text('Cobrado'),
+                  ),
+                ),
+              ),
+          ],
         ],
       ),
     );

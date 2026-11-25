@@ -27,6 +27,7 @@ class PanelPedidosPedidos {
   final String? notas;
   final double montoTotal;
   final int intentosEntrega;
+  final bool esCredito;
   final PanelPedidosPedidosUsuario usuario;
   final List<PanelPedidosPedidosDetallePedidosOnPedido> detallePedidos_on_pedido;
   PanelPedidosPedidos.fromJson(dynamic json):
@@ -38,6 +39,7 @@ class PanelPedidosPedidos {
   notas = json['notas'] == null ? null : nativeFromJson<String>(json['notas']),
   montoTotal = nativeFromJson<double>(json['montoTotal']),
   intentosEntrega = nativeFromJson<int>(json['intentosEntrega']),
+  esCredito = nativeFromJson<bool>(json['esCredito']),
   usuario = PanelPedidosPedidosUsuario.fromJson(json['usuario']),
   detallePedidos_on_pedido = (json['detallePedidos_on_pedido'] as List<dynamic>)
         .map((e) => PanelPedidosPedidosDetallePedidosOnPedido.fromJson(e))
@@ -59,12 +61,13 @@ class PanelPedidosPedidos {
     notas == otherTyped.notas && 
     montoTotal == otherTyped.montoTotal && 
     intentosEntrega == otherTyped.intentosEntrega && 
+    esCredito == otherTyped.esCredito && 
     usuario == otherTyped.usuario && 
     detallePedidos_on_pedido == otherTyped.detallePedidos_on_pedido;
     
   }
   @override
-  int get hashCode => Object.hashAll([id.hashCode, folio.hashCode, estado.hashCode, recogerA.hashCode, notas.hashCode, montoTotal.hashCode, intentosEntrega.hashCode, usuario.hashCode, detallePedidos_on_pedido.hashCode]);
+  int get hashCode => Object.hashAll([id.hashCode, folio.hashCode, estado.hashCode, recogerA.hashCode, notas.hashCode, montoTotal.hashCode, intentosEntrega.hashCode, esCredito.hashCode, usuario.hashCode, detallePedidos_on_pedido.hashCode]);
   
 
   Map<String, dynamic> toJson() {
@@ -78,6 +81,7 @@ class PanelPedidosPedidos {
     }
     json['montoTotal'] = nativeToJson<double>(montoTotal);
     json['intentosEntrega'] = nativeToJson<int>(intentosEntrega);
+    json['esCredito'] = nativeToJson<bool>(esCredito);
     json['usuario'] = usuario.toJson();
     json['detallePedidos_on_pedido'] = detallePedidos_on_pedido.map((e) => e.toJson()).toList();
     return json;
@@ -91,6 +95,7 @@ class PanelPedidosPedidos {
     this.notas,
     required this.montoTotal,
     required this.intentosEntrega,
+    required this.esCredito,
     required this.usuario,
     required this.detallePedidos_on_pedido,
   });
