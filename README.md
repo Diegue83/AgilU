@@ -193,6 +193,12 @@ Detalle de lo que cubren y últimos resultados: [`docs/pruebas.md`](docs/pruebas
 Dependencias y revisión de alertas: [`docs/dependencias.md`](docs/dependencias.md).
 
 ## Flujo de trabajo
-Ramas `feature/<nombre>` por historia o tarea, pull request y revisión de otro
-integrante antes de unir a `main`. GitHub Actions corre análisis y pruebas en
-cada push y pull request.
+- `main`: versión estable; de aquí salen los releases (etiquetas `vX.Y.Z`).
+- `develop`: integración de lo terminado en el sprint.
+- `feature/<nombre>`: una rama por historia o tarea, que sale de `develop`.
+
+Cada funcionalidad entra a `develop` por pull request con la revisión aprobada de
+otro integrante (la plantilla del PR trae la lista de revisión) y CI en verde. Al
+cerrar el sprint, `develop` se une a `main` con otro pull request y se publica la
+versión. GitHub Actions corre análisis y pruebas en cada push y pull request.
+Las pruebas con usuarios se registran en `docs/pruebas-usuarios.md`.
