@@ -57,6 +57,27 @@ class TicketPedido {
     this.estacion,
   });
 
+  /// Pasos que ve el alumno, de pagar a recoger.
+  static const pasos = ['Pago', 'Recibido', 'Preparando', 'Listo', 'Entregado'];
+
+  /// Paso en curso (índice de [pasos]), o null si el pedido se canceló o no
+  /// se recogió.
+  int? get pasoActual => switch (estado) {
+        EstadoPedido.porPagar || EstadoPedido.pagoEnRevision => 0,
+        EstadoPedido.pendiente => 1,
+        EstadoPedido.preparando => 2,
+        EstadoPedido.listo => 3,
+        EstadoPedido.entregado => 4,
+        EstadoPedido.cancelado || EstadoPedido.noRecogido => null,
+      };
+
+  /// El pedido ya no va a cambiar: no hace falta seguir actualizándolo.
+  bool get terminado => const [
+        EstadoPedido.entregado,
+        EstadoPedido.cancelado,
+        EstadoPedido.noRecogido,
+      ].contains(estado);
+
   /// Pedido a pagar al recoger que todavía no se paga.
   bool get debe =>
       alRecoger && pagadoEn == null && estado != EstadoPedido.cancelado;

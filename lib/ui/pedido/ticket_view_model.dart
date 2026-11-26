@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../data/repositories/notificador.dart';
 import 'package:flutter/foundation.dart';
 
@@ -9,9 +11,34 @@ class TicketViewModel extends ChangeNotifier {
   final PedidoRepository _repo;
   final String pedidoId;
   final Notificador? _avisos;
-  TicketViewModel(this._repo, this.pedidoId, {Notificador? avisos})
+  TicketViewModel(this._repo, this.pedidoId,
+      {Notificador? avisos, Duration intervalo = const Duration(seconds: 15)})
       : _avisos = avisos {
     cargar();
+    // Mientras el pedido avanza, el ticket se actualiza solo.
+    _reloj = Timer.periodic(intervalo, (_) {
+      if (!(ticket?.terminado ?? false) && !cargando) _refrescar();
+    });
+  }
+
+  Timer? _reloj;
+
+  /// Actualiza sin mostrar la carga; si falla, se queda lo último.
+  Future<void> _refrescar() async {
+    try {
+      final nuevo = await _repo.ticket(pedidoId);
+      if (nuevo != null) {
+        ticket = nuevo;
+        notifyListeners();
+      }
+    } catch (_) {}
+    if (ticket?.terminado ?? false) _reloj?.cancel();
+  }
+
+  @override
+  void dispose() {
+    _reloj?.cancel();
+    super.dispose();
   }
 
   TicketPedido? ticket;
