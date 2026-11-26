@@ -10,14 +10,14 @@ dependencies:
   flutter:
     sdk: flutter
   provider: ^6.1.2
-  firebase_core: ^3.6.0
-  firebase_auth: ^5.3.1
-  firebase_data_connect: ^0.1.5+4
+  firebase_core: ^5.2.0
+  firebase_auth: ^7.1.0
+  firebase_data_connect: ^0.4.2
   image_picker: ^1.2.4
-  cloud_functions: ^5.6.2
+  cloud_functions: ^7.1.0
   qr_flutter: ^4.1.0
   mobile_scanner: ^7.5.0
-  firebase_messaging: 15.2.10
+  firebase_messaging: 17.1.0
   storage_client: ^2.8.1
   http: ^1.6.0
   crypto: ^3.0.8
