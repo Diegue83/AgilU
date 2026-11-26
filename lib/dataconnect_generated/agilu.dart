@@ -19,6 +19,8 @@ part 'crear_estacion.dart';
 
 part 'editar_estacion.dart';
 
+part 'activar_estacion.dart';
+
 part 'eliminar_estacion.dart';
 
 part 'crear_mi_producto.dart';
@@ -76,6 +78,8 @@ part 'mi_personal.dart';
 part 'agregar_empleado.dart';
 
 part 'quitar_empleado.dart';
+
+part 'asignar_estacion.dart';
 
 part 'cafeterias_para_registro.dart';
 
@@ -169,6 +173,11 @@ class AgiluConnector {
   
   EditarEstacionVariablesBuilder editarEstacion ({required String id, required String nombre, required int orden, required bool activo, }) {
     return EditarEstacionVariablesBuilder(dataConnect, id: id,nombre: nombre,orden: orden,activo: activo,);
+  }
+  
+  
+  ActivarEstacionVariablesBuilder activarEstacion ({required String id, required bool activo, }) {
+    return ActivarEstacionVariablesBuilder(dataConnect, id: id,activo: activo,);
   }
   
   
@@ -314,6 +323,11 @@ class AgiluConnector {
   
   QuitarEmpleadoVariablesBuilder quitarEmpleado ({required String usuarioId, }) {
     return QuitarEmpleadoVariablesBuilder(dataConnect, usuarioId: usuarioId,);
+  }
+  
+  
+  AsignarEstacionVariablesBuilder asignarEstacion ({required String usuarioId, }) {
+    return AsignarEstacionVariablesBuilder(dataConnect, usuarioId: usuarioId,);
   }
   
   

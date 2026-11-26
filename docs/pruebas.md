@@ -37,6 +37,10 @@ y pull request.
   si no se recoge baja la confianza 20 puntos y no se recupera mientras se deba; solo
   el encargado lo cobra y desde entonces se recuperan 5 puntos por día; con menos de
   100 el servidor rechaza pagar al recoger y dice por qué.
+- Estación del empleado: sin estación asignada no ve ni cambia nada; el encargado
+  solo asigna estaciones de su cafetería a sus empleados; el empleado activa su
+  estación y da de alta, edita y pone foto a productos solo de ella, sin eliminar ni
+  ofertas; al quitarle el rol pierde la estación.
 - Puntos rojos: `MisPendientes` da al encargado sus pagos por validar y al alumno sus
   pedidos listos y avisos sin leer, sin mezclar conteos de otros roles.
 - Avisos (`supabase/functions/avisar/reglas.test.ts`, en CI): el comprobante solo lo

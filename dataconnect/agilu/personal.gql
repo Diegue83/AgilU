@@ -93,7 +93,8 @@ mutation AsignarRolAdmin($correo: String!, $rol: String!, $cafeteriaId: UUID)
     sql: """
     UPDATE usuario u
     SET rol_id = (SELECT id FROM rol WHERE nombre = $3),
-        cafeteria_id = CASE WHEN $3 IN ('encargado', 'empleado') THEN $4::uuid ELSE NULL END
+        cafeteria_id = CASE WHEN $3 IN ('encargado', 'empleado') THEN $4::uuid ELSE NULL END,
+        puesto_id = NULL
     FROM autenticacion a
     WHERE a.usuario_id = u.id
       AND lower(a.correo_electronico) = lower(trim($2))
@@ -118,10 +119,12 @@ mutation AsignarRolAdmin($correo: String!, $rol: String!, $cafeteriaId: UUID)
 query MiPersonal @auth(level: USER) {
   personal: _select(
     sql: """
-    SELECT u.id AS "usuarioId", u.nombre, a.correo_electronico AS "correo", r.nombre AS "rol"
+    SELECT u.id AS "usuarioId", u.nombre, a.correo_electronico AS "correo", r.nombre AS "rol",
+           e.id AS "estacionId", e.nombre AS "estacion"
     FROM usuario u
     JOIN autenticacion a ON a.usuario_id = u.id
     JOIN rol r ON r.id = u.rol_id
+    LEFT JOIN puesto e ON e.id = u.puesto_id
     WHERE r.nombre IN ('encargado', 'empleado')
       AND u.cafeteria_id = (
         SELECT yo.cafeteria_id FROM usuario yo
@@ -148,7 +151,8 @@ mutation AgregarEmpleado($correo: String!) @auth(level: USER) {
     )
     UPDATE usuario u
     SET rol_id = (SELECT id FROM rol WHERE nombre = 'empleado'),
-        cafeteria_id = (SELECT id FROM mia)
+        cafeteria_id = (SELECT id FROM mia),
+        puesto_id = NULL
     FROM autenticacion a
     WHERE a.usuario_id = u.id
       AND lower(a.correo_electronico) = lower(trim($2))
@@ -167,7 +171,7 @@ mutation QuitarEmpleado($usuarioId: UUID!) @auth(level: USER) {
   resultado: _executeReturningFirst(
     sql: """
     UPDATE usuario u
-    SET rol_id = (SELECT id FROM rol WHERE nombre = 'alumno'), cafeteria_id = NULL
+    SET rol_id = (SELECT id FROM rol WHERE nombre = 'alumno'), cafeteria_id = NULL, puesto_id = NULL
     WHERE u.id = $2::uuid
       AND u.rol_id = (SELECT id FROM rol WHERE nombre = 'empleado')
       AND u.cafeteria_id = (
@@ -179,6 +183,30 @@ mutation QuitarEmpleado($usuarioId: UUID!) @auth(level: USER) {
     RETURNING u.id AS "usuarioId"
     """
     params: [{ _expr: "auth.uid" }, $usuarioId]
+  )
+}
+
+# El encargado asigna a un empleado de su cafetería una estación de esa misma
+# cafetería, o se la quita con estacionId nulo. Devuelve null si no se cumplió.
+mutation AsignarEstacion($usuarioId: UUID!, $estacionId: UUID) @auth(level: USER) {
+  resultado: _executeReturningFirst(
+    sql: """
+    WITH mia AS (
+      SELECT yo.cafeteria_id AS id FROM usuario yo
+      JOIN autenticacion ya ON ya.usuario_id = yo.id
+      JOIN rol yr ON yr.id = yo.rol_id
+      WHERE ya.firebase_auth_uid = $1 AND yr.nombre = 'encargado' AND yo.cafeteria_id IS NOT NULL
+    )
+    UPDATE usuario u
+    SET puesto_id = $3::uuid
+    WHERE u.id = $2::uuid
+      AND u.rol_id = (SELECT id FROM rol WHERE nombre = 'empleado')
+      AND u.cafeteria_id = (SELECT id FROM mia)
+      AND ($3::uuid IS NULL
+           OR EXISTS (SELECT 1 FROM puesto e WHERE e.id = $3::uuid AND e.cafeteria_id = (SELECT id FROM mia)))
+    RETURNING u.id AS "usuarioId"
+    """
+    params: [{ _expr: "auth.uid" }, $usuarioId, $estacionId]
   )
 }
 

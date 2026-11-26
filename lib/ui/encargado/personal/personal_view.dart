@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../data/models/perfil.dart';
 import '../../../data/models/personal.dart';
+import '../../../data/repositories/estacion_repository.dart';
 import '../../../data/repositories/personal_repository.dart';
 import 'personal_view_model.dart';
 
@@ -12,7 +13,8 @@ class PersonalView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (ctx) => PersonalViewModel(ctx.read<PersonalRepository>()),
+      create: (ctx) => PersonalViewModel(ctx.read<PersonalRepository>(),
+          estaciones: ctx.read<EstacionRepository>()),
       child: const _Personal(),
     );
   }
@@ -181,12 +183,30 @@ class _Personal extends StatelessWidget {
                           ? Icons.manage_accounts
                           : Icons.badge_outlined),
                       title: Text(m.nombre),
-                      subtitle: Text('${etiquetaRol(m.rol)} · ${m.correo}'),
+                      subtitle: Text([
+                        etiquetaRol(m.rol),
+                        m.correo,
+                        if (m.rol == RolUsuario.empleado)
+                          m.estacion ?? 'Sin estación',
+                      ].join(' · ')),
                       trailing: m.rol == RolUsuario.empleado
-                          ? IconButton(
-                              tooltip: 'Quitar',
-                              icon: const Icon(Icons.person_remove_outlined),
-                              onPressed: () => _confirmarQuitar(context, vm, m),
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  tooltip: 'Asignar estación',
+                                  icon: const Icon(Icons.storefront_outlined),
+                                  onPressed: () =>
+                                      _elegirEstacion(context, vm, m),
+                                ),
+                                IconButton(
+                                  tooltip: 'Quitar',
+                                  icon:
+                                      const Icon(Icons.person_remove_outlined),
+                                  onPressed: () =>
+                                      _confirmarQuitar(context, vm, m),
+                                ),
+                              ],
                             )
                           : null,
                     ),
@@ -200,5 +220,43 @@ class _Personal extends StatelessWidget {
               ),
             ),
     );
+  }
+
+  Future<void> _elegirEstacion(
+      BuildContext context, PersonalViewModel vm, MiembroPersonal m) async {
+    // '' = quitar la estación; null = cerrar sin cambios.
+    final elegida = await showDialog<String>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text('Estación de ${m.nombre}'),
+        children: [
+          if (vm.estaciones.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              child: Text('Primero crea una estación.'),
+            ),
+          for (final e in vm.estaciones)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(ctx, e.id),
+              child: Row(
+                children: [
+                  Icon(e.id == m.estacionId
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(e.nombre)),
+                ],
+              ),
+            ),
+          if (m.estacionId != null)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(ctx, ''),
+              child: const Text('Quitar estación'),
+            ),
+        ],
+      ),
+    );
+    if (elegida == null || elegida == m.estacionId) return;
+    await vm.asignarEstacion(m, elegida.isEmpty ? null : elegida);
   }
 }

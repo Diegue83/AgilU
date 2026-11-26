@@ -7,8 +7,11 @@ import '../../comun/foto_producto.dart';
 import 'producto_form_view.dart';
 import 'productos_view_model.dart';
 
+/// Productos de la cafetería. Con [empleado] solo llegan los de su estación
+/// (el servidor los filtra) y el formulario no permite eliminar ni ofertas.
 class ProductosView extends StatelessWidget {
-  const ProductosView({super.key});
+  final bool empleado;
+  const ProductosView({super.key, this.empleado = false});
 
   @override
   Widget build(BuildContext context) {
@@ -17,13 +20,14 @@ class ProductosView extends StatelessWidget {
         ctx.read<ProductoRepository>(),
         ctx.read<EstacionRepository>(),
       ),
-      child: const _Productos(),
+      child: _Productos(empleado: empleado),
     );
   }
 }
 
 class _Productos extends StatelessWidget {
-  const _Productos();
+  final bool empleado;
+  const _Productos({required this.empleado});
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +44,8 @@ class _Productos extends StatelessWidget {
                 final guardado = await Navigator.push<bool>(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => ProductoFormView(estaciones: vm.estaciones),
+                    builder: (_) => ProductoFormView(
+                        estaciones: vm.estaciones, empleado: empleado),
                   ),
                 );
                 if (guardado == true) await vm.cargar();
@@ -71,26 +76,29 @@ class _Productos extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(
-              height: 56,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                children: [
-                  _chip('Todas', vm.estacionSeleccionada == null,
-                      () => vm.seleccionarEstacion(null)),
-                  for (final e in vm.estaciones)
-                    _chip(e.nombre, vm.estacionSeleccionada == e.id,
-                        () => vm.seleccionarEstacion(e.id)),
-                ],
+            if (vm.estaciones.length > 1)
+              SizedBox(
+                height: 56,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  children: [
+                    _chip('Todas', vm.estacionSeleccionada == null,
+                        () => vm.seleccionarEstacion(null)),
+                    for (final e in vm.estaciones)
+                      _chip(e.nombre, vm.estacionSeleccionada == e.id,
+                          () => vm.seleccionarEstacion(e.id)),
+                  ],
+                ),
               ),
-            ),
             if (productos.isEmpty)
               Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(vm.total == 0
-                    ? 'Aún no hay productos en tu cafetería.'
+                    ? (empleado
+                        ? 'Aún no hay productos en tu estación.'
+                        : 'Aún no hay productos en tu cafetería.')
                     : 'Ningún producto coincide con la búsqueda.'),
               ),
             for (final p in productos)
@@ -100,7 +108,9 @@ class _Productos extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (_) => ProductoFormView(
-                          estaciones: vm.estaciones, producto: p),
+                          estaciones: vm.estaciones,
+                          producto: p,
+                          empleado: empleado),
                     ),
                   );
                   if (guardado == true) await vm.cargar();

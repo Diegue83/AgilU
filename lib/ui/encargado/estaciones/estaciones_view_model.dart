@@ -15,6 +15,7 @@ class EstacionesViewModel extends ChangeNotifier {
     'Solo el encargado puede hacer esto',
     'No tienes cafetería asignada',
     'La estación no es de tu cafetería',
+    'La estación no es tuya',
   ];
 
   List<Estacion> estaciones = [];
@@ -58,7 +59,7 @@ class EstacionesViewModel extends ChangeNotifier {
       _ejecutar(() => _repo.editar(e.copiar(nombre: nombre.trim())));
 
   Future<bool> alternarActiva(Estacion e) =>
-      _ejecutar(() => _repo.editar(e.copiar(activo: !e.activo)));
+      _ejecutar(() => _repo.activar(e.id, !e.activo));
 
   Future<bool> eliminar(Estacion e) => _ejecutar(() => _repo.eliminar(e.id));
 

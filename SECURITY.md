@@ -44,6 +44,11 @@ configuración de Firebase. No se encontraron credenciales.
   otro pendiente de pago. Ese pedido cuenta como adeudo desde que se pide; entregarlo
   con el código registra el cobro. Si no se recoge, solo el encargado de esa cafetería
   puede registrar que se pagó (`CobrarAdeudo`).
+- **Estación del empleado**: el encargado asigna a cada empleado una estación de su
+  propia cafetería (`AsignarEstacion`). Con ella el empleado puede activarla o
+  desactivarla, cambiar la disponibilidad, editar, poner foto y dar de alta productos
+  solo en esa estación; no puede renombrarla, borrarla, mover productos a otra
+  estación, eliminarlos ni publicar ofertas. Al dejar de ser empleado pierde la estación.
 - **Solicitudes de trabajo**: quien se registra como empleado queda sin rol y con una
   solicitud; el servidor le impide hacer pedidos y solo el encargado de esa cafetería
   la aprueba (pasa a empleado) o la rechaza. La única consulta sin sesión expone

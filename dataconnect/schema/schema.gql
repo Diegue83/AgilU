@@ -10,6 +10,10 @@ type Usuario @table {
   direccion: String
   rol: Rol
   cafeteria: Cafeteria
+  # Estación que atiende un empleado. El encargado la asigna; con ella el
+  # empleado puede activarla, cambiar la disponibilidad de sus productos y
+  # dar de alta productos en ella.
+  puesto: Puesto
 }
 
 # alumno, empleado, encargado, beneficiaria, admin. Todo registro nuevo es

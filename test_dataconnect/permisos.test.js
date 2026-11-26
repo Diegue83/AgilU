@@ -1790,3 +1790,114 @@ describe('pago al recoger y adeudos', () => {
     await deleteApp(quique.app);
   });
 });
+
+describe('estación del empleado', () => {
+  let memo;
+  let jugos;
+  let crepas;
+  let memoId;
+  let nuevo;
+  const OTRA_CAFETERIA = 'a0000000000040008000000000000002';
+
+  before(async () => {
+    memo = await alumno('memo');
+    await memo.mutation('CrearPerfil', { nombre: 'Memo' });
+    const alta = await beto.mutation('AgregarEmpleado', { correo: 'memo@utng.edu.mx' });
+    memoId = alta.data.resultado.usuarioId;
+    jugos = (await beto.mutation('CrearEstacion', { nombre: 'Jugos', orden: 20 })).data.puesto_insert.id;
+    crepas = (await beto.mutation('CrearEstacion', { nombre: 'Crepas', orden: 21 })).data.puesto_insert.id;
+  });
+
+  after(async () => {
+    await signOut(memo.auth);
+    await deleteApp(memo.app);
+  });
+
+  test('sin estación asignada el empleado no ve ni cambia estaciones o productos', async () => {
+    assert.equal((await memo.query('MisEstaciones')).data.puestos.length, 0);
+    assert.equal((await memo.query('MisProductos')).data.productos.length, 0);
+    await assert.rejects(memo.mutation('ActivarEstacion', { id: jugos, activo: false }));
+  });
+
+  test('el encargado asigna una estación de su cafetería solo a sus empleados', async () => {
+    const r = await beto.mutation('AsignarEstacion', { usuarioId: memoId, estacionId: jugos });
+    assert.ok(r.data.resultado);
+    const yo = (await memo.query('MiPerfil')).data.autenticacion.usuario;
+    assert.equal(yo.puesto.id, jugos);
+    const fila = (await beto.query('MiPersonal')).data.personal.find((m) => m.correo === 'memo@utng.edu.mx');
+    assert.equal(fila.estacion, 'Jugos');
+
+    const otra = await beto.mutation('AsignarEstacion', { usuarioId: memoId, estacionId: OTRA_CAFETERIA });
+    assert.equal(otra.data.resultado, null);
+    const anaId = (await ana.query('MiPerfil')).data.autenticacion.usuario.id;
+    const aAlumno = await beto.mutation('AsignarEstacion', { usuarioId: anaId, estacionId: jugos });
+    assert.equal(aAlumno.data.resultado, null);
+    const solo = await memo.mutation('AsignarEstacion', { usuarioId: memoId, estacionId: crepas });
+    assert.equal(solo.data.resultado, null);
+    assert.equal((await memo.query('MiPerfil')).data.autenticacion.usuario.puesto.id, jugos);
+  });
+
+  test('el empleado activa y desactiva su estación, pero no otras ni la renombra', async () => {
+    await memo.mutation('ActivarEstacion', { id: jugos, activo: false });
+    const { data } = await memo.query('MisEstaciones');
+    assert.deepEqual(data.puestos.map((p) => [p.id, p.activo]), [[jugos, false]]);
+    await memo.mutation('ActivarEstacion', { id: jugos, activo: true });
+
+    await assert.rejects(memo.mutation('ActivarEstacion', { id: crepas, activo: false }));
+    await assert.rejects(memo.mutation('EditarEstacion', { id: jugos, nombre: 'Otra', orden: 1, activo: true }));
+    await assert.rejects(memo.mutation('EliminarEstacion', { id: crepas }));
+    await assert.rejects(ana.mutation('ActivarEstacion', { id: jugos, activo: false }));
+
+    await beto.mutation('ActivarEstacion', { id: crepas, activo: false });
+    const b = await beto.query('MisEstaciones');
+    assert.equal(b.data.puestos.find((p) => p.id === crepas).activo, false);
+    await beto.mutation('ActivarEstacion', { id: crepas, activo: true });
+  });
+
+  test('el empleado da de alta productos solo en su estación', async () => {
+    const datos = { nombre: 'Jugo verde', precio: 30, disponible: true };
+    const r = await memo.mutation('CrearMiProducto', { ...datos, puestoId: jugos });
+    nuevo = r.data.producto_insert.id;
+    await assert.rejects(memo.mutation('CrearMiProducto', { ...datos, puestoId: crepas }));
+    await assert.rejects(memo.mutation('CrearMiProducto', { ...datos, puestoId: OTRA_CAFETERIA }));
+
+    const { data } = await memo.query('MisProductos');
+    assert.ok(data.productos.length >= 1);
+    assert.ok(data.productos.every((p) => p.puesto.id === jugos));
+    assert.ok(data.productos.some((p) => p.id === nuevo));
+    assert.ok((await beto.query('MisProductos')).data.productos.some((p) => p.id === nuevo));
+  });
+
+  test('el empleado cambia la disponibilidad, edita y pone foto solo en su estación', async () => {
+    await memo.mutation('EstablecerDisponibilidad', { id: nuevo, disponible: false });
+    const p = (await memo.query('MisProductos')).data.productos.find((x) => x.id === nuevo);
+    assert.equal(p.disponible, false);
+    await assert.rejects(memo.mutation('EstablecerDisponibilidad', { id: MOLLETES, disponible: false }));
+
+    const cambio = { id: nuevo, nombre: 'Jugo verde grande', precio: 35, disponible: true };
+    await memo.mutation('EditarMiProducto', { ...cambio, puestoId: jugos });
+    await assert.rejects(memo.mutation('EditarMiProducto', { ...cambio, puestoId: crepas }));
+    await assert.rejects(memo.mutation('EditarMiProducto', { ...cambio, id: MOLLETES, puestoId: jugos }));
+
+    const uid = memo.auth.currentUser.uid;
+    const url = `https://x.supabase.co/storage/v1/object/public/productos/${uid}/jugo.jpg`;
+    await memo.mutation('GuardarFotoProducto', { id: nuevo, url });
+    const conFoto = (await memo.query('MisProductos')).data.productos.find((x) => x.id === nuevo);
+    assert.equal(conFoto.urlDeImagen, url);
+    await assert.rejects(memo.mutation('GuardarFotoProducto', {
+      id: MOLLETES, url: `https://x.supabase.co/storage/v1/object/public/productos/${uid}/m.jpg`,
+    }));
+
+    await assert.rejects(memo.mutation('EliminarMiProducto', { id: nuevo }));
+    await assert.rejects(memo.mutation('PublicarOferta', {
+      id: nuevo, precioOferta: 10, hasta: new Date(Date.now() + 864e5).toISOString(), esEspecialidad: false,
+    }));
+  });
+
+  test('al dejar de ser empleado pierde la estación', async () => {
+    await beto.mutation('QuitarEmpleado', { usuarioId: memoId });
+    assert.equal((await memo.query('MiPerfil')).data.autenticacion.usuario.puesto, null);
+    assert.equal((await memo.query('MisEstaciones')).data.puestos.length, 0);
+    await assert.rejects(memo.mutation('ActivarEstacion', { id: jugos, activo: false }));
+  });
+});
