@@ -106,6 +106,11 @@ class DataConnectPedidoRepository implements PedidoRepository {
               recogerA: p.recogerA.toDateTime().toLocal(),
               total: p.montoTotal,
               cafeteria: p.cafeteria.nombre,
+              cafeteriaId: p.cafeteria.id,
+              lineas: [
+                for (final d in p.detallePedidos_on_pedido)
+                  LineaReorden(d.producto.id, d.producto.nombre, d.cantidad),
+              ],
             ))
         .toList();
   }

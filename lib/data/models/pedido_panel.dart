@@ -57,6 +57,9 @@ class PedidoPanel {
   /// Se cobra al entregar.
   final bool alRecoger;
 
+  /// Cuándo hizo el pedido el alumno.
+  final DateTime? creadoEn;
+
   const PedidoPanel({
     required this.id,
     required this.folio,
@@ -68,7 +71,20 @@ class PedidoPanel {
     this.intentosEntrega = 0,
     this.lineas = const [],
     this.alRecoger = false,
+    this.creadoEn,
   });
+
+  /// "hace 5 min" o "hace 1 h 20 min" desde que se hizo el pedido.
+  String? transcurrido(DateTime ahora) {
+    final c = creadoEn;
+    if (c == null) return null;
+    final m = ahora.difference(c).inMinutes;
+    if (m < 1) return 'hace menos de 1 min';
+    if (m < 60) return 'hace $m min';
+    final h = m ~/ 60;
+    final r = m % 60;
+    return r == 0 ? 'hace $h h' : 'hace $h h $r min';
+  }
 
   /// HU-09: tras 5 códigos equivocados ya no se entrega con código.
   bool get entregaBloqueada => intentosEntrega >= 5;
@@ -84,5 +100,6 @@ class PedidoPanel {
         intentosEntrega: intentosEntrega,
         lineas: lineas,
         alRecoger: alRecoger,
+        creadoEn: creadoEn,
       );
 }

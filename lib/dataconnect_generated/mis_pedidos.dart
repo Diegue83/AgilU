@@ -105,9 +105,11 @@ class MisPedidosPedidos {
 
 @immutable
 class MisPedidosPedidosCafeteria {
+  final String id;
   final String nombre;
   MisPedidosPedidosCafeteria.fromJson(dynamic json):
   
+  id = nativeFromJson<String>(json['id']),
   nombre = nativeFromJson<String>(json['nombre']);
   @override
   bool operator ==(Object other) {
@@ -119,20 +121,23 @@ class MisPedidosPedidosCafeteria {
     }
 
     final MisPedidosPedidosCafeteria otherTyped = other as MisPedidosPedidosCafeteria;
-    return nombre == otherTyped.nombre;
+    return id == otherTyped.id && 
+    nombre == otherTyped.nombre;
     
   }
   @override
-  int get hashCode => nombre.hashCode;
+  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode]);
   
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
+    json['id'] = nativeToJson<String>(id);
     json['nombre'] = nativeToJson<String>(nombre);
     return json;
   }
 
   MisPedidosPedidosCafeteria({
+    required this.id,
     required this.nombre,
   });
 }
@@ -183,9 +188,11 @@ class MisPedidosPedidosDetallePedidosOnPedido {
 
 @immutable
 class MisPedidosPedidosDetallePedidosOnPedidoProducto {
+  final String id;
   final String nombre;
   MisPedidosPedidosDetallePedidosOnPedidoProducto.fromJson(dynamic json):
   
+  id = nativeFromJson<String>(json['id']),
   nombre = nativeFromJson<String>(json['nombre']);
   @override
   bool operator ==(Object other) {
@@ -197,20 +204,23 @@ class MisPedidosPedidosDetallePedidosOnPedidoProducto {
     }
 
     final MisPedidosPedidosDetallePedidosOnPedidoProducto otherTyped = other as MisPedidosPedidosDetallePedidosOnPedidoProducto;
-    return nombre == otherTyped.nombre;
+    return id == otherTyped.id && 
+    nombre == otherTyped.nombre;
     
   }
   @override
-  int get hashCode => nombre.hashCode;
+  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode]);
   
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
+    json['id'] = nativeToJson<String>(id);
     json['nombre'] = nativeToJson<String>(nombre);
     return json;
   }
 
   MisPedidosPedidosDetallePedidosOnPedidoProducto({
+    required this.id,
     required this.nombre,
   });
 }

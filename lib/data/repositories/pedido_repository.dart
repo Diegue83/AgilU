@@ -92,6 +92,10 @@ class MockPedidoRepository implements PedidoRepository {
             recogerA: t.recogerA,
             total: t.total,
             cafeteria: t.cafeteria,
+            lineas: [
+              for (final l in t.lineas)
+                LineaReorden(l.producto, l.producto, l.cantidad),
+            ],
           ),
       ];
 

@@ -147,6 +147,11 @@ class ResumenPedido {
   final DateTime recogerA;
   final double total;
   final String cafeteria;
+  final String cafeteriaId;
+
+  /// Productos y cantidades, para "Volver a pedir".
+  final List<LineaReorden> lineas;
+
   const ResumenPedido({
     required this.id,
     required this.folio,
@@ -154,7 +159,26 @@ class ResumenPedido {
     required this.recogerA,
     required this.total,
     required this.cafeteria,
+    this.cafeteriaId = '',
+    this.lineas = const [],
   });
+
+  /// Solo los pedidos que ya terminaron se vuelven a pedir.
+  bool get sePuedeRepetir =>
+      lineas.isNotEmpty &&
+      const [
+        EstadoPedido.entregado,
+        EstadoPedido.cancelado,
+        EstadoPedido.noRecogido,
+      ].contains(estado);
+}
+
+/// Un producto de un pedido anterior.
+class LineaReorden {
+  final String productoId;
+  final String nombre;
+  final int cantidad;
+  const LineaReorden(this.productoId, this.nombre, this.cantidad);
 }
 
 /// Comprobante que espera validación del encargado.
