@@ -24,6 +24,7 @@ class PagosPorValidarPedidos {
   final double montoTotal;
   final Timestamp recogerA;
   final String? comprobanteUrl;
+  final PagosPorValidarPedidosPuesto? puesto;
   final PagosPorValidarPedidosUsuario usuario;
   PagosPorValidarPedidos.fromJson(dynamic json):
   
@@ -33,6 +34,7 @@ class PagosPorValidarPedidos {
   montoTotal = nativeFromJson<double>(json['montoTotal']),
   recogerA = Timestamp.fromJson(json['recogerA']),
   comprobanteUrl = json['comprobanteUrl'] == null ? null : nativeFromJson<String>(json['comprobanteUrl']),
+  puesto = json['puesto'] == null ? null : PagosPorValidarPedidosPuesto.fromJson(json['puesto']),
   usuario = PagosPorValidarPedidosUsuario.fromJson(json['usuario']);
   @override
   bool operator ==(Object other) {
@@ -50,11 +52,12 @@ class PagosPorValidarPedidos {
     montoTotal == otherTyped.montoTotal && 
     recogerA == otherTyped.recogerA && 
     comprobanteUrl == otherTyped.comprobanteUrl && 
+    puesto == otherTyped.puesto && 
     usuario == otherTyped.usuario;
     
   }
   @override
-  int get hashCode => Object.hashAll([id.hashCode, folio.hashCode, referenciaPago.hashCode, montoTotal.hashCode, recogerA.hashCode, comprobanteUrl.hashCode, usuario.hashCode]);
+  int get hashCode => Object.hashAll([id.hashCode, folio.hashCode, referenciaPago.hashCode, montoTotal.hashCode, recogerA.hashCode, comprobanteUrl.hashCode, puesto.hashCode, usuario.hashCode]);
   
 
   Map<String, dynamic> toJson() {
@@ -69,6 +72,9 @@ class PagosPorValidarPedidos {
     if (comprobanteUrl != null) {
       json['comprobanteUrl'] = nativeToJson<String?>(comprobanteUrl);
     }
+    if (puesto != null) {
+      json['puesto'] = puesto!.toJson();
+    }
     json['usuario'] = usuario.toJson();
     return json;
   }
@@ -80,7 +86,42 @@ class PagosPorValidarPedidos {
     required this.montoTotal,
     required this.recogerA,
     this.comprobanteUrl,
+    this.puesto,
     required this.usuario,
+  });
+}
+
+@immutable
+class PagosPorValidarPedidosPuesto {
+  final String nombre;
+  PagosPorValidarPedidosPuesto.fromJson(dynamic json):
+  
+  nombre = nativeFromJson<String>(json['nombre']);
+  @override
+  bool operator ==(Object other) {
+    if(identical(this, other)) {
+      return true;
+    }
+    if(other.runtimeType != runtimeType) {
+      return false;
+    }
+
+    final PagosPorValidarPedidosPuesto otherTyped = other as PagosPorValidarPedidosPuesto;
+    return nombre == otherTyped.nombre;
+    
+  }
+  @override
+  int get hashCode => nombre.hashCode;
+  
+
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> json = {};
+    json['nombre'] = nativeToJson<String>(nombre);
+    return json;
+  }
+
+  PagosPorValidarPedidosPuesto({
+    required this.nombre,
   });
 }
 

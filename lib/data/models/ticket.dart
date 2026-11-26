@@ -33,6 +33,9 @@ class TicketPedido {
   /// Se paga en la cafetería al recoger; cuenta como adeudo hasta pagarse.
   final bool alRecoger;
 
+  /// Estación que prepara y cobra el pedido.
+  final String? estacion;
+
   const TicketPedido({
     required this.id,
     required this.folio,
@@ -51,6 +54,7 @@ class TicketPedido {
     this.codigoEntrega,
     this.lineas = const [],
     this.alRecoger = false,
+    this.estacion,
   });
 
   /// Pedido a pagar al recoger que todavía no se paga.
@@ -140,12 +144,14 @@ class AdeudoPorCobrar {
   final double total;
   final DateTime recogerA;
   final String alumno;
+  final String? estacion;
   const AdeudoPorCobrar({
     required this.pedidoId,
     required this.folio,
     required this.total,
     required this.recogerA,
     required this.alumno,
+    this.estacion,
   });
 }
 
@@ -157,6 +163,9 @@ class PagoPorValidar {
   final DateTime recogerA;
   final String alumno;
   final String? comprobanteUrl;
+
+  /// Estación que cobra el pedido.
+  final String? estacion;
   const PagoPorValidar({
     required this.pedidoId,
     required this.folio,
@@ -165,5 +174,6 @@ class PagoPorValidar {
     required this.recogerA,
     required this.alumno,
     this.comprobanteUrl,
+    this.estacion,
   });
 }

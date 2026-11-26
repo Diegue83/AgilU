@@ -56,6 +56,7 @@ class DataConnectPagosRepository implements PagosRepository {
               recogerA: p.recogerA.toDateTime().toLocal(),
               alumno: p.usuario.nombre,
               comprobanteUrl: p.comprobanteUrl,
+              estacion: p.puesto?.nombre,
             ))
         .toList();
   }
@@ -80,6 +81,7 @@ class DataConnectPagosRepository implements PagosRepository {
               total: p.montoTotal,
               recogerA: p.recogerA.toDateTime().toLocal(),
               alumno: p.usuario.nombre,
+              estacion: p.puesto?.nombre,
             ))
         .toList();
   }

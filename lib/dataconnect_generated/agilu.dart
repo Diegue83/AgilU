@@ -21,6 +21,8 @@ part 'editar_estacion.dart';
 
 part 'activar_estacion.dart';
 
+part 'editar_cobro_estacion.dart';
+
 part 'eliminar_estacion.dart';
 
 part 'crear_mi_producto.dart';
@@ -192,6 +194,11 @@ class AgiluConnector {
   
   ActivarEstacionVariablesBuilder activarEstacion ({required String id, required bool activo, }) {
     return ActivarEstacionVariablesBuilder(dataConnect, id: id,activo: activo,);
+  }
+  
+  
+  EditarCobroEstacionVariablesBuilder editarCobroEstacion ({required String id, }) {
+    return EditarCobroEstacionVariablesBuilder(dataConnect, id: id,);
   }
   
   

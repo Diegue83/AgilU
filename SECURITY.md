@@ -43,6 +43,11 @@ configuración de Firebase. No se encontraron credenciales.
   y que el pedido esté en el estado del aviso, así nadie puede mandar avisos falsos.
   La cuenta de servicio que usa para SQL Connect y FCM vive solo como secreto de
   Supabase. Los tokens de dispositivo inválidos se borran.
+- **Cobro por estación**: cada pedido es de una sola estación (el servidor rechaza
+  pedidos que mezclan estaciones) y se paga a la cuenta de esa estación, o a la de la
+  cafetería si no tiene. Quien tiene `pagos.validar` y una estación asignada solo ve y
+  valida los pagos de esa estación; sin estación asignada, los de toda su cafetería.
+  Los datos de cobro de una estación solo los cambia quien tiene `catalogo.gestionar`.
 - **Pago al recoger y adeudos**: el servidor calcula la confianza (0 a 100) con los
   pedidos sin recoger y solo acepta un pedido a pagar al recoger con 100 puntos y sin
   otro pendiente de pago. Ese pedido cuenta como adeudo desde que se pide; entregarlo

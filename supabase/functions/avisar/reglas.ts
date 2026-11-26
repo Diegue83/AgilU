@@ -23,6 +23,8 @@ export interface Persona {
   rol: string | null;
   /** Permisos del rol (RolPermiso): deciden quién avisa y a quién le llega. */
   permisos: string[];
+  /** Estación asignada; quien cobra con estación solo cobra la suya. */
+  puestoId?: string | null;
   tokens: string[];
 }
 
@@ -32,6 +34,8 @@ export interface PedidoParaAviso {
   estado: string;
   motivoRechazoPago: string | null;
   pagadoEn: string | null;
+  /** Estación que cobra el pedido (null en pedidos anteriores). */
+  puestoId?: string | null;
   alumno: Persona;
   personal: Persona[]; // usuarios de la cafetería del pedido
 }
@@ -58,7 +62,11 @@ export class AvisoRechazado extends Error {
 export const formatearFolio = (n: number) => `AGU-${String(n).padStart(5, '0')}`;
 
 const esPersonalDe = (uid: string, p: PedidoParaAviso, permiso: string) =>
-  p.personal.some((x) => x.uid === uid && x.permisos.includes(permiso));
+  p.personal.some((x) => x.uid === uid && x.permisos.includes(permiso) && atiende(x, p));
+
+/** Sin estación atiende toda la cafetería; con estación, solo los pedidos de ella. */
+const atiende = (x: Persona, p: PedidoParaAviso) =>
+  !x.puestoId || !p.puestoId || x.puestoId === p.puestoId;
 
 const conPermiso = (personas: Persona[], permiso: string) =>
   personas.filter((x) => x.permisos.includes(permiso));
@@ -73,7 +81,7 @@ export function avisoDePedido(evento: Evento, uid: string, p: PedidoParaAviso): 
       return {
         titulo: 'Nuevo comprobante',
         mensaje: `El pedido ${folio} espera que valides el pago.`,
-        destinatarios: conPermiso(p.personal, 'pagos.validar'),
+        destinatarios: conPermiso(p.personal, 'pagos.validar').filter((x) => atiende(x, p)),
       };
     case 'pago_validado':
       if (!esPersonalDe(uid, p, 'pagos.validar')) throw new AvisoRechazado(403, 'No validas pagos en esta cafetería.');

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../core/app_config.dart';
 import '../../core/reglas_pedido.dart';
+import '../../core/uuid.dart';
 import '../../data/models/cafeteria.dart';
 import '../../data/models/confianza.dart';
 import '../../data/models/item_carrito.dart';
@@ -206,40 +207,82 @@ class CartViewModel extends ChangeNotifier {
     enviando = true;
     error = null;
     notifyListeners();
-    try {
+    // Cada estación cobra lo suyo: se envía un pedido por estación, todos
+    // con el mismo grupo para que cuenten como una sola compra.
+    final grupo = uuidV4();
+    final alRecoger = pagoAlRecoger && puedePagarAlRecoger;
+    final hora = recogerA!;
+    final creados = <ResultadoPedido>[];
+    final fallas = <String>[];
+    final grupos = porEstacion;
+    for (final MapEntry(key: estacion, value: lineas) in grupos.entries) {
       final pedido = Pedido(
         usuarioId: uid,
         cafeteriaId: cafeteriaId!,
-        items: items,
-        total: total,
-        recogerA: recogerA!,
+        items: lineas,
+        total: lineas.fold(0.0, (s, i) => s + i.subtotal),
+        recogerA: hora,
         notas: notas,
-        pagoAlRecoger: pagoAlRecoger && puedePagarAlRecoger,
+        pagoAlRecoger: alRecoger,
+        grupo: grupo,
       );
-      final creado = await repo.crearPedido(pedido);
-      final resultado = ResultadoPedido(
-          id: creado.id,
-          folio: creado.folio,
-          recogerA: pedido.recogerA,
-          total: pedido.total);
-      _items.clear();
+      try {
+        final creado = await repo.crearPedido(pedido);
+        creados.add(ResultadoPedido(
+            id: creado.id,
+            folio: creado.folio,
+            recogerA: hora,
+            total: pedido.total,
+            estacion: estacion));
+        for (final i in lineas) {
+          _items.remove(i.producto.id);
+        }
+      } on PedidoRechazado catch (e) {
+        fallas.add(grupos.length > 1 ? '$estacion: ${e.motivo}' : e.motivo);
+      } catch (_) {
+        fallas.add(grupos.length > 1
+            ? '$estacion: no se pudo enviar.'
+            : 'No se pudo enviar el pedido. Revisa tu conexión e intenta de nuevo.');
+      }
+    }
+    enviando = false;
+    if (creados.isEmpty) {
+      error = fallas.join('\n');
+      notifyListeners();
+      return null;
+    }
+    if (_items.isEmpty) {
       recogerA = null;
       notas = '';
-      if (pedido.pagoAlRecoger) {
-        pagoAlRecoger = false;
-        confianza = null;
-      }
-      return resultado;
-    } on PedidoRechazado catch (e) {
-      error = e.motivo;
-      return null;
-    } catch (_) {
-      error =
-          'No se pudo enviar el pedido. Revisa tu conexión e intenta de nuevo.';
-      return null;
-    } finally {
-      enviando = false;
-      notifyListeners();
     }
+    if (alRecoger) {
+      pagoAlRecoger = false;
+      confianza = null;
+    }
+    error = null;
+    notifyListeners();
+    return ResultadoPedido(
+      id: creados.first.id,
+      folio: creados.first.folio,
+      recogerA: hora,
+      total: creados.first.total,
+      estacion: creados.first.estacion,
+      otros: creados.skip(1).toList(),
+      aviso: fallas.isEmpty
+          ? null
+          : 'No se pidió todo; lo que falta sigue en tu carrito. '
+              '${fallas.join(' ')}',
+    );
+  }
+
+  /// Productos del carrito agrupados por la estación que los cobra.
+  Map<String, List<ItemCarrito>> get porEstacion {
+    final grupos = <String, List<ItemCarrito>>{};
+    for (final i in items) {
+      final e =
+          i.producto.estacion.isNotEmpty ? i.producto.estacion : 'Cafetería';
+      grupos.putIfAbsent(e, () => []).add(i);
+    }
+    return grupos;
   }
 }

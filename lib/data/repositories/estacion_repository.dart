@@ -12,6 +12,11 @@ abstract class EstacionRepository {
   /// Activa o desactiva una estación. También lo puede hacer el empleado
   /// con la estación que tiene asignada.
   Future<void> activar(String id, bool activo);
+
+  /// Cuenta donde los alumnos transfieren a esta estación (vacía = la de la
+  /// cafetería).
+  Future<void> editarCobro(
+      String id, String? banco, String? clabe, String? titular);
 }
 
 class DataConnectEstacionRepository implements EstacionRepository {
@@ -29,6 +34,9 @@ class DataConnectEstacionRepository implements EstacionRepository {
               orden: p.orden,
               activo: p.activo,
               productos: p.productos_on_puesto.length,
+              banco: p.banco,
+              clabe: p.clabe,
+              titular: p.titular,
             ))
         .toList();
   }
@@ -50,6 +58,16 @@ class DataConnectEstacionRepository implements EstacionRepository {
   @override
   Future<void> activar(String id, bool activo) =>
       _conector.activarEstacion(id: id, activo: activo).execute();
+
+  @override
+  Future<void> editarCobro(
+          String id, String? banco, String? clabe, String? titular) =>
+      _conector
+          .editarCobroEstacion(id: id)
+          .banco(banco)
+          .clabe(clabe)
+          .titular(titular)
+          .execute();
 }
 
 class MockEstacionRepository implements EstacionRepository {
@@ -90,5 +108,21 @@ class MockEstacionRepository implements EstacionRepository {
     final i = _estaciones.indexWhere((x) => x.id == id);
     if (i < 0) throw Exception('La estación no es tuya');
     _estaciones[i] = _estaciones[i].copiar(activo: activo);
+  }
+
+  @override
+  Future<void> editarCobro(
+      String id, String? banco, String? clabe, String? titular) async {
+    final i = _estaciones.indexWhere((x) => x.id == id);
+    final e = _estaciones[i];
+    _estaciones[i] = Estacion(
+        id: e.id,
+        nombre: e.nombre,
+        orden: e.orden,
+        activo: e.activo,
+        productos: e.productos,
+        banco: banco,
+        clabe: clabe,
+        titular: titular);
   }
 }

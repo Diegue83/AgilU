@@ -81,7 +81,9 @@ class _Pagos extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('${p.folio} · ${p.alumno}',
+                    Text(
+                        [p.folio, p.alumno, if (p.estacion != null) p.estacion!]
+                            .join(' · '),
                         style: Theme.of(context).textTheme.titleSmall),
                     Text(
                         'Referencia ${p.referencia} · \$${p.total.toStringAsFixed(2)}'),
@@ -130,7 +132,11 @@ class _Pagos extends StatelessWidget {
               Card(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 child: ListTile(
-                  title: Text('${a.folio} · ${a.alumno}'),
+                  title: Text([
+                    a.folio,
+                    a.alumno,
+                    if (a.estacion != null) a.estacion!
+                  ].join(' · ')),
                   subtitle: Text('\$${a.total.toStringAsFixed(2)} · era para '
                       'el ${a.recogerA.day}/${a.recogerA.month} a las '
                       '${ReglasPedido.formatearHora(a.recogerA)}'),
