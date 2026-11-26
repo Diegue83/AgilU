@@ -28,8 +28,8 @@ sistema se cargan con `dataconnect/permisos.gql` (`SembrarPermisos`).
 | Cualquier usuario con sesión | `MisPendientes` (puntos rojos según sus permisos), `PermisosDisponibles`, `CrearPerfilEmpleado`, `ListarMenu`, `ListarCafeterias`, `OcupacionFranjas` (solo conteos), `MiPerfil`, `CrearPerfil`, `EditarMiPerfil`, `RegistrarDispositivo`, `OlvidarDispositivo` |
 | Alumno (dueño) | `EnviarComprobante`, `EliminarMiCuenta`, `CrearPedido`, `CancelarMiPedido`, `DiagnosticarPedido`, `MiPedido`, `MisPedidos`, `MiConfianza`, `MisNotificaciones`, `MarcarAvisosLeidos` |
 | `pedidos.atender` (encargado, empleado) | `PanelPedidos`, `HistorialPedidos`, `AvanzarPedido`, `EntregarPedido`, `MarcarNoRecogido` |
-| `pagos.validar` (encargado) | `PagosPorValidar`, `ValidarPago`, `AdeudosPorCobrar`, `CobrarAdeudo` |
-| `catalogo.gestionar` (encargado) | `MisEstaciones`, `CrearEstacion`, `EditarEstacion`, `ActivarEstacion`, `EliminarEstacion`, `MisProductos`, `CrearMiProducto`, `EditarMiProducto`, `EstablecerDisponibilidad`, `GuardarFotoProducto`, `EliminarMiProducto`, `PublicarOferta`, `QuitarOferta` |
+| `pagos.validar` (encargado; con estación asignada, solo los de esa estación) | `PagosPorValidar`, `ValidarPago`, `AdeudosPorCobrar`, `CobrarAdeudo` |
+| `catalogo.gestionar` (encargado) | `MisEstaciones`, `CrearEstacion`, `EditarEstacion`, `EditarCobroEstacion`, `ActivarEstacion`, `EliminarEstacion`, `MisProductos`, `CrearMiProducto`, `EditarMiProducto`, `EstablecerDisponibilidad`, `GuardarFotoProducto`, `EliminarMiProducto`, `PublicarOferta`, `QuitarOferta` |
 | `estacion.propia` (empleado con estación) | Las mismas de estación y productos, solo sobre su estación y sin borrar ni ofertas |
 | `personal.gestionar` (encargado) | `MiPersonal`, `AgregarEmpleado`, `QuitarEmpleado`, `AsignarEstacion`, `SolicitudesPendientes`, `AprobarSolicitud`, `RechazarSolicitud` |
 | `cafeteria.configurar` (encargado) | `MiCafeteria`, `EditarMiCafeteria` |

@@ -19,26 +19,34 @@ class ConfirmacionView extends StatelessWidget {
   const ConfirmacionView({super.key, required this.resultado});
 
   @override
-  Widget build(BuildContext context) => TicketView(pedidoId: resultado.id);
+  Widget build(BuildContext context) => TicketView(
+      pedidoId: resultado.id, otros: resultado.otros, aviso: resultado.aviso);
 }
 
 /// HU-08 y HU-22: instrucciones de pago, carga del comprobante y recibo.
 class TicketView extends StatelessWidget {
   final String pedidoId;
-  const TicketView({super.key, required this.pedidoId});
+
+  /// Los demás pedidos que salieron del mismo carrito.
+  final List<ResultadoPedido> otros;
+  final String? aviso;
+  const TicketView(
+      {super.key, required this.pedidoId, this.otros = const [], this.aviso});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (ctx) => TicketViewModel(ctx.read<PedidoRepository>(), pedidoId,
           avisos: ctx.read<Notificador>()),
-      child: const _Ticket(),
+      child: _Ticket(otros: otros, aviso: aviso),
     );
   }
 }
 
 class _Ticket extends StatelessWidget {
-  const _Ticket();
+  final List<ResultadoPedido> otros;
+  final String? aviso;
+  const _Ticket({this.otros = const [], this.aviso});
 
   Future<void> _subir(BuildContext context, TicketViewModel vm) async {
     final archivo = await ImagePicker().pickImage(
@@ -101,6 +109,42 @@ class _Ticket extends StatelessWidget {
               : ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
+                    if (otros.isNotEmpty || aviso != null)
+                      Card(
+                        color: Theme.of(context).colorScheme.secondaryContainer,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (otros.isNotEmpty) ...[
+                                Text(
+                                    'Tu compra se dividió en ${otros.length + 1} '
+                                    'pedidos: cada estación cobra y entrega el '
+                                    'suyo. Este es el de ${t.estacion ?? 'la cafetería'}.'),
+                                for (final o in otros)
+                                  TextButton.icon(
+                                    onPressed: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                              TicketView(pedidoId: o.id)),
+                                    ),
+                                    icon: const Icon(Icons.receipt_long),
+                                    label: Text('${o.folio} · ${o.estacion} · '
+                                        '\$${o.total.toStringAsFixed(2)}'),
+                                  ),
+                              ],
+                              if (aviso != null)
+                                Text(aviso!,
+                                    style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .error)),
+                            ],
+                          ),
+                        ),
+                      ),
                     Center(
                       child: Chip(
                         avatar: Icon(switch (t.estado) {

@@ -62,6 +62,10 @@ type Puesto @table {
   ubicacion: String
   orden: Int! @default(value: 0)
   activo: Boolean! @default(value: true)
+  # Cada estación cobra lo suyo. Sin cuenta propia se usa la de la cafetería.
+  banco: String
+  clabe: String
+  titular: String
   cafeteria: Cafeteria!
 }
 
@@ -105,6 +109,10 @@ type Pedido @table {
   intentosEntrega: Int! @default(value: 0)
   entregadoEn: Timestamp
   esCredito: Boolean! @default(value: false)
+  # Cada pedido es de una sola estación, que lo cobra. Los pedidos que salen
+  # del mismo carrito comparten grupoCompra.
+  puesto: Puesto
+  grupoCompra: UUID
   usuario: Usuario!
   cafeteria: Cafeteria!
 }

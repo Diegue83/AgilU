@@ -98,3 +98,20 @@ test('los avisos siguen los permisos del rol, no su nombre', () => {
   assert.equal(avisoDePedido('pago_validado', 'uid-caja', validado).destinatarios[0].usuarioId, 'u-ana');
   rechazo(() => avisoDePedido('pedido_listo', 'uid-caja', pedido({ personal: [caja], estado: 'listo' })), 403);
 });
+
+test('cada estación recibe y valida solo los comprobantes de sus pedidos', () => {
+  const cajaTacos: Persona = {
+    usuarioId: 'u-tacos', uid: 'uid-tacos', rol: 'cajero', permisos: ['pagos.validar'],
+    puestoId: 'tacos', tokens: [],
+  };
+  const cajaJugos: Persona = {
+    usuarioId: 'u-jugos', uid: 'uid-jugos', rol: 'cajero', permisos: ['pagos.validar'],
+    puestoId: 'jugos', tokens: [],
+  };
+  const p = pedido({ puestoId: 'tacos', personal: [beto, cajaTacos, cajaJugos] });
+  const a = avisoDePedido('comprobante', 'uid-ana', p);
+  assert.deepEqual(a.destinatarios.map((x) => x.usuarioId).sort(), ['u-beto', 'u-tacos']);
+  const validado = { ...p, estado: 'pendiente', pagadoEn: '2026-11-26T10:00:00Z' };
+  assert.equal(avisoDePedido('pago_validado', 'uid-tacos', validado).destinatarios[0].usuarioId, 'u-ana');
+  rechazo(() => avisoDePedido('pago_validado', 'uid-jugos', validado), 403);
+});

@@ -54,6 +54,7 @@ class DataConnectPedidoRepository implements PedidoRepository {
         )
         .notas(notas.isEmpty ? null : notas)
         .pagoAlRecoger(pedido.pagoAlRecoger)
+        .grupo(pedido.grupo)
         .execute();
 
     if ((res.data.execute_ ?? 0) == 0) {
@@ -125,9 +126,12 @@ class DataConnectPedidoRepository implements PedidoRepository {
       notas: p.notas,
       cafeteria: p.cafeteria.nombre,
       ubicacion: p.cafeteria.ubicacion,
-      banco: p.cafeteria.banco,
-      clabe: p.cafeteria.clabe,
-      titular: p.cafeteria.titular,
+      // Cada estación cobra lo suyo; sin cuenta propia, la de la cafetería.
+      banco: p.puesto?.clabe != null ? p.puesto!.banco : p.cafeteria.banco,
+      clabe: p.puesto?.clabe ?? p.cafeteria.clabe,
+      titular:
+          p.puesto?.clabe != null ? p.puesto!.titular : p.cafeteria.titular,
+      estacion: p.puesto?.nombre,
       motivoRechazo: p.motivoRechazoPago,
       pagadoEn: p.pagadoEn?.toDateTime().toLocal(),
       codigoEntrega: p.codigoEntrega,

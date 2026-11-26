@@ -84,6 +84,13 @@ query MiPedido($id: UUID!) @auth(level: USER) {
     esCredito
     codigoEntrega
     entregadoEn
+    grupoCompra
+    puesto {
+      nombre
+      banco
+      clabe
+      titular
+    }
     cafeteria {
       nombre
       ubicacion
@@ -161,6 +168,9 @@ query MisEstaciones @auth(level: USER) {
     nombre
     orden
     activo
+    banco
+    clabe
+    titular
     productos_on_puesto(where: { eliminado: { eq: false } }) {
       id
     }
@@ -395,15 +405,34 @@ query PanelPedidos($desde: Timestamp!, $hasta: Timestamp!) @auth(level: USER) {
 query PagosPorValidar @auth(level: USER) {
   pedidos(
     where: {
-      cafeteria: {
-        usuarios_on_cafeteria: {
-          exist: {
-            rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "pagos.validar" } } } } }
-            autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
-          }
+      _and: [
+        {
+          _or: [
+            {
+              cafeteria: {
+                usuarios_on_cafeteria: {
+                  exist: {
+                    rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "pagos.validar" } } } } }
+                    autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+                    puestoId: { isNull: true }
+                  }
+                }
+              }
+            }
+            {
+              puesto: {
+                usuarios_on_puesto: {
+                  exist: {
+                    rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "pagos.validar" } } } } }
+                    autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+                  }
+                }
+              }
+            }
+          ]
         }
-      }
-      estado: { eq: "pago_en_revision" }
+        { estado: { eq: "pago_en_revision" } }
+      ]
     }
     orderBy: [{ recogerA: ASC }]
   ) {
@@ -413,6 +442,9 @@ query PagosPorValidar @auth(level: USER) {
     montoTotal
     recogerA
     comprobanteUrl
+    puesto {
+      nombre
+    }
     usuario {
       nombre
     }
@@ -457,17 +489,34 @@ query MiConfianza @auth(level: USER) {
 query AdeudosPorCobrar @auth(level: USER) {
   pedidos(
     where: {
-      cafeteria: {
-        usuarios_on_cafeteria: {
-          exist: {
-            rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "pagos.validar" } } } } }
-            autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
-          }
+      _and: [
+        {
+          _or: [
+            {
+              cafeteria: {
+                usuarios_on_cafeteria: {
+                  exist: {
+                    rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "pagos.validar" } } } } }
+                    autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+                    puestoId: { isNull: true }
+                  }
+                }
+              }
+            }
+            {
+              puesto: {
+                usuarios_on_puesto: {
+                  exist: {
+                    rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "pagos.validar" } } } } }
+                    autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+                  }
+                }
+              }
+            }
+          ]
         }
-      }
-      estado: { eq: "no_recogido" }
-      esCredito: { eq: true }
-      pagadoEn: { isNull: true }
+        { estado: { eq: "no_recogido" }, esCredito: { eq: true }, pagadoEn: { isNull: true } }
+      ]
     }
     orderBy: [{ recogerA: ASC }]
   ) {
@@ -475,6 +524,9 @@ query AdeudosPorCobrar @auth(level: USER) {
     folio
     montoTotal
     recogerA
+    puesto {
+      nombre
+    }
     usuario {
       nombre
     }

@@ -36,6 +36,12 @@ y pull request.
   del release solo se aceptan publicados, con etiqueta vX.Y.Z, APK y .sha256 del
   mismo repositorio; si la suma no coincide no se instala; sin permiso de instalar se
   pide y luego se instala lo ya descargado; fuera de Android no se busca nada.
+- Cobro por estación: un pedido no mezcla estaciones; los pedidos del mismo carrito
+  comparten grupo, cuentan como una compra en la capacidad y pueden pagarse al recoger
+  juntos; cada estación tiene su propia cuenta; quien cobra con estación asignada solo
+  valida los pagos de su estación y el encargado los de todas. En la app, el carrito
+  se divide en un pedido por estación y lo que una estación rechaza se queda en el
+  carrito.
 - Roles y permisos: el catálogo y los permisos iniciales; solo el administrador ve
   y cambia roles; un rol nuevo con permisos exige cafetería y sus permisos deciden lo
   que puede hacer (al quitarle uno pierde ese acceso); el alumno no lleva permisos,

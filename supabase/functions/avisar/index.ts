@@ -98,6 +98,7 @@ async function graphql(query: string, variables: Record<string, unknown>) {
 
 const PERSONA = `
   id
+  puestoId
   rol { nombre rolPermisos_on_rol { permiso { codigoAccion } } }
   autenticacion_on_usuario { firebaseAuthUid }
   dispositivoTokens_on_usuario { token }
@@ -108,6 +109,7 @@ const persona = (u: any): Persona => ({
   usuarioId: u.id,
   uid: u.autenticacion_on_usuario?.firebaseAuthUid ?? null,
   rol: u.rol?.nombre ?? null,
+  puestoId: u.puestoId ?? null,
   // deno-lint-ignore no-explicit-any
   permisos: (u.rol?.rolPermisos_on_rol ?? []).map((x: any) => x.permiso.codigoAccion),
   // deno-lint-ignore no-explicit-any
@@ -118,7 +120,7 @@ async function avisoParaPedido(evento: Parameters<typeof avisoDePedido>[0], uid:
   const d = await graphql(
     `query P($id: UUID!) {
       pedido(id: $id) {
-        id folio estado motivoRechazoPago pagadoEn
+        id folio estado motivoRechazoPago pagadoEn puestoId
         usuario { ${PERSONA} }
         cafeteria { usuarios_on_cafeteria { ${PERSONA} } }
       }
@@ -133,6 +135,7 @@ async function avisoParaPedido(evento: Parameters<typeof avisoDePedido>[0], uid:
     estado: p.estado,
     motivoRechazoPago: p.motivoRechazoPago,
     pagadoEn: p.pagadoEn,
+    puestoId: p.puestoId ?? null,
     alumno: persona(p.usuario),
     personal: p.cafeteria.usuarios_on_cafeteria.map(persona),
   });

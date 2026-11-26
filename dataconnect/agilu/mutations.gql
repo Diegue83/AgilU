@@ -35,6 +35,7 @@ mutation CrearPedido(
   $notas: String
   $items: Any!
   $pagoAlRecoger: Boolean
+  $grupo: UUID
 ) @auth(level: USER) {
   _execute(
     sql: """
@@ -59,7 +60,7 @@ mutation CrearPedido(
         FROM jsonb_array_elements($6::jsonb) AS e
       ),
       lineas AS (
-        SELECT i.producto_id, i.cantidad, p.preparacion_inmediata,
+        SELECT i.producto_id, i.cantidad, p.preparacion_inmediata, p.puesto_id,
                CASE WHEN p.precio_oferta IS NOT NULL AND p.oferta_hasta > now()
                     THEN p.precio_oferta ELSE p.precio END AS precio
         FROM pedidos_items i
@@ -89,7 +90,10 @@ mutation CrearPedido(
           WHERE n.usuario_id = cliente.usuario_id AND n.estado = 'no_recogido'), 0))::int = 100
                 AND (SELECT count(*) FROM pedido c
           WHERE c.usuario_id = cliente.usuario_id AND c.es_credito AND c.pagado_en IS NULL
-            AND c.estado <> 'cancelado') = 0))
+            AND c.estado <> 'cancelado'
+            AND ($8::uuid IS NULL OR c.grupo_compra IS DISTINCT FROM $8::uuid)) = 0))
+          /* Cada estación cobra lo suyo: el pedido es de una sola estación. */
+          AND (SELECT count(DISTINCT puesto_id) FROM lineas) = 1
           AND (SELECT count(*) FROM lineas) = (SELECT count(*) FROM pedidos_items)
           AND (SELECT count(*) FROM pedidos_items) BETWEEN 1 AND 50
           AND coalesce(length($5::text), 0) <= 200
@@ -106,9 +110,11 @@ mutation CrearPedido(
                               AND NOT EXISTS (SELECT 1 FROM lineas WHERE NOT preparacion_inmediata)
                          THEN 0 ELSE greatest(f.anticipacion_minutos - 5, 0) END)
               AND $4::timestamptz > now()
-              AND (SELECT count(*) FROM pedido o
+              /* La capacidad cuenta compras: los pedidos de un mismo carrito son una. */
+              AND (SELECT count(DISTINCT coalesce(o.grupo_compra, o.id)) FROM pedido o
                    WHERE o.cafeteria_id = f.id AND o.recoger_a = $4::timestamptz
-                     AND o.estado <> 'cancelado') < f.capacidad_por_franja
+                     AND o.estado <> 'cancelado'
+                     AND ($8::uuid IS NULL OR o.grupo_compra IS DISTINCT FROM $8::uuid)) < f.capacidad_por_franja
           )
       ),
       folio AS (
@@ -120,7 +126,7 @@ mutation CrearPedido(
       nuevo AS (
         INSERT INTO pedido (id, folio, monto_total, estado, fecha_creacion,
                             recoger_a, notas, es_credito, usuario_id, cafeteria_id,
-                            referencia_pago, codigo_entrega)
+                            referencia_pago, codigo_entrega, puesto_id, grupo_compra)
         SELECT $2::uuid, folio.valor, (SELECT sum(precio * cantidad) FROM lineas),
                /* Pagar al recoger entra directo a cocina con su código de entrega. */
                CASE WHEN coalesce($7::boolean, false) THEN 'pendiente' ELSE 'por_pagar' END,
@@ -128,7 +134,8 @@ mutation CrearPedido(
                coalesce($7::boolean, false), cliente.usuario_id, $3::uuid,
                'AGU-' || lpad(folio.valor::text, 5, '0'),
                CASE WHEN coalesce($7::boolean, false)
-                    THEN lpad((floor(random() * 10000))::int::text, 4, '0') END
+                    THEN lpad((floor(random() * 10000))::int::text, 4, '0') END,
+               (SELECT min(puesto_id::text)::uuid FROM lineas), $8::uuid
         FROM folio, cliente
         RETURNING id
       )
@@ -136,7 +143,7 @@ mutation CrearPedido(
     SELECT gen_random_uuid(), lineas.cantidad, lineas.precio, nuevo.id, lineas.producto_id
     FROM lineas, nuevo
     """
-    params: [{ _expr: "auth.uid" }, $id, $cafeteriaId, $recogerA, $notas, $items, $pagoAlRecoger]
+    params: [{ _expr: "auth.uid" }, $id, $cafeteriaId, $recogerA, $notas, $items, $pagoAlRecoger, $grupo]
   )
 }
 
@@ -284,6 +291,29 @@ mutation ActivarEstacion($id: UUID!, $activo: Boolean!)
     }
     data: { activo: $activo }
   ) @check(expr: "this != null", message: "La estación no es tuya")
+}
+
+# Cuenta donde los alumnos transfieren a esta estación. Vacía usa la de la
+# cafetería. La CLABE, si se da, son 18 dígitos.
+mutation EditarCobroEstacion($id: UUID!, $banco: String, $clabe: String, $titular: String)
+  @auth(expr: "auth != null && (!has(vars.clabe) || vars.clabe == null || vars.clabe == '' || vars.clabe.matches('^[0-9]{18}$')) && (!has(vars.banco) || vars.banco == null || vars.banco.size() <= 60) && (!has(vars.titular) || vars.titular == null || vars.titular.size() <= 80)")
+  @transaction {
+  puesto_update(
+    first: {
+      where: {
+        id: { eq: $id }
+        cafeteria: {
+          usuarios_on_cafeteria: {
+            exist: {
+              rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "catalogo.gestionar" } } } } }
+              autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+            }
+          }
+        }
+      }
+    }
+    data: { banco: $banco, clabe: $clabe, titular: $titular }
+  ) @check(expr: "this != null", message: "La estación no es de tu cafetería")
 }
 
 mutation EliminarEstacion($id: UUID!) @auth(level: USER) @transaction {
@@ -670,12 +700,15 @@ mutation ValidarPago($id: UUID!, $aprobado: Boolean!, $motivo: String)
         intentos_entrega = 0
     WHERE id = $2::uuid
       AND estado = 'pago_en_revision'
-      AND cafeteria_id IN (
-        SELECT u.cafeteria_id
+      /* Lo valida quien cobra en esa cafetería; con estación, solo la suya. */
+      AND EXISTS (
+        SELECT 1
         FROM usuario u
         JOIN autenticacion a ON a.usuario_id = u.id
         JOIN rol r ON r.id = u.rol_id
         WHERE a.firebase_auth_uid = $1 AND EXISTS (SELECT 1 FROM rol_permiso rp JOIN permiso pe ON pe.id = rp.permiso_id WHERE rp.rol_id = r.id AND pe.codigo_accion = 'pagos.validar')
+          AND u.cafeteria_id = pedido.cafeteria_id
+          AND (u.puesto_id IS NULL OR u.puesto_id = pedido.puesto_id)
       )
     """
     params: [{ _expr: "auth.uid" }, $id, $aprobado, $motivo]
@@ -718,18 +751,34 @@ mutation CobrarAdeudo($id: UUID!) @auth(level: USER) @transaction {
   pedido_update(
     first: {
       where: {
-        id: { eq: $id }
-        estado: { eq: "no_recogido" }
-        esCredito: { eq: true }
-        pagadoEn: { isNull: true }
-        cafeteria: {
-          usuarios_on_cafeteria: {
-            exist: {
-              rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "pagos.validar" } } } } }
-              autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
-            }
+        _and: [
+          { id: { eq: $id }, estado: { eq: "no_recogido" }, esCredito: { eq: true }, pagadoEn: { isNull: true } }
+          {
+            _or: [
+              {
+                cafeteria: {
+                  usuarios_on_cafeteria: {
+                    exist: {
+                      rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "pagos.validar" } } } } }
+                      autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+                      puestoId: { isNull: true }
+                    }
+                  }
+                }
+              }
+              {
+                puesto: {
+                  usuarios_on_puesto: {
+                    exist: {
+                      rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "pagos.validar" } } } } }
+                      autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+                    }
+                  }
+                }
+              }
+            ]
           }
-        }
+        ]
       }
     }
     data: { pagadoEn_expr: "request.time" }

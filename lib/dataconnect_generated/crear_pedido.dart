@@ -7,6 +7,7 @@ class CrearPedidoVariablesBuilder {
   Optional<String> _notas = Optional.optional(nativeFromJson, nativeToJson);
   AnyValue items;
   Optional<bool> _pagoAlRecoger = Optional.optional(nativeFromJson, nativeToJson);
+  Optional<String> _grupo = Optional.optional(nativeFromJson, nativeToJson);
 
   final FirebaseDataConnect _dataConnect;  CrearPedidoVariablesBuilder notas(String? t) {
    _notas.value = t;
@@ -14,6 +15,10 @@ class CrearPedidoVariablesBuilder {
   }
   CrearPedidoVariablesBuilder pagoAlRecoger(bool? t) {
    _pagoAlRecoger.value = t;
+   return this;
+  }
+  CrearPedidoVariablesBuilder grupo(String? t) {
+   _grupo.value = t;
    return this;
   }
 
@@ -25,7 +30,7 @@ class CrearPedidoVariablesBuilder {
   }
 
   MutationRef<CrearPedidoData, CrearPedidoVariables> ref() {
-    CrearPedidoVariables vars= CrearPedidoVariables(id: id,cafeteriaId: cafeteriaId,recogerA: recogerA,notas: _notas,items: items,pagoAlRecoger: _pagoAlRecoger,);
+    CrearPedidoVariables vars= CrearPedidoVariables(id: id,cafeteriaId: cafeteriaId,recogerA: recogerA,notas: _notas,items: items,pagoAlRecoger: _pagoAlRecoger,grupo: _grupo,);
     return _dataConnect.mutation("CrearPedido", dataDeserializer, varsSerializer, vars);
   }
 }
@@ -74,6 +79,7 @@ class CrearPedidoVariables {
   late final Optional<String>notas;
   final AnyValue items;
   late final Optional<bool>pagoAlRecoger;
+  late final Optional<String>grupo;
   @Deprecated('fromJson is deprecated for Variable classes as they are no longer required for deserialization.')
   CrearPedidoVariables.fromJson(Map<String, dynamic> json):
   
@@ -94,6 +100,10 @@ class CrearPedidoVariables {
     pagoAlRecoger = Optional.optional(nativeFromJson, nativeToJson);
     pagoAlRecoger.value = json['pagoAlRecoger'] == null ? null : nativeFromJson<bool>(json['pagoAlRecoger']);
   
+  
+    grupo = Optional.optional(nativeFromJson, nativeToJson);
+    grupo.value = json['grupo'] == null ? null : nativeFromJson<String>(json['grupo']);
+  
   }
   @override
   bool operator ==(Object other) {
@@ -110,11 +120,12 @@ class CrearPedidoVariables {
     recogerA == otherTyped.recogerA && 
     notas == otherTyped.notas && 
     items == otherTyped.items && 
-    pagoAlRecoger == otherTyped.pagoAlRecoger;
+    pagoAlRecoger == otherTyped.pagoAlRecoger && 
+    grupo == otherTyped.grupo;
     
   }
   @override
-  int get hashCode => Object.hashAll([id.hashCode, cafeteriaId.hashCode, recogerA.hashCode, notas.hashCode, items.hashCode, pagoAlRecoger.hashCode]);
+  int get hashCode => Object.hashAll([id.hashCode, cafeteriaId.hashCode, recogerA.hashCode, notas.hashCode, items.hashCode, pagoAlRecoger.hashCode, grupo.hashCode]);
   
 
   Map<String, dynamic> toJson() {
@@ -129,6 +140,9 @@ class CrearPedidoVariables {
     if(pagoAlRecoger.state == OptionalState.set) {
       json['pagoAlRecoger'] = pagoAlRecoger.toJson();
     }
+    if(grupo.state == OptionalState.set) {
+      json['grupo'] = grupo.toJson();
+    }
     return json;
   }
 
@@ -139,6 +153,7 @@ class CrearPedidoVariables {
     required this.notas,
     required this.items,
     required this.pagoAlRecoger,
+    required this.grupo,
   });
 }
 

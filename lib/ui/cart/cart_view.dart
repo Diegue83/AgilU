@@ -32,6 +32,12 @@ class CartView extends StatelessWidget {
             Text('Total: \$${vm.total.toStringAsFixed(2)}'),
             Text(
                 'Recoges hoy a las ${ReglasPedido.formatearHora(vm.recogerA!)}'),
+            if (vm.porEstacion.length > 1) ...[
+              const SizedBox(height: 8),
+              Text(
+                  'Se harán ${vm.porEstacion.length} pedidos, uno por estación '
+                  '(${vm.porEstacion.keys.join(', ')}); cada una cobra el suyo.'),
+            ],
             if (vm.pagoAlRecoger)
               const Text('Pagas en la cafetería al recoger. Si no lo recoges, '
                   'queda como adeudo y baja tu confianza.'),

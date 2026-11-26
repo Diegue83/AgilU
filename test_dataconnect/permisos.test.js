@@ -30,6 +30,9 @@ const CAFETERIA = 'c0000000000040008000000000000001';
 const BARRA = 'c0000000000040008000000000000002';
 const MOLLETES = 'b0000000000040008000000000000002';
 const HORCHATA = 'b0000000000040008000000000000004';
+// Misma estación que Molletes (Guisados): un pedido es de una sola estación.
+const QUESADILLA = 'b0000000000040008000000000000007';
+const TIENDITA_ID = 'a0000000000040008000000000000003';
 const CAFE_NO_DISPONIBLE = 'b0000000000040008000000000000005';
 const CAPUCHINO = 'b0000000000040008000000000000006';
 
@@ -65,7 +68,7 @@ const pedido = (cambios = {}) => ({
   notas: 'Sin cebolla',
   items: [
     { productoId: MOLLETES, cantidad: 2 },
-    { productoId: HORCHATA, cantidad: 1 },
+    { productoId: QUESADILLA, cantidad: 1 },
   ],
   ...cambios,
 });
@@ -162,7 +165,7 @@ describe('perfil', () => {
 describe('menú', () => {
   test('un alumno con sesión ve el menú completo', async () => {
     const { data } = await ana.query('ListarMenu');
-    assert.equal(data.productos.length, 6);
+    assert.equal(data.productos.length, 7);
     const cafe = data.productos.find((p) => p.id === CAFE_NO_DISPONIBLE);
     assert.equal(cafe.disponible, false);
   });
@@ -434,6 +437,12 @@ describe('editar producto (HU-15)', () => {
   const cambio = (c = {}) => ({
     id: MOLLETES_ID, nombre: 'Molletes', descripcion: 'Con frijoles',
     precio: 42, puestoId: 'a0000000000040008000000000000001', disponible: true, ...c,
+  });
+
+  // Molletes regresa a Guisados con su precio: los pedidos de las demás
+  // pruebas son de una sola estación (Molletes y Quesadilla).
+  after(async () => {
+    await beto.mutation('EditarMiProducto', cambio({ precio: 40, descripcion: 'Con pico de gallo' }));
   });
 
   test('el encargado cambia precio, descripción y sección', async () => {
@@ -1997,5 +2006,110 @@ describe('roles y permisos', () => {
     await jefa.mutation('AsignarRolAdmin', { correo: 'caja@utng.edu.mx', rol: 'alumno' });
     assert.ok((await jefa.mutation('EliminarRolAdmin', { rolId: cajero })).data.resultado);
     assert.equal(await rolDe('cajero'), undefined);
+  });
+});
+
+describe('cobro por estación', () => {
+  let tere;
+  let rita;
+  const enRevision = (id) => adminDataConnect.executeGraphql(
+    'mutation R($id: UUID!) { pedido_update(id: $id, data: { estado: "pago_en_revision" }) }',
+    { variables: { id } },
+  );
+  const deGuisados = (c = {}) => pedido({ items: [{ productoId: MOLLETES, cantidad: 1 }], ...c });
+  const deTiendita = (c = {}) => pedido({ items: [{ productoId: HORCHATA, cantidad: 1 }], ...c });
+
+  before(async () => {
+    tere = await alumno('tere');
+    rita = await alumno('rita');
+    await tere.mutation('CrearPerfil', { nombre: 'Tere' });
+    await rita.mutation('CrearPerfil', { nombre: 'Rita' });
+    // Rol propio que solo cobra, asignado a la estación Tiendita.
+    const { data } = await adminDataConnect.executeGraphql(
+      'query P { permisos(where: { codigoAccion: { eq: "pagos.validar" } }) { id } }',
+    );
+    const rol = await adminDataConnect.executeGraphql(
+      'mutation R { rol_insert(data: { nombre: "caja_estacion" }) }',
+    );
+    await adminDataConnect.executeGraphql(
+      'mutation L($r: UUID!, $p: UUID!) { rolPermiso_insert(data: { rolId: $r, permisoId: $p }) }',
+      { variables: { r: rol.data.rol_insert.id, p: data.permisos[0].id } },
+    );
+    await comoAdmin('../dataconnect/agilu/mutations.gql', 'AsignarRol', {
+      correo: 'tere@utng.edu.mx', rol: 'caja_estacion', cafeteriaId: CAFETERIA,
+    });
+    const teresa = (await tere.query('MiPerfil')).data.autenticacion.usuario.id;
+    const r = await beto.mutation('AsignarEstacion', { usuarioId: teresa, estacionId: TIENDITA_ID });
+    assert.ok(r.data.resultado);
+  });
+
+  after(async () => {
+    for (const a of [tere, rita]) {
+      await signOut(a.auth);
+      await deleteApp(a.app);
+    }
+  });
+
+  test('un pedido es de una sola estación y el carrito se agrupa', async () => {
+    const mezclado = pedido({ items: [{ productoId: MOLLETES, cantidad: 1 }, { productoId: HORCHATA, cantidad: 1 }] });
+    assert.equal((await ana.mutation('CrearPedido', mezclado)).data._execute, 0);
+
+    const grupo = randomUUID();
+    const a = deGuisados({ grupo });
+    const b = deTiendita({ grupo });
+    assert.equal((await ana.mutation('CrearPedido', a)).data._execute, 1);
+    assert.equal((await ana.mutation('CrearPedido', b)).data._execute, 1);
+    const pa = (await ana.query('MiPedido', { id: a.id })).data.pedidos[0];
+    const pb = (await ana.query('MiPedido', { id: b.id })).data.pedidos[0];
+    assert.equal(pa.puesto.nombre, 'Guisados');
+    assert.equal(pb.puesto.nombre, 'Tiendita');
+    assert.equal(pa.grupoCompra, pb.grupoCompra);
+    assert.notEqual(pa.referenciaPago, pb.referenciaPago);
+  });
+
+  test('cada estación puede tener su propia cuenta de cobro', async () => {
+    await beto.mutation('EditarCobroEstacion', {
+      id: TIENDITA_ID, banco: 'Banco Tiendita', clabe: '012345678901234567', titular: 'Tiendita UTNG',
+    });
+    const p = deTiendita();
+    await ana.mutation('CrearPedido', p);
+    const t = (await ana.query('MiPedido', { id: p.id })).data.pedidos[0];
+    assert.equal(t.puesto.banco, 'Banco Tiendita');
+    assert.equal(t.puesto.clabe, '012345678901234567');
+    await assert.rejects(beto.mutation('EditarCobroEstacion', { id: TIENDITA_ID, clabe: '123' }));
+    await assert.rejects(tere.mutation('EditarCobroEstacion', { id: TIENDITA_ID, banco: 'Otro' }));
+    const e = (await beto.query('MisEstaciones')).data.puestos.find((x) => x.id === TIENDITA_ID);
+    assert.equal(e.titular, 'Tiendita UTNG');
+  });
+
+  test('la caja de una estación valida solo sus pagos y el encargado todos', async () => {
+    const a = deGuisados();
+    const b = deTiendita();
+    await ana.mutation('CrearPedido', a);
+    await ana.mutation('CrearPedido', b);
+    await enRevision(a.id);
+    await enRevision(b.id);
+
+    const deTere = (await tere.query('PagosPorValidar')).data.pedidos.map((x) => x.id);
+    assert.ok(deTere.includes(sinGuiones(b.id)));
+    assert.ok(!deTere.includes(sinGuiones(a.id)));
+    assert.equal((await tere.mutation('ValidarPago', { id: a.id, aprobado: true })).data._execute, 0);
+    assert.equal((await tere.mutation('ValidarPago', { id: b.id, aprobado: true })).data._execute, 1);
+
+    const deBeto = (await beto.query('PagosPorValidar')).data.pedidos;
+    assert.ok(deBeto.some((x) => x.id === sinGuiones(a.id) && x.puesto.nombre === 'Guisados'));
+    assert.equal((await beto.mutation('ValidarPago', { id: a.id, aprobado: true })).data._execute, 1);
+  });
+
+  test('pagar al recoger vale para todo el carrito, no para otra compra', async () => {
+    const grupo = randomUUID();
+    const r1 = await rita.mutation('CrearPedido', deGuisados({ grupo, pagoAlRecoger: true }));
+    const r2 = await rita.mutation('CrearPedido', deTiendita({ grupo, pagoAlRecoger: true }));
+    assert.equal(r1.data._execute, 1);
+    assert.equal(r2.data._execute, 1);
+    const c = (await rita.query('MiConfianza')).data.confianza;
+    assert.equal(c.creditosAbiertos, 2);
+    const otra = await rita.mutation('CrearPedido', deGuisados({ grupo: randomUUID(), pagoAlRecoger: true }));
+    assert.equal(otra.data._execute, 0);
   });
 });

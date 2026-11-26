@@ -327,7 +327,10 @@ mutation AsignarEstacion($usuarioId: UUID!, $estacionId: UUID) @auth(level: USER
     UPDATE usuario u
     SET puesto_id = $3::uuid
     WHERE u.id = $2::uuid
-      AND u.rol_id = (SELECT id FROM rol WHERE nombre = 'empleado')
+      AND u.rol_id IS NOT NULL
+      AND u.rol_id <> (SELECT id FROM rol WHERE nombre = 'alumno')
+      AND NOT EXISTS (SELECT 1 FROM rol_permiso rp JOIN permiso pe ON pe.id = rp.permiso_id
+                      WHERE rp.rol_id = u.rol_id AND pe.codigo_accion = 'personal.gestionar')
       AND u.cafeteria_id = (SELECT id FROM mia)
       AND ($3::uuid IS NULL
            OR EXISTS (SELECT 1 FROM puesto e WHERE e.id = $3::uuid AND e.cafeteria_id = (SELECT id FROM mia)))

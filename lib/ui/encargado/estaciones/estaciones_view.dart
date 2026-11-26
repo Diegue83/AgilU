@@ -63,6 +63,65 @@ class _Estaciones extends StatelessWidget {
     );
   }
 
+  Future<void> _editarCobro(
+      BuildContext context, EstacionesViewModel vm, Estacion e) async {
+    final banco = TextEditingController(text: e.banco ?? '');
+    final clabe = TextEditingController(text: e.clabe ?? '');
+    final titular = TextEditingController(text: e.titular ?? '');
+    String? problema;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) => AlertDialog(
+          title: Text('Cobro de ${e.nombre}'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Cada estación cobra sus pedidos. Si dejas todo '
+                    'vacío, se usa la cuenta de la cafetería.'),
+                TextField(
+                    controller: banco,
+                    decoration: const InputDecoration(labelText: 'Banco')),
+                TextField(
+                    controller: clabe,
+                    keyboardType: TextInputType.number,
+                    maxLength: 18,
+                    decoration:
+                        const InputDecoration(labelText: 'CLABE (18 dígitos)')),
+                TextField(
+                    controller: titular,
+                    decoration: const InputDecoration(labelText: 'Titular')),
+                if (problema != null)
+                  Text(problema!,
+                      style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancelar')),
+            FilledButton(
+              onPressed: () {
+                final p = vm.validarCobro(banco.text, clabe.text, titular.text);
+                if (p != null) {
+                  setState(() => problema = p);
+                } else {
+                  Navigator.pop(ctx, true);
+                }
+              },
+              child: const Text('Guardar'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (ok == true) {
+      await vm.editarCobro(e, banco.text, clabe.text, titular.text);
+    }
+  }
+
   Future<void> _confirmarEliminar(
       BuildContext context, EstacionesViewModel vm, Estacion e) async {
     final ok = await showDialog<bool>(
@@ -120,8 +179,13 @@ class _Estaciones extends StatelessWidget {
                   for (final (i, e) in vm.estaciones.indexed)
                     ListTile(
                       title: Text(e.nombre),
-                      subtitle: Text(
-                          '${e.productos} producto(s) · ${e.activo ? 'Visible' : 'Desactivada'}'),
+                      subtitle: Text([
+                        '${e.productos} producto(s)',
+                        e.activo ? 'Visible' : 'Desactivada',
+                        e.tieneCuenta
+                            ? 'Cobra con su cuenta'
+                            : 'Cuenta de la cafetería',
+                      ].join(' · ')),
                       leading: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -150,6 +214,8 @@ class _Estaciones extends StatelessWidget {
                                 final n =
                                     await _pedirNombre(context, vm, actual: e);
                                 if (n != null) await vm.renombrar(e, n);
+                              } else if (op == 'cobro') {
+                                await _editarCobro(context, vm, e);
                               } else if (context.mounted) {
                                 await _confirmarEliminar(context, vm, e);
                               }
@@ -157,6 +223,9 @@ class _Estaciones extends StatelessWidget {
                             itemBuilder: (_) => [
                               const PopupMenuItem(
                                   value: 'renombrar', child: Text('Renombrar')),
+                              const PopupMenuItem(
+                                  value: 'cobro',
+                                  child: Text('Datos de cobro')),
                               PopupMenuItem(
                                 value: 'eliminar',
                                 enabled: e.sePuedeEliminar,

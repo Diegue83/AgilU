@@ -10,7 +10,7 @@ AgiluConnector.instance.CrearProducto(crearProductoVariables).execute();
 AgiluConnector.instance.CrearEstacion(crearEstacionVariables).execute();
 AgiluConnector.instance.EditarEstacion(editarEstacionVariables).execute();
 AgiluConnector.instance.ActivarEstacion(activarEstacionVariables).execute();
-AgiluConnector.instance.EliminarEstacion(eliminarEstacionVariables).execute();
+AgiluConnector.instance.EditarCobroEstacion(editarCobroEstacionVariables).execute();
 
 ```
 

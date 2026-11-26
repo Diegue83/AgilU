@@ -63,6 +63,29 @@ class EstacionesViewModel extends ChangeNotifier {
 
   Future<bool> eliminar(Estacion e) => _ejecutar(() => _repo.eliminar(e.id));
 
+  /// Problema con los datos de cobro, o null si se pueden guardar. Todo vacío
+  /// deja la estación cobrando con la cuenta de la cafetería.
+  String? validarCobro(String banco, String clabe, String titular) {
+    final c = clabe.trim();
+    final todoVacio =
+        banco.trim().isEmpty && c.isEmpty && titular.trim().isEmpty;
+    if (todoVacio) return null;
+    if (!RegExp(r'^[0-9]{18}$').hasMatch(c)) {
+      return 'La CLABE debe tener 18 dígitos.';
+    }
+    if (banco.trim().isEmpty || titular.trim().isEmpty) {
+      return 'Escribe el banco y el titular de la cuenta.';
+    }
+    return null;
+  }
+
+  Future<bool> editarCobro(
+      Estacion e, String banco, String clabe, String titular) {
+    String? limpio(String s) => s.trim().isEmpty ? null : s.trim();
+    return _ejecutar(() =>
+        _repo.editarCobro(e.id, limpio(banco), limpio(clabe), limpio(titular)));
+  }
+
   /// Mueve la estación una posición arriba (-1) o abajo (+1) y guarda el
   /// nuevo orden de las dos estaciones intercambiadas.
   Future<bool> mover(Estacion e, int direccion) {

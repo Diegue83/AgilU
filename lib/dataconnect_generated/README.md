@@ -1229,6 +1229,10 @@ class CrearPedidoVariablesBuilder {
    _pagoAlRecoger.value = t;
    return this;
   }
+  CrearPedidoVariablesBuilder grupo(String? t) {
+   _grupo.value = t;
+   return this;
+  }
 
   ...
 }
@@ -1240,6 +1244,7 @@ AgiluConnector.instance.crearPedido(
 )
 .notas(notas)
 .pagoAlRecoger(pagoAlRecoger)
+.grupo(grupo)
 .execute();
 ```
 
@@ -1691,6 +1696,76 @@ bool activo = ...;
 final ref = AgiluConnector.instance.activarEstacion(
   id: id,
   activo: activo,
+).ref();
+ref.execute();
+```
+
+
+### EditarCobroEstacion
+#### Required Arguments
+```dart
+String id = ...;
+AgiluConnector.instance.editarCobroEstacion(
+  id: id,
+).execute();
+```
+
+#### Optional Arguments
+We return a builder for each query. For EditarCobroEstacion, we created `EditarCobroEstacionBuilder`. For queries and mutations with optional parameters, we return a builder class.
+The builder pattern allows Data Connect to distinguish between fields that haven't been set and fields that have been set to null. A field can be set by calling its respective setter method like below:
+```dart
+class EditarCobroEstacionVariablesBuilder {
+  ...
+   EditarCobroEstacionVariablesBuilder banco(String? t) {
+   _banco.value = t;
+   return this;
+  }
+  EditarCobroEstacionVariablesBuilder clabe(String? t) {
+   _clabe.value = t;
+   return this;
+  }
+  EditarCobroEstacionVariablesBuilder titular(String? t) {
+   _titular.value = t;
+   return this;
+  }
+
+  ...
+}
+AgiluConnector.instance.editarCobroEstacion(
+  id: id,
+)
+.banco(banco)
+.clabe(clabe)
+.titular(titular)
+.execute();
+```
+
+#### Return Type
+`execute()` returns a `OperationResult<EditarCobroEstacionData, EditarCobroEstacionVariables>`
+```dart
+/// Result of an Operation Request (query/mutation).
+class OperationResult<Data, Variables> {
+  OperationResult(this.dataConnect, this.data, this.ref);
+  Data data;
+  OperationRef<Data, Variables> ref;
+  FirebaseDataConnect dataConnect;
+}
+
+final result = await AgiluConnector.instance.editarCobroEstacion(
+  id: id,
+);
+EditarCobroEstacionData data = result.data;
+final ref = result.ref;
+```
+
+#### Getting the Ref
+Each builder returns an `execute` function, which is a helper function that creates a `Ref` object, and executes the underlying operation.
+An example of how to use the `Ref` object is shown below:
+```dart
+String id = ...;
+
+final ref = AgiluConnector.instance.editarCobroEstacion(
+  id: id,
 ).ref();
 ref.execute();
 ```
