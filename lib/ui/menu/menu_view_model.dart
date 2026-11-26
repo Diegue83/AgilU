@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import '../../data/models/cafeteria.dart';
 import '../../data/models/producto.dart';
 import '../../core/app_config.dart';
+import '../../core/reglas_pedido.dart';
+import '../../data/repositories/menu_con_cache.dart';
 import '../../data/repositories/menu_repository.dart';
 import '../../data/repositories/pedido_repository.dart';
 
@@ -67,6 +69,17 @@ class MenuViewModel extends ChangeNotifier {
   bool _menuListo = false;
   bool cargando = true;
   String? error;
+
+  /// Sin conexión se muestra la última copia guardada del menú.
+  String? get avisoSinConexion {
+    final repo = _repo;
+    final cuando = repo is MenuConCache ? repo.guardadoEn : null;
+    if (cuando == null) return null;
+    return 'Sin conexión: este es el menú guardado a las '
+        '${ReglasPedido.formatearHora(cuando)}. Precios y disponibilidad pueden '
+        'haber cambiado.';
+  }
+
   String? categoriaSeleccionada; // null = todas
 
   void _actualizarCargando() {
