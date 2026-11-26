@@ -107,9 +107,42 @@ class MenuViewModel extends ChangeNotifier {
 
   DateTime get ahora => _ahora();
 
-  List<Producto> get productosVisibles => categoriaSeleccionada == null
-      ? _deHoy
-      : _deHoy.where((p) => p.seccion == categoriaSeleccionada).toList();
+  List<Producto> get productosVisibles {
+    final texto = _normalizar(busqueda);
+    return _deHoy
+        .where((p) =>
+            categoriaSeleccionada == null || p.seccion == categoriaSeleccionada)
+        .where((p) =>
+            texto.isEmpty ||
+            _normalizar(p.nombre).contains(texto) ||
+            _normalizar(p.descripcion).contains(texto))
+        .toList();
+  }
+
+  /// Texto del buscador ya aplicado (después de la espera).
+  String busqueda = '';
+  Timer? _espera;
+
+  /// Espera antes de filtrar para no recalcular en cada tecla.
+  static const esperaBusqueda = Duration(milliseconds: 300);
+
+  /// Filtra el menú por nombre o descripción 300 ms después de la última tecla.
+  void buscar(String texto) {
+    _espera?.cancel();
+    _espera = Timer(esperaBusqueda, () {
+      busqueda = texto;
+      notifyListeners();
+    });
+  }
+
+  static String _normalizar(String s) => s
+      .toLowerCase()
+      .trim()
+      .replaceAll(RegExp('[áä]'), 'a')
+      .replaceAll(RegExp('[éë]'), 'e')
+      .replaceAll(RegExp('[íï]'), 'i')
+      .replaceAll(RegExp('[óö]'), 'o')
+      .replaceAll(RegExp('[úü]'), 'u');
 
   bool get puedePedir {
     final c = cafeteria;
@@ -154,6 +187,7 @@ class MenuViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
+    _espera?.cancel();
     _sub?.cancel();
     super.dispose();
   }
