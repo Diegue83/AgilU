@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/routes.dart';
-import '../../data/models/personal.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/pedido_repository.dart';
 import '../../data/repositories/perfil_repository.dart';
@@ -88,7 +87,7 @@ class _Cuenta extends StatelessWidget {
                               const SizedBox(height: 4),
                               Chip(
                                 label: Text([
-                                  etiquetaRol(p.rol),
+                                  p.etiquetaRol,
                                   if (p.cafeteria != null) p.cafeteria!,
                                 ].join(' · ')),
                                 visualDensity: VisualDensity.compact,

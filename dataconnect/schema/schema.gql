@@ -16,13 +16,15 @@ type Usuario @table {
   puesto: Puesto
 }
 
-# alumno, empleado, encargado, beneficiaria, admin. Todo registro nuevo es
-# alumno; un usuario sin rol (cuentas anteriores) también se trata como alumno.
+# Roles de sistema: alumno, empleado, encargado y admin; el administrador puede
+# crear más. Lo que puede hacer cada rol lo dicen sus permisos (RolPermiso).
+# Todo registro nuevo es alumno; un usuario sin rol se trata como alumno.
 type Rol @table {
   nombre: String! @unique
   descripcion: String
 }
 
+# Catálogo fijo: cada codigoAccion lo revisa alguna operación del servidor.
 type Permiso @table {
   nombre: String!
   codigoAccion: String! @unique

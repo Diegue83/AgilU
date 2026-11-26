@@ -32,6 +32,12 @@ y pull request.
   creada no es de alumno, no puede hacer pedidos mientras espera, y solo el encargado
   de esa cafetería ve, aprueba o rechaza la solicitud; una cafetería inactiva no las
   recibe.
+- Roles y permisos: el catálogo y los permisos iniciales; solo el administrador ve
+  y cambia roles; un rol nuevo con permisos exige cafetería y sus permisos deciden lo
+  que puede hacer (al quitarle uno pierde ese acceso); el alumno no lleva permisos,
+  el admin no pierde el suyo y los roles de sistema o con cuentas no se borran; el
+  reporte lo ve quien tiene `reporte.ver`, solo de su cafetería. Los avisos siguen
+  los permisos del rol, no su nombre.
 - Pago al recoger y adeudos: con 100 de confianza el pedido entra directo a cocina con
   código y cuenta como adeudo; solo uno a la vez; entregarlo con el código lo cobra;
   si no se recoge baja la confianza 20 puntos y no se recupera mientras se deba; solo

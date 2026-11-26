@@ -8,43 +8,48 @@ import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/reporte_repository.dart';
 import 'reporte_view_model.dart';
 
-/// HU-11: cómo va el negocio, por cafetería.
+/// HU-11: cómo va el negocio de la cafetería. Con [enPanel] se muestra como
+/// pestaña del panel del personal, sin su propia barra.
 class ReporteView extends StatelessWidget {
-  const ReporteView({super.key});
+  final bool enPanel;
+  const ReporteView({super.key, this.enPanel = false});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (ctx) => ReporteViewModel(ctx.read<ReporteRepository>()),
-      child: const _Reporte(),
+      child: _Reporte(enPanel: enPanel),
     );
   }
 }
 
 class _Reporte extends StatelessWidget {
-  const _Reporte();
+  final bool enPanel;
+  const _Reporte({required this.enPanel});
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<ReporteViewModel>();
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Reporte'),
-        actions: [
-          const BotonMiCuenta(),
-          IconButton(
-            tooltip: 'Cerrar sesión',
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await context.read<AuthRepository>().cerrarSesion();
-              if (context.mounted) {
-                Navigator.pushNamedAndRemoveUntil(
-                    context, Routes.login, (_) => false);
-              }
-            },
-          ),
-        ],
-      ),
+      appBar: enPanel
+          ? null
+          : AppBar(
+              title: const Text('Reporte'),
+              actions: [
+                const BotonMiCuenta(),
+                IconButton(
+                  tooltip: 'Cerrar sesión',
+                  icon: const Icon(Icons.logout),
+                  onPressed: () async {
+                    await context.read<AuthRepository>().cerrarSesion();
+                    if (context.mounted) {
+                      Navigator.pushNamedAndRemoveUntil(
+                          context, Routes.login, (_) => false);
+                    }
+                  },
+                ),
+              ],
+            ),
       body: RefreshIndicator(
         onRefresh: vm.cargar,
         child: ListView(

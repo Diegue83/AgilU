@@ -73,6 +73,20 @@ part 'editar_cafeteria_admin.dart';
 
 part 'asignar_rol_admin.dart';
 
+part 'permisos_disponibles.dart';
+
+part 'roles_admin.dart';
+
+part 'crear_rol_admin.dart';
+
+part 'editar_rol_admin.dart';
+
+part 'eliminar_rol_admin.dart';
+
+part 'dar_permiso_admin.dart';
+
+part 'quitar_permiso_admin.dart';
+
 part 'mi_personal.dart';
 
 part 'agregar_empleado.dart';
@@ -121,7 +135,7 @@ part 'adeudos_por_cobrar.dart';
 
 part 'mis_notificaciones.dart';
 
-part 'reporte_beneficiaria.dart';
+part 'reporte_cafeteria.dart';
 
 part 'historial_pedidos.dart';
 
@@ -311,6 +325,41 @@ class AgiluConnector {
   }
   
   
+  PermisosDisponiblesVariablesBuilder permisosDisponibles () {
+    return PermisosDisponiblesVariablesBuilder(dataConnect, );
+  }
+  
+  
+  RolesAdminVariablesBuilder rolesAdmin () {
+    return RolesAdminVariablesBuilder(dataConnect, );
+  }
+  
+  
+  CrearRolAdminVariablesBuilder crearRolAdmin ({required String nombre, }) {
+    return CrearRolAdminVariablesBuilder(dataConnect, nombre: nombre,);
+  }
+  
+  
+  EditarRolAdminVariablesBuilder editarRolAdmin ({required String rolId, }) {
+    return EditarRolAdminVariablesBuilder(dataConnect, rolId: rolId,);
+  }
+  
+  
+  EliminarRolAdminVariablesBuilder eliminarRolAdmin ({required String rolId, }) {
+    return EliminarRolAdminVariablesBuilder(dataConnect, rolId: rolId,);
+  }
+  
+  
+  DarPermisoAdminVariablesBuilder darPermisoAdmin ({required String rolId, required String codigo, }) {
+    return DarPermisoAdminVariablesBuilder(dataConnect, rolId: rolId,codigo: codigo,);
+  }
+  
+  
+  QuitarPermisoAdminVariablesBuilder quitarPermisoAdmin ({required String rolId, required String codigo, }) {
+    return QuitarPermisoAdminVariablesBuilder(dataConnect, rolId: rolId,codigo: codigo,);
+  }
+  
+  
   MiPersonalVariablesBuilder miPersonal () {
     return MiPersonalVariablesBuilder(dataConnect, );
   }
@@ -431,8 +480,8 @@ class AgiluConnector {
   }
   
   
-  ReporteBeneficiariaVariablesBuilder reporteBeneficiaria ({required Timestamp desde, required Timestamp hasta, }) {
-    return ReporteBeneficiariaVariablesBuilder(dataConnect, desde: desde,hasta: hasta,);
+  ReporteCafeteriaVariablesBuilder reporteCafeteria ({required Timestamp desde, required Timestamp hasta, }) {
+    return ReporteCafeteriaVariablesBuilder(dataConnect, desde: desde,hasta: hasta,);
   }
   
   

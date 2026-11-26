@@ -1,7 +1,8 @@
+import '../../core/permisos.dart';
 import 'perfil.dart';
 
-/// Una persona con rol distinto de alumno: empleado, encargado, beneficiaria o
-/// administrador.
+/// Una persona con rol distinto de alumno: empleado, encargado, administrador o
+/// un rol creado por el administrador.
 class MiembroPersonal {
   final String usuarioId;
   final String nombre;
@@ -14,6 +15,11 @@ class MiembroPersonal {
   final String? estacionId;
   final String? estacion;
 
+  /// Nombre del rol en la base; para roles propios del administrador.
+  final String? nombreRol;
+
+  String get etiqueta => etiquetaRolNombre(nombreRol ?? rol.name);
+
   const MiembroPersonal({
     required this.usuarioId,
     required this.nombre,
@@ -23,6 +29,7 @@ class MiembroPersonal {
     this.cafeteria,
     this.estacionId,
     this.estacion,
+    this.nombreRol,
   });
 
   /// Fila de SQL nativo (PersonalAdmin, MiPersonal).
@@ -31,6 +38,7 @@ class MiembroPersonal {
         nombre: '${m['nombre'] ?? ''}',
         correo: '${m['correo'] ?? ''}',
         rol: RolUsuario.desdeNombre(m['rol'] as String?),
+        nombreRol: m['rol'] as String?,
         cafeteriaId: m['cafeteriaId'] as String?,
         cafeteria: m['cafeteria'] as String?,
         estacionId: m['estacionId'] as String?,
@@ -46,6 +54,7 @@ class MiembroPersonal {
         cafeteria: cafeteria,
         estacionId: id,
         estacion: nombre,
+        nombreRol: nombreRol,
       );
 }
 
@@ -78,14 +87,8 @@ class CafeteriaAdmin {
       );
 }
 
-/// Nombre que se muestra para cada rol.
-String etiquetaRol(RolUsuario rol) => switch (rol) {
-      RolUsuario.alumno => 'Alumno',
-      RolUsuario.empleado => 'Empleado',
-      RolUsuario.encargado => 'Encargado',
-      RolUsuario.beneficiaria => 'Beneficiaria',
-      RolUsuario.admin => 'Administrador',
-    };
+/// Nombre que se muestra para cada rol de sistema.
+String etiquetaRol(RolUsuario rol) => etiquetaRolNombre(rol.name);
 
 /// Alguien que se registró como empleado y espera la aprobación del encargado.
 class SolicitudEmpleo {

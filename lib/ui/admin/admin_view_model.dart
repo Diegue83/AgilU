@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart';
 
 import '../../core/errores.dart';
-import '../../data/models/perfil.dart';
+import '../../core/permisos.dart';
 import '../../data/models/personal.dart';
+import '../../data/models/rol.dart';
 import '../../data/repositories/personal_repository.dart';
 
-/// El administrador da de alta cafeterías y asigna roles a cualquier cuenta.
+/// El administrador da de alta cafeterías, asigna roles a cualquier cuenta y
+/// decide qué permisos tiene cada rol.
 class AdminViewModel extends ChangeNotifier {
   final AdminRepository _repo;
   AdminViewModel(this._repo) {
@@ -13,12 +15,14 @@ class AdminViewModel extends ChangeNotifier {
   }
 
   static const _mensajes = [
-    'Solo el administrador puede hacer esto',
+    'No tienes permiso para hacer esto',
     'La cafetería no existe',
   ];
 
   List<CafeteriaAdmin> cafeterias = [];
   List<MiembroPersonal> personal = [];
+  List<RolAdmin> roles = [];
+  List<PermisoDisponible> permisos = [];
   bool cargando = true;
   String? error;
 
@@ -29,9 +33,16 @@ class AdminViewModel extends ChangeNotifier {
     cargando = true;
     notifyListeners();
     try {
-      final r = await Future.wait([_repo.cafeterias(), _repo.personal()]);
+      final r = await Future.wait([
+        _repo.cafeterias(),
+        _repo.personal(),
+        _repo.roles(),
+        _repo.permisos(),
+      ]);
       cafeterias = r[0] as List<CafeteriaAdmin>;
       personal = r[1] as List<MiembroPersonal>;
+      roles = r[2] as List<RolAdmin>;
+      permisos = r[3] as List<PermisoDisponible>;
       error = null;
     } catch (e) {
       error = mensajeDeError(e, 'No se pudo cargar la información.', _mensajes);
@@ -41,9 +52,45 @@ class AdminViewModel extends ChangeNotifier {
     }
   }
 
-  /// Roles que requieren una cafetería.
-  static bool necesitaCafeteria(RolUsuario rol) =>
-      rol == RolUsuario.encargado || rol == RolUsuario.empleado;
+  /// Los roles con permisos de cafetería requieren una cafetería.
+  bool necesitaCafeteria(String rol) =>
+      roles.where((r) => r.nombre == rol).firstOrNull?.requiereCafeteria ??
+      false;
+
+  static final _nombreRol = RegExp(r'^[a-z][a-z0-9_]{2,29}$');
+
+  /// Problema con el nombre de un rol nuevo, o null si es válido.
+  String? validarNombreRol(String nombre) {
+    final n = nombre.trim();
+    if (!_nombreRol.hasMatch(n)) {
+      return 'Usa de 3 a 30 letras minúsculas, números o guion bajo, '
+          'empezando con letra (ej. cajero).';
+    }
+    if (roles.any((r) => r.nombre == n)) {
+      return 'Ya existe un rol con ese nombre.';
+    }
+    return null;
+  }
+
+  Future<bool> crearRol(String nombre, String descripcion) =>
+      _ejecutar(() => _repo.crearRol(nombre.trim(),
+          descripcion.trim().isEmpty ? null : descripcion.trim()));
+
+  Future<bool> editarRol(RolAdmin r, String descripcion) =>
+      _ejecutar(() => _repo.editarRol(
+          r.id, descripcion.trim().isEmpty ? null : descripcion.trim()));
+
+  Future<bool> eliminarRol(RolAdmin r) =>
+      _ejecutar(() => _repo.eliminarRol(r.id));
+
+  /// El alumno no lleva permisos y el administrador no pierde el suyo.
+  bool puedeCambiar(RolAdmin r, String codigo) =>
+      Permisos.sePuedeCambiar(r.nombre, codigo);
+
+  Future<bool> cambiarPermiso(RolAdmin r, String codigo, bool activo) {
+    if (!puedeCambiar(r, codigo)) return Future.value(false);
+    return _ejecutar(() => _repo.cambiarPermiso(r.id, codigo, activo));
+  }
 
   String? validarNombreCafeteria(String nombre, {String? exceptoId}) {
     final n = nombre.trim();
@@ -59,8 +106,7 @@ class AdminViewModel extends ChangeNotifier {
   static final _correoValido = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
   /// Problema con la asignación, o null si se puede enviar.
-  String? validarAsignacion(
-      String correo, RolUsuario rol, String? cafeteriaId) {
+  String? validarAsignacion(String correo, String rol, String? cafeteriaId) {
     if (!_correoValido.hasMatch(correo.trim())) {
       return 'El correo no es válido.';
     }
@@ -77,7 +123,7 @@ class AdminViewModel extends ChangeNotifier {
   Future<bool> editarCafeteria(CafeteriaAdmin c) =>
       _ejecutar(() => _repo.editarCafeteria(c));
 
-  Future<bool> asignarRol(String correo, RolUsuario rol, String? cafeteriaId) =>
+  Future<bool> asignarRol(String correo, String rol, String? cafeteriaId) =>
       _ejecutar(() => _repo.asignarRol(correo, rol,
           cafeteriaId: necesitaCafeteria(rol) ? cafeteriaId : null));
 

@@ -1,8 +1,8 @@
-import 'package:agilu/core/routes.dart';
 import 'package:agilu/data/models/perfil.dart';
 import 'package:agilu/data/models/reporte.dart';
 import 'package:agilu/data/repositories/reporte_repository.dart';
 import 'package:agilu/ui/reporte/reporte_view_model.dart';
+import 'package:agilu/ui/encargado/encargado_view.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _Rango implements ReporteRepository {
@@ -57,9 +57,19 @@ void main() {
     expect(repo.desde, DateTime(2026, 11, 10));
   });
 
-  test('la beneficiaria inicia en el reporte', () {
-    const p = Perfil(
-        nombre: 'E', correo: 'e@utng.edu.mx', rol: RolUsuario.beneficiaria);
-    expect(Routes.inicioPara(p), Routes.reporte);
+  test('el reporte es una pestaña del panel para quien tiene reporte.ver', () {
+    const encargado = Perfil(
+        nombre: 'E',
+        correo: 'e@utng.edu.mx',
+        rol: RolUsuario.encargado,
+        cafeteriaId: 'c1');
+    expect(seccionesDelPanel(encargado).map((s) => s.$1), contains('Reporte'));
+    const empleado = Perfil(
+        nombre: 'L',
+        correo: 'l@utng.edu.mx',
+        rol: RolUsuario.empleado,
+        cafeteriaId: 'c1');
+    expect(seccionesDelPanel(empleado).map((s) => s.$1),
+        isNot(contains('Reporte')));
   });
 }

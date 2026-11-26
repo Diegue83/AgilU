@@ -1,0 +1,45 @@
+# Catálogo de permisos y permisos iniciales de los roles de sistema. Se corre
+# una vez como administrador de la base, después de publicar el conector:
+#
+#   firebase dataconnect:execute dataconnect/permisos.gql SembrarPermisos --project <proyecto>
+#
+# Se puede repetir sin duplicar nada, pero vuelve a dar a encargado, empleado y
+# admin los permisos iniciales si alguien se los quitó. También borra el rol
+# beneficiaria, que ya no existe: el reporte ahora lo ve quien tenga reporte.ver.
+mutation SembrarPermisos @auth(level: NO_ACCESS) {
+  _execute(
+    sql: """
+    WITH
+      p AS (
+        INSERT INTO permiso (id, nombre, codigo_accion) VALUES
+          (gen_random_uuid(), 'Atender pedidos (panel y entrega)', 'pedidos.atender'),
+          (gen_random_uuid(), 'Validar pagos y cobrar adeudos', 'pagos.validar'),
+          (gen_random_uuid(), 'Administrar estaciones, productos y ofertas', 'catalogo.gestionar'),
+          (gen_random_uuid(), 'Manejar su estación asignada y sus productos', 'estacion.propia'),
+          (gen_random_uuid(), 'Administrar el personal y las solicitudes', 'personal.gestionar'),
+          (gen_random_uuid(), 'Configurar horario y cobro de la cafetería', 'cafeteria.configurar'),
+          (gen_random_uuid(), 'Ver el reporte de la cafetería', 'reporte.ver'),
+          (gen_random_uuid(), 'Administrar cafeterías, roles y permisos', 'admin.gestionar')
+        ON CONFLICT (codigo_accion) DO UPDATE SET nombre = EXCLUDED.nombre
+        RETURNING id, codigo_accion
+      ),
+      inicial (rol, codigo) AS (
+        VALUES
+          ('encargado', 'pedidos.atender'), ('encargado', 'pagos.validar'),
+          ('encargado', 'catalogo.gestionar'), ('encargado', 'personal.gestionar'),
+          ('encargado', 'cafeteria.configurar'), ('encargado', 'reporte.ver'),
+          ('empleado', 'pedidos.atender'), ('empleado', 'estacion.propia'),
+          ('admin', 'admin.gestionar')
+      ),
+      enlaces AS (
+        INSERT INTO rol_permiso (rol_id, permiso_id)
+        SELECT r.id, p.id FROM inicial
+        JOIN rol r ON r.nombre = inicial.rol
+        JOIN p ON p.codigo_accion = inicial.codigo
+        ON CONFLICT DO NOTHING
+        RETURNING rol_id
+      )
+    DELETE FROM rol WHERE nombre = 'beneficiaria'
+    """
+  )
+}

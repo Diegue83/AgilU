@@ -3,10 +3,12 @@ import '../cuenta/cuenta_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/permisos.dart';
 import '../../core/routes.dart';
 import '../../data/models/perfil.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/perfil_repository.dart';
+import '../reporte/reporte_view.dart';
 import 'cafeteria/cafeteria_view.dart';
 import 'estaciones/estaciones_view.dart';
 import 'pagos/pagos_view.dart';
@@ -14,10 +16,34 @@ import 'panel/panel_view.dart';
 import 'personal/personal_view.dart';
 import 'productos/productos_view.dart';
 
-/// Pantalla principal del personal de la cafetería. El encargado ve todas las
-/// secciones; el empleado el panel de pedidos y, si tiene estación asignada,
-/// su estación y sus productos. El servidor aplica la misma regla en cada
-/// operación, esto solo decide qué se muestra.
+/// Pestañas que le tocan a [perfil] según sus permisos.
+List<(String, IconData, Widget)> seccionesDelPanel(Perfil? perfil) {
+  bool puede(String p) => perfil?.puede(p) ?? false;
+  final conEstacion = perfil?.tieneEstacion ?? false;
+  return [
+    if (puede(Permisos.pedidosAtender))
+      ('Pedidos', Icons.receipt_long, const PanelView()),
+    if (puede(Permisos.pagosValidar))
+      ('Pagos', Icons.payments_outlined, const PagosView()),
+    if (puede(Permisos.catalogoGestionar)) ...[
+      ('Productos', Icons.restaurant_menu, const ProductosView()),
+      ('Estaciones', Icons.storefront, const EstacionesView()),
+    ] else if (conEstacion) ...[
+      ('Productos', Icons.restaurant_menu, const ProductosView(empleado: true)),
+      ('Mi estación', Icons.storefront, const EstacionesView(empleado: true)),
+    ],
+    if (puede(Permisos.personalGestionar))
+      ('Personal', Icons.group_outlined, const PersonalView()),
+    if (puede(Permisos.cafeteriaConfigurar))
+      ('Cafetería', Icons.tune, const CafeteriaView()),
+    if (puede(Permisos.reporteVer))
+      ('Reporte', Icons.bar_chart, const ReporteView(enPanel: true)),
+  ];
+}
+
+/// Pantalla principal del personal de la cafetería. Cada pestaña aparece si el
+/// rol tiene el permiso correspondiente; el servidor revisa el mismo permiso en
+/// cada operación, esto solo decide qué se muestra.
 class EncargadoView extends StatefulWidget {
   const EncargadoView({super.key});
 
@@ -31,25 +57,6 @@ class _EncargadoViewState extends State<EncargadoView> {
       .read<PerfilRepository>()
       .miPerfil()
       .then((p) => p, onError: (_) => null);
-
-  static const _delEncargado = <(String, IconData, Widget)>[
-    ('Pedidos', Icons.receipt_long, PanelView()),
-    ('Pagos', Icons.payments_outlined, PagosView()),
-    ('Productos', Icons.restaurant_menu, ProductosView()),
-    ('Estaciones', Icons.storefront, EstacionesView()),
-    ('Personal', Icons.group_outlined, PersonalView()),
-    ('Cafetería', Icons.tune, CafeteriaView()),
-  ];
-
-  static const _delEmpleado = <(String, IconData, Widget)>[
-    ('Pedidos', Icons.receipt_long, PanelView()),
-  ];
-
-  static const _conEstacion = <(String, IconData, Widget)>[
-    ('Pedidos', Icons.receipt_long, PanelView()),
-    ('Productos', Icons.restaurant_menu, ProductosView(empleado: true)),
-    ('Mi estación', Icons.storefront, EstacionesView(empleado: true)),
-  ];
 
   /// Punto rojo de cada pestaña del panel.
   static int _cuenta(BuildContext context, String seccion) {
@@ -75,19 +82,27 @@ class _EncargadoViewState extends State<EncargadoView> {
           return const Scaffold(
               body: Center(child: CircularProgressIndicator()));
         }
-        final perfil = snap.data;
-        final secciones = perfil?.esEncargado == true
-            ? _delEncargado
-            : perfil?.tieneEstacion == true
-                ? _conEstacion
-                : _delEmpleado;
+        final secciones = seccionesDelPanel(snap.data);
+        if (secciones.isEmpty) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Panel'), actions: const [
+              BotonMiCuenta(),
+            ]),
+            body: const Center(
+                child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Text('Tu rol todavía no tiene permisos en la cafetería. '
+                  'Pide al administrador que te los asigne.'),
+            )),
+          );
+        }
         final i = _seccion.clamp(0, secciones.length - 1);
         final (titulo, _, vista) = secciones[i];
         return Scaffold(
           appBar: AppBar(
             title: Text(titulo),
             actions: [
-              if (i == 0)
+              if (titulo == 'Pedidos')
                 IconButton(
                   tooltip: 'Historial',
                   icon: const Icon(Icons.history),

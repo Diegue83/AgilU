@@ -12,7 +12,7 @@ class EstacionesViewModel extends ChangeNotifier {
 
   static const _mensajes = [
     'La estación tiene productos: desactívala en lugar de borrarla',
-    'Solo el encargado puede hacer esto',
+    'No tienes permiso para hacer esto',
     'No tienes cafetería asignada',
     'La estación no es de tu cafetería',
     'La estación no es tuya',

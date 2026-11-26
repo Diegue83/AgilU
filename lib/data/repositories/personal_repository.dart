@@ -2,8 +2,10 @@ import 'package:firebase_data_connect/firebase_data_connect.dart';
 
 import '../../core/conector.dart';
 import '../../dataconnect_generated/agilu.dart';
+import '../../core/permisos.dart';
 import '../models/perfil.dart';
 import '../models/personal.dart';
+import '../models/rol.dart';
 
 /// Lo que rechaza el servidor sin decir por qué (la operación no cambió nada).
 class CambioRechazado implements Exception {
@@ -36,8 +38,23 @@ abstract class AdminRepository {
   Future<void> crearCafeteria(String nombre, String? ubicacion);
   Future<void> editarCafeteria(CafeteriaAdmin cafeteria);
   Future<List<MiembroPersonal>> personal();
-  Future<void> asignarRol(String correo, RolUsuario rol, {String? cafeteriaId});
+
+  /// Asigna el rol con ese nombre; "alumno" le quita el rol.
+  Future<void> asignarRol(String correo, String rol, {String? cafeteriaId});
+
+  Future<List<RolAdmin>> roles();
+  Future<List<PermisoDisponible>> permisos();
+  Future<void> crearRol(String nombre, String? descripcion);
+  Future<void> editarRol(String rolId, String? descripcion);
+  Future<void> eliminarRol(String rolId);
+
+  /// Da (activo) o quita un permiso a un rol.
+  Future<void> cambiarPermiso(String rolId, String codigo, bool activo);
 }
+
+const _rolNoAsignado = CambioRechazado(
+    'No se asignó el rol: revisa que la cuenta exista, que no sea la tuya y, '
+    'si el rol trabaja en una cafetería, que la cafetería esté activa.');
 
 /// Las filas de SQL nativo llegan como List<AnyValue>; cada fila en .value.
 List<Map> filasDeSql(List<AnyValue>? filas) =>
@@ -159,15 +176,67 @@ class DataConnectAdminRepository implements AdminRepository {
   }
 
   @override
-  Future<void> asignarRol(String correo, RolUsuario rol,
+  Future<void> asignarRol(String correo, String rol,
       {String? cafeteriaId}) async {
-    var op = _conector.asignarRolAdmin(correo: correo.trim(), rol: rol.name);
+    var op = _conector.asignarRolAdmin(correo: correo.trim(), rol: rol);
     if (cafeteriaId != null) op = op.cafeteriaId(cafeteriaId);
     final res = await op.execute();
+    if (res.data.resultado == null) throw _rolNoAsignado;
+  }
+
+  @override
+  Future<List<RolAdmin>> roles() async {
+    final res = await _conector.rolesAdmin().execute();
+    return filasDeSql(res.data.roles).map(RolAdmin.desdeMapa).toList();
+  }
+
+  @override
+  Future<List<PermisoDisponible>> permisos() async {
+    final res = await _conector.permisosDisponibles().execute();
+    return res.data.permisos
+        .map((p) => PermisoDisponible(p.codigoAccion, p.nombre))
+        .toList();
+  }
+
+  @override
+  Future<void> crearRol(String nombre, String? descripcion) async {
+    final res = await _conector
+        .crearRolAdmin(nombre: nombre.trim())
+        .descripcion(descripcion)
+        .execute();
     if (res.data.resultado == null) {
-      throw const CambioRechazado(
-          'No se asignó el rol: revisa que la cuenta exista, que no sea la '
-          'tuya y que la cafetería esté activa.');
+      throw const CambioRechazado('Ya existe un rol con ese nombre.');
+    }
+  }
+
+  @override
+  Future<void> editarRol(String rolId, String? descripcion) async {
+    final res = await _conector
+        .editarRolAdmin(rolId: rolId)
+        .descripcion(descripcion)
+        .execute();
+    if (res.data.resultado == null) {
+      throw const CambioRechazado('Ese rol ya no existe.');
+    }
+  }
+
+  @override
+  Future<void> eliminarRol(String rolId) async {
+    final res = await _conector.eliminarRolAdmin(rolId: rolId).execute();
+    if (res.data.resultado == null) {
+      throw const CambioRechazado('No se puede borrar: es un rol de sistema '
+          'o alguna cuenta lo tiene asignado.');
+    }
+  }
+
+  @override
+  Future<void> cambiarPermiso(String rolId, String codigo, bool activo) async {
+    if (activo) {
+      await _conector.darPermisoAdmin(rolId: rolId, codigo: codigo).execute();
+    } else {
+      await _conector
+          .quitarPermisoAdmin(rolId: rolId, codigo: codigo)
+          .execute();
     }
   }
 }
@@ -292,28 +361,84 @@ class MockAdminRepository implements AdminRepository {
   Future<List<MiembroPersonal>> personal() async => List.of(_personal);
 
   @override
-  Future<void> asignarRol(String correo, RolUsuario rol,
+  Future<void> asignarRol(String correo, String rol,
       {String? cafeteriaId}) async {
     final c = correo.trim().toLowerCase();
-    final conCafeteria =
-        rol == RolUsuario.encargado || rol == RolUsuario.empleado;
+    final elegido = _roles.where((r) => r.nombre == rol).firstOrNull;
+    final conCafeteria = elegido?.requiereCafeteria ?? false;
     final cafeteria =
         _cafeterias.where((x) => x.id == cafeteriaId && x.activa).firstOrNull;
-    if (!cuentas.contains(c) || (conCafeteria && cafeteria == null)) {
-      throw const CambioRechazado(
-          'No se asignó el rol: revisa que la cuenta exista, que no sea la '
-          'tuya y que la cafetería esté activa.');
+    if (elegido == null ||
+        !cuentas.contains(c) ||
+        (conCafeteria && cafeteria == null)) {
+      throw _rolNoAsignado;
     }
     _personal.removeWhere((p) => p.correo == c);
-    if (rol != RolUsuario.alumno) {
+    if (rol != 'alumno') {
       _personal.add(MiembroPersonal(
         usuarioId: c,
         nombre: c.split('@').first,
         correo: c,
-        rol: rol,
+        rol: RolUsuario.desdeNombre(rol),
+        nombreRol: rol,
         cafeteriaId: conCafeteria ? cafeteria!.id : null,
         cafeteria: conCafeteria ? cafeteria!.nombre : null,
       ));
     }
+  }
+
+  final List<RolAdmin> _roles = [
+    for (final (i, n)
+        in const ['admin', 'alumno', 'empleado', 'encargado'].indexed)
+      RolAdmin(id: 'sistema-$i', nombre: n, permisos: Permisos.porDefecto(n)),
+  ];
+
+  @override
+  Future<List<RolAdmin>> roles() async => [
+        for (final r in _roles)
+          r.copiar(
+              usuarios: _personal.where((p) => p.nombreRol == r.nombre).length),
+      ];
+
+  @override
+  Future<List<PermisoDisponible>> permisos() async => [
+        for (final e in Permisos.nombres.entries)
+          PermisoDisponible(e.key, e.value),
+      ];
+
+  @override
+  Future<void> crearRol(String nombre, String? descripcion) async {
+    if (_roles.any((r) => r.nombre == nombre)) {
+      throw const CambioRechazado('Ya existe un rol con ese nombre.');
+    }
+    _roles.add(RolAdmin(
+        id: 'rol${_siguiente++}', nombre: nombre, descripcion: descripcion));
+  }
+
+  @override
+  Future<void> editarRol(String rolId, String? descripcion) async {
+    final i = _roles.indexWhere((r) => r.id == rolId);
+    _roles[i] = _roles[i].copiar(descripcion: descripcion);
+  }
+
+  @override
+  Future<void> eliminarRol(String rolId) async {
+    final r = (await roles()).firstWhere((r) => r.id == rolId);
+    if (!r.sePuedeEliminar) {
+      throw const CambioRechazado('No se puede borrar: es un rol de sistema '
+          'o alguna cuenta lo tiene asignado.');
+    }
+    _roles.removeWhere((x) => x.id == rolId);
+  }
+
+  @override
+  Future<void> cambiarPermiso(String rolId, String codigo, bool activo) async {
+    final i = _roles.indexWhere((r) => r.id == rolId);
+    final r = _roles[i];
+    if (!Permisos.sePuedeCambiar(r.nombre, codigo)) return;
+    _roles[i] = r.copiar(
+        permisos: activo
+            ? {...r.permisos, codigo}
+            : (r.permisos.toSet()..remove(codigo)));
   }
 }

@@ -98,7 +98,7 @@ async function graphql(query: string, variables: Record<string, unknown>) {
 
 const PERSONA = `
   id
-  rol { nombre }
+  rol { nombre rolPermisos_on_rol { permiso { codigoAccion } } }
   autenticacion_on_usuario { firebaseAuthUid }
   dispositivoTokens_on_usuario { token }
 `;
@@ -108,6 +108,8 @@ const persona = (u: any): Persona => ({
   usuarioId: u.id,
   uid: u.autenticacion_on_usuario?.firebaseAuthUid ?? null,
   rol: u.rol?.nombre ?? null,
+  // deno-lint-ignore no-explicit-any
+  permisos: (u.rol?.rolPermisos_on_rol ?? []).map((x: any) => x.permiso.codigoAccion),
   // deno-lint-ignore no-explicit-any
   tokens: (u.dispositivoTokens_on_usuario ?? []).map((t: any) => t.token),
 });

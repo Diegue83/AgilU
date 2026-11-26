@@ -1,27 +1,27 @@
 part of 'agilu.dart';
 
-class ReporteBeneficiariaVariablesBuilder {
+class ReporteCafeteriaVariablesBuilder {
   Timestamp desde;
   Timestamp hasta;
 
   final FirebaseDataConnect _dataConnect;
-  ReporteBeneficiariaVariablesBuilder(this._dataConnect, {required  this.desde,required  this.hasta,});
-  Deserializer<ReporteBeneficiariaData> dataDeserializer = (dynamic json)  => ReporteBeneficiariaData.fromJson(jsonDecode(json));
-  Serializer<ReporteBeneficiariaVariables> varsSerializer = (ReporteBeneficiariaVariables vars) => jsonEncode(vars.toJson());
-  Future<QueryResult<ReporteBeneficiariaData, ReporteBeneficiariaVariables>> execute() {
+  ReporteCafeteriaVariablesBuilder(this._dataConnect, {required  this.desde,required  this.hasta,});
+  Deserializer<ReporteCafeteriaData> dataDeserializer = (dynamic json)  => ReporteCafeteriaData.fromJson(jsonDecode(json));
+  Serializer<ReporteCafeteriaVariables> varsSerializer = (ReporteCafeteriaVariables vars) => jsonEncode(vars.toJson());
+  Future<QueryResult<ReporteCafeteriaData, ReporteCafeteriaVariables>> execute() {
     return ref().execute();
   }
 
-  QueryRef<ReporteBeneficiariaData, ReporteBeneficiariaVariables> ref() {
-    ReporteBeneficiariaVariables vars= ReporteBeneficiariaVariables(desde: desde,hasta: hasta,);
-    return _dataConnect.query("ReporteBeneficiaria", dataDeserializer, varsSerializer, vars);
+  QueryRef<ReporteCafeteriaData, ReporteCafeteriaVariables> ref() {
+    ReporteCafeteriaVariables vars= ReporteCafeteriaVariables(desde: desde,hasta: hasta,);
+    return _dataConnect.query("ReporteCafeteria", dataDeserializer, varsSerializer, vars);
   }
 }
 
 @immutable
-class ReporteBeneficiariaData {
+class ReporteCafeteriaData {
   final List<AnyValue>? filas;
-  ReporteBeneficiariaData.fromJson(dynamic json):
+  ReporteCafeteriaData.fromJson(dynamic json):
   
   filas = json['filas'] == null ? null : (json['filas'] as List<dynamic>)
         .map((e) => AnyValue.fromJson(e))
@@ -35,7 +35,7 @@ class ReporteBeneficiariaData {
       return false;
     }
 
-    final ReporteBeneficiariaData otherTyped = other as ReporteBeneficiariaData;
+    final ReporteCafeteriaData otherTyped = other as ReporteCafeteriaData;
     return filas == otherTyped.filas;
     
   }
@@ -51,17 +51,17 @@ class ReporteBeneficiariaData {
     return json;
   }
 
-  ReporteBeneficiariaData({
+  ReporteCafeteriaData({
     this.filas,
   });
 }
 
 @immutable
-class ReporteBeneficiariaVariables {
+class ReporteCafeteriaVariables {
   final Timestamp desde;
   final Timestamp hasta;
   @Deprecated('fromJson is deprecated for Variable classes as they are no longer required for deserialization.')
-  ReporteBeneficiariaVariables.fromJson(Map<String, dynamic> json):
+  ReporteCafeteriaVariables.fromJson(Map<String, dynamic> json):
   
   desde = Timestamp.fromJson(json['desde']),
   hasta = Timestamp.fromJson(json['hasta']);
@@ -74,7 +74,7 @@ class ReporteBeneficiariaVariables {
       return false;
     }
 
-    final ReporteBeneficiariaVariables otherTyped = other as ReporteBeneficiariaVariables;
+    final ReporteCafeteriaVariables otherTyped = other as ReporteCafeteriaVariables;
     return desde == otherTyped.desde && 
     hasta == otherTyped.hasta;
     
@@ -90,7 +90,7 @@ class ReporteBeneficiariaVariables {
     return json;
   }
 
-  ReporteBeneficiariaVariables({
+  ReporteCafeteriaVariables({
     required this.desde,
     required this.hasta,
   });

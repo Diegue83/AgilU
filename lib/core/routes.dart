@@ -20,7 +20,6 @@ class Routes {
     if (perfil != null && perfil.esAdmin) return admin;
     if (perfil != null && perfil.esPersonal) return encargado;
     if (perfil != null && perfil.esperandoAprobacion) return solicitud;
-    if (perfil != null && perfil.esBeneficiaria) return reporte;
     return menu;
   }
 }

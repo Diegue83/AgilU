@@ -203,8 +203,13 @@ mutation CrearEstacion($nombre: String!, $orden: Int!) @auth(level: USER) @trans
     autenticacion(key: { firebaseAuthUid_expr: "auth.uid" })
       @check(expr: "this != null", message: "No tienes perfil") {
       usuario {
-        rol @check(expr: "this != null && this.nombre == 'encargado'", message: "Solo el encargado puede hacer esto") {
-          nombre
+        rol @check(expr: "this != null", message: "No tienes permiso para hacer esto") {
+          rolPermisos_on_rol(where: { permiso: { codigoAccion: { eq: "catalogo.gestionar" } } })
+            @check(expr: "this.size() == 1", message: "No tienes permiso para hacer esto") {
+            permiso {
+              codigoAccion
+            }
+          }
         }
         cafeteria @check(expr: "this != null", message: "No tienes cafetería asignada") {
           id
@@ -231,7 +236,7 @@ mutation EditarEstacion($id: UUID!, $nombre: String!, $orden: Int!, $activo: Boo
         cafeteria: {
           usuarios_on_cafeteria: {
             exist: {
-              rol: { nombre: { eq: "encargado" } }
+              rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "catalogo.gestionar" } } } } }
               autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
             }
           }
@@ -258,7 +263,7 @@ mutation ActivarEstacion($id: UUID!, $activo: Boolean!)
                 cafeteria: {
                   usuarios_on_cafeteria: {
                     exist: {
-                      rol: { nombre: { eq: "encargado" } }
+                      rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "catalogo.gestionar" } } } } }
                       autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
                     }
                   }
@@ -267,7 +272,7 @@ mutation ActivarEstacion($id: UUID!, $activo: Boolean!)
               {
                 usuarios_on_puesto: {
                   exist: {
-                    rol: { nombre: { eq: "empleado" } }
+                    rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "estacion.propia" } } } } }
                     autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
                   }
                 }
@@ -297,7 +302,7 @@ mutation EliminarEstacion($id: UUID!) @auth(level: USER) @transaction {
         cafeteria: {
           usuarios_on_cafeteria: {
             exist: {
-              rol: { nombre: { eq: "encargado" } }
+              rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "catalogo.gestionar" } } } } }
               autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
             }
           }
@@ -334,7 +339,7 @@ mutation CrearMiProducto(
                 cafeteria: {
                   usuarios_on_cafeteria: {
                     exist: {
-                      rol: { nombre: { eq: "encargado" } }
+                      rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "catalogo.gestionar" } } } } }
                       autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
                     }
                   }
@@ -343,7 +348,7 @@ mutation CrearMiProducto(
               {
                 usuarios_on_puesto: {
                   exist: {
-                    rol: { nombre: { eq: "empleado" } }
+                    rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "estacion.propia" } } } } }
                     autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
                   }
                 }
@@ -395,7 +400,7 @@ mutation EditarMiProducto(
               cafeteria: {
                 usuarios_on_cafeteria: {
                   exist: {
-                    rol: { nombre: { eq: "encargado" } }
+                    rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "catalogo.gestionar" } } } } }
                     autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
                   }
                 }
@@ -404,7 +409,7 @@ mutation EditarMiProducto(
             {
               usuarios_on_puesto: {
                 exist: {
-                  rol: { nombre: { eq: "empleado" } }
+                  rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "estacion.propia" } } } } }
                   autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
                 }
               }
@@ -428,7 +433,7 @@ mutation EditarMiProducto(
                 cafeteria: {
                   usuarios_on_cafeteria: {
                     exist: {
-                      rol: { nombre: { eq: "encargado" } }
+                      rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "catalogo.gestionar" } } } } }
                       autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
                     }
                   }
@@ -437,7 +442,7 @@ mutation EditarMiProducto(
               {
                 usuarios_on_puesto: {
                   exist: {
-                    rol: { nombre: { eq: "empleado" } }
+                    rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "estacion.propia" } } } } }
                     autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
                   }
                 }
@@ -479,7 +484,7 @@ mutation EstablecerDisponibilidad($id: UUID!, $disponible: Boolean!)
               cafeteria: {
                 usuarios_on_cafeteria: {
                   exist: {
-                    rol: { nombre: { eq: "encargado" } }
+                    rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "catalogo.gestionar" } } } } }
                     autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
                   }
                 }
@@ -488,7 +493,7 @@ mutation EstablecerDisponibilidad($id: UUID!, $disponible: Boolean!)
             {
               usuarios_on_puesto: {
                 exist: {
-                  rol: { nombre: { eq: "empleado" } }
+                  rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "estacion.propia" } } } } }
                   autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
                 }
               }
@@ -514,7 +519,7 @@ mutation EliminarMiProducto($id: UUID!) @auth(level: USER) @transaction {
           cafeteria: {
             usuarios_on_cafeteria: {
               exist: {
-                rol: { nombre: { eq: "encargado" } }
+                rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "catalogo.gestionar" } } } } }
                 autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
               }
             }
@@ -550,7 +555,7 @@ mutation PublicarOferta(
           cafeteria: {
             usuarios_on_cafeteria: {
               exist: {
-                rol: { nombre: { eq: "encargado" } }
+                rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "catalogo.gestionar" } } } } }
                 autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
               }
             }
@@ -571,7 +576,7 @@ mutation QuitarOferta($id: UUID!) @auth(level: USER) @transaction {
           cafeteria: {
             usuarios_on_cafeteria: {
               exist: {
-                rol: { nombre: { eq: "encargado" } }
+                rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "catalogo.gestionar" } } } } }
                 autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
               }
             }
@@ -600,8 +605,13 @@ mutation EditarMiCafeteria(
       @check(expr: "vars.intervaloMinutos >= 5 && vars.intervaloMinutos <= 60", message: "El intervalo debe estar entre 5 y 60 minutos")
       @check(expr: "vars.capacidadPorFranja >= 1 && vars.capacidadPorFranja <= 200", message: "La capacidad debe estar entre 1 y 200 pedidos") {
       usuario {
-        rol @check(expr: "this != null && this.nombre == 'encargado'", message: "Solo el encargado puede hacer esto") {
-          nombre
+        rol @check(expr: "this != null", message: "No tienes permiso para hacer esto") {
+          rolPermisos_on_rol(where: { permiso: { codigoAccion: { eq: "cafeteria.configurar" } } })
+            @check(expr: "this.size() == 1", message: "No tienes permiso para hacer esto") {
+            permiso {
+              codigoAccion
+            }
+          }
         }
         cafeteria @check(expr: "this != null", message: "No tienes cafetería asignada") {
           id
@@ -636,7 +646,7 @@ mutation AvanzarPedido($id: UUID!, $estado: String!)
         FROM usuario u
         JOIN autenticacion a ON a.usuario_id = u.id
         JOIN rol r ON r.id = u.rol_id
-        WHERE a.firebase_auth_uid = $1 AND r.nombre IN ('encargado', 'empleado')
+        WHERE a.firebase_auth_uid = $1 AND EXISTS (SELECT 1 FROM rol_permiso rp JOIN permiso pe ON pe.id = rp.permiso_id WHERE rp.rol_id = r.id AND pe.codigo_accion = 'pedidos.atender')
       )
     """
     params: [{ _expr: "auth.uid" }, $id, $estado]
@@ -665,7 +675,7 @@ mutation ValidarPago($id: UUID!, $aprobado: Boolean!, $motivo: String)
         FROM usuario u
         JOIN autenticacion a ON a.usuario_id = u.id
         JOIN rol r ON r.id = u.rol_id
-        WHERE a.firebase_auth_uid = $1 AND r.nombre = 'encargado'
+        WHERE a.firebase_auth_uid = $1 AND EXISTS (SELECT 1 FROM rol_permiso rp JOIN permiso pe ON pe.id = rp.permiso_id WHERE rp.rol_id = r.id AND pe.codigo_accion = 'pagos.validar')
       )
     """
     params: [{ _expr: "auth.uid" }, $id, $aprobado, $motivo]
@@ -694,7 +704,7 @@ mutation EntregarPedido($id: UUID!, $codigo: String!) @auth(level: USER) {
         FROM usuario u
         JOIN autenticacion a ON a.usuario_id = u.id
         JOIN rol r ON r.id = u.rol_id
-        WHERE a.firebase_auth_uid = $1 AND r.nombre IN ('encargado', 'empleado')
+        WHERE a.firebase_auth_uid = $1 AND EXISTS (SELECT 1 FROM rol_permiso rp JOIN permiso pe ON pe.id = rp.permiso_id WHERE rp.rol_id = r.id AND pe.codigo_accion = 'pedidos.atender')
       )
     RETURNING estado, intentos_entrega AS "intentos"
     """
@@ -715,7 +725,7 @@ mutation CobrarAdeudo($id: UUID!) @auth(level: USER) @transaction {
         cafeteria: {
           usuarios_on_cafeteria: {
             exist: {
-              rol: { nombre: { eq: "encargado" } }
+              rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "pagos.validar" } } } } }
               autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
             }
           }
@@ -740,7 +750,7 @@ mutation MarcarNoRecogido($id: UUID!) @auth(level: USER) {
         FROM usuario u
         JOIN autenticacion a ON a.usuario_id = u.id
         JOIN rol r ON r.id = u.rol_id
-        WHERE a.firebase_auth_uid = $1 AND r.nombre IN ('encargado', 'empleado')
+        WHERE a.firebase_auth_uid = $1 AND EXISTS (SELECT 1 FROM rol_permiso rp JOIN permiso pe ON pe.id = rp.permiso_id WHERE rp.rol_id = r.id AND pe.codigo_accion = 'pedidos.atender')
       )
     """
     params: [{ _expr: "auth.uid" }, $id]
@@ -898,7 +908,7 @@ mutation GuardarFotoProducto($id: UUID!, $url: String!)
               cafeteria: {
                 usuarios_on_cafeteria: {
                   exist: {
-                    rol: { nombre: { eq: "encargado" } }
+                    rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "catalogo.gestionar" } } } } }
                     autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
                   }
                 }
@@ -907,7 +917,7 @@ mutation GuardarFotoProducto($id: UUID!, $url: String!)
             {
               usuarios_on_puesto: {
                 exist: {
-                  rol: { nombre: { eq: "empleado" } }
+                  rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "estacion.propia" } } } } }
                   autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
                 }
               }

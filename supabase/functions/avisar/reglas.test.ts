@@ -12,9 +12,15 @@ import {
   validarEntrada,
 } from './reglas.ts';
 
-const ana: Persona = { usuarioId: 'u-ana', uid: 'uid-ana', rol: 'alumno', tokens: ['t-ana'] };
-const beto: Persona = { usuarioId: 'u-beto', uid: 'uid-beto', rol: 'encargado', tokens: ['t-beto'] };
-const luis: Persona = { usuarioId: 'u-luis', uid: 'uid-luis', rol: 'empleado', tokens: [] };
+const ana: Persona = { usuarioId: 'u-ana', uid: 'uid-ana', rol: 'alumno', permisos: [], tokens: ['t-ana'] };
+const beto: Persona = {
+  usuarioId: 'u-beto', uid: 'uid-beto', rol: 'encargado',
+  permisos: ['pedidos.atender', 'pagos.validar', 'personal.gestionar'], tokens: ['t-beto'],
+};
+const luis: Persona = {
+  usuarioId: 'u-luis', uid: 'uid-luis', rol: 'empleado',
+  permisos: ['pedidos.atender', 'estacion.propia'], tokens: [],
+};
 
 const pedido = (cambios: Partial<PedidoParaAviso> = {}): PedidoParaAviso => ({
   id: 'p1',
@@ -78,4 +84,17 @@ test('la entrada se valida', () => {
   rechazo(() => validarEntrada({ evento: 'borrar_todo' }), 400);
   rechazo(() => validarEntrada({ evento: 'pedido_listo', pedidoId: '1; drop' }), 400);
   rechazo(() => validarEntrada(null), 400);
+});
+
+test('los avisos siguen los permisos del rol, no su nombre', () => {
+  const caja: Persona = {
+    usuarioId: 'u-caja', uid: 'uid-caja', rol: 'cajero', permisos: ['pagos.validar'], tokens: ['t-caja'],
+  };
+  const p = pedido({ personal: [beto, luis, caja] });
+  const a = avisoDePedido('comprobante', 'uid-ana', p);
+  assert.deepEqual(a.destinatarios.map((x) => x.usuarioId).sort(), ['u-beto', 'u-caja']);
+  // Validar el pago lo puede avisar la caja; marcar listo no, porque no atiende pedidos.
+  const validado = pedido({ personal: [caja], estado: 'pendiente', pagadoEn: '2026-11-25T10:00:00Z' });
+  assert.equal(avisoDePedido('pago_validado', 'uid-caja', validado).destinatarios[0].usuarioId, 'u-ana');
+  rechazo(() => avisoDePedido('pedido_listo', 'uid-caja', pedido({ personal: [caja], estado: 'listo' })), 403);
 });

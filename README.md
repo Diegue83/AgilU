@@ -3,7 +3,7 @@
 App móvil para pre-ordenar alimentos en cafeterías universitarias: el alumno ve el
 menú del día, arma su pedido para una hora de recogida, paga por transferencia y
 recoge con un código o QR; el encargado administra el menú, valida pagos y prepara
-pedidos en un panel; la beneficiaria consulta el reporte del negocio.
+pedidos en un panel y consulta el reporte de su cafetería.
 
 **Stack:** Flutter + Firebase (Auth, SQL Connect, Cloud Functions, Storage, Cloud Messaging)
 · **Arquitectura:** MVVM · **Metodología:** Scrum
@@ -82,7 +82,13 @@ ser externo) se registra eligiendo la cafetería. La cuenta no es de alumno: sol
 perfil con el aviso "En espera de aprobación" y no puede hacer pedidos hasta que el
 encargado de esa cafetería la apruebe en **Personal**.
 
-**Roles:** alumno (al registrarse), empleado, encargado, beneficiaria y administrador.
+**Roles y permisos:** los roles de sistema son alumno (al registrarse), empleado,
+encargado y administrador. El administrador puede crear más roles y, en **Roles**,
+darles o quitarles permisos del catálogo (`pedidos.atender`, `pagos.validar`,
+`catalogo.gestionar`, `estacion.propia`, `personal.gestionar`, `cafeteria.configurar`,
+`reporte.ver`, `admin.gestionar`); el servidor revisa el permiso en cada operación.
+Después de publicar el conector por primera vez con permisos, corre una vez
+`firebase dataconnect:execute dataconnect/permisos.gql SembrarPermisos --project <proyecto>`.
 El primer administrador se nombra una sola vez desde la consola de SQL Connect con
 la mutación `AsignarRol` (`rol: "admin"`). Después, desde la app, el administrador
 crea cafeterías y asigna roles, y cada encargado da de alta a sus empleados con el

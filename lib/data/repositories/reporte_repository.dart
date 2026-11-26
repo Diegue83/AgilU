@@ -4,6 +4,7 @@ import '../../core/conector.dart';
 import '../../dataconnect_generated/agilu.dart';
 import '../models/reporte.dart';
 
+/// HU-11: reporte de la cafetería de quien tiene el permiso reporte.ver.
 abstract class ReporteRepository {
   Future<List<FilaReporte>> resumen(DateTime desde, DateTime hasta);
 }
@@ -19,13 +20,13 @@ class DataConnectReporteRepository implements ReporteRepository {
   @override
   Future<List<FilaReporte>> resumen(DateTime desde, DateTime hasta) async {
     final res = await _conector
-        .reporteBeneficiaria(desde: _ts(desde), hasta: _ts(hasta))
+        .reporteCafeteria(desde: _ts(desde), hasta: _ts(hasta))
         .execute();
     return filasDe(res.data);
   }
 
   /// La respuesta de SQL nativo llega como List<AnyValue>; cada fila en .value.
-  static List<FilaReporte> filasDe(ReporteBeneficiariaData d) =>
+  static List<FilaReporte> filasDe(ReporteCafeteriaData d) =>
       (d.filas ?? const <AnyValue>[])
           .map((v) => FilaReporte.desdeMapa(v.value as Map))
           .toList();
@@ -44,13 +45,6 @@ class MockReporteRepository implements ReporteRepository {
           cancelados: 3,
           ingresos: 2150,
           montoNoRecogido: 95,
-        ),
-        FilaReporte(
-          cafeteriaId: 'c2',
-          cafeteria: 'Barra de café',
-          pedidos: 12,
-          entregados: 12,
-          ingresos: 420,
         ),
       ];
 }
