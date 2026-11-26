@@ -63,6 +63,9 @@ class MiPerfilAutenticacionUsuario {
   final MiPerfilAutenticacionUsuarioRol? rol;
   final MiPerfilAutenticacionUsuarioCafeteria? cafeteria;
   final MiPerfilAutenticacionUsuarioPuesto? puesto;
+  final bool avisoPedidoListo;
+  final bool avisoPagos;
+  final bool avisoPersonal;
   final MiPerfilAutenticacionUsuarioSolicitudEmpleoOnUsuario? solicitudEmpleo_on_usuario;
   MiPerfilAutenticacionUsuario.fromJson(dynamic json):
   
@@ -72,6 +75,9 @@ class MiPerfilAutenticacionUsuario {
   rol = json['rol'] == null ? null : MiPerfilAutenticacionUsuarioRol.fromJson(json['rol']),
   cafeteria = json['cafeteria'] == null ? null : MiPerfilAutenticacionUsuarioCafeteria.fromJson(json['cafeteria']),
   puesto = json['puesto'] == null ? null : MiPerfilAutenticacionUsuarioPuesto.fromJson(json['puesto']),
+  avisoPedidoListo = nativeFromJson<bool>(json['avisoPedidoListo']),
+  avisoPagos = nativeFromJson<bool>(json['avisoPagos']),
+  avisoPersonal = nativeFromJson<bool>(json['avisoPersonal']),
   solicitudEmpleo_on_usuario = json['solicitudEmpleo_on_usuario'] == null ? null : MiPerfilAutenticacionUsuarioSolicitudEmpleoOnUsuario.fromJson(json['solicitudEmpleo_on_usuario']);
   @override
   bool operator ==(Object other) {
@@ -89,11 +95,14 @@ class MiPerfilAutenticacionUsuario {
     rol == otherTyped.rol && 
     cafeteria == otherTyped.cafeteria && 
     puesto == otherTyped.puesto && 
+    avisoPedidoListo == otherTyped.avisoPedidoListo && 
+    avisoPagos == otherTyped.avisoPagos && 
+    avisoPersonal == otherTyped.avisoPersonal && 
     solicitudEmpleo_on_usuario == otherTyped.solicitudEmpleo_on_usuario;
     
   }
   @override
-  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, numeroDeTelefono.hashCode, rol.hashCode, cafeteria.hashCode, puesto.hashCode, solicitudEmpleo_on_usuario.hashCode]);
+  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, numeroDeTelefono.hashCode, rol.hashCode, cafeteria.hashCode, puesto.hashCode, avisoPedidoListo.hashCode, avisoPagos.hashCode, avisoPersonal.hashCode, solicitudEmpleo_on_usuario.hashCode]);
   
 
   Map<String, dynamic> toJson() {
@@ -112,6 +121,9 @@ class MiPerfilAutenticacionUsuario {
     if (puesto != null) {
       json['puesto'] = puesto!.toJson();
     }
+    json['avisoPedidoListo'] = nativeToJson<bool>(avisoPedidoListo);
+    json['avisoPagos'] = nativeToJson<bool>(avisoPagos);
+    json['avisoPersonal'] = nativeToJson<bool>(avisoPersonal);
     if (solicitudEmpleo_on_usuario != null) {
       json['solicitudEmpleo_on_usuario'] = solicitudEmpleo_on_usuario!.toJson();
     }
@@ -125,6 +137,9 @@ class MiPerfilAutenticacionUsuario {
     this.rol,
     this.cafeteria,
     this.puesto,
+    required this.avisoPedidoListo,
+    required this.avisoPagos,
+    required this.avisoPersonal,
     this.solicitudEmpleo_on_usuario,
   });
 }

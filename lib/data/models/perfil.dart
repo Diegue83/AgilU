@@ -38,7 +38,11 @@ class Perfil {
     this.estacion,
     this.nombreRol,
     Set<String>? permisos,
+    this.avisos = const PreferenciasAvisos(),
   }) : _permisos = permisos;
+
+  /// Qué notificaciones push recibe.
+  final PreferenciasAvisos avisos;
 
   /// Nombre del rol tal como está en la base (incluye roles propios).
   final String? nombreRol;
@@ -114,4 +118,21 @@ class OpcionCafeteria {
   const OpcionCafeteria(this.id, this.nombre, {this.ubicacion});
 
   String get etiqueta => ubicacion == null ? nombre : '$nombre ($ubicacion)';
+}
+
+/// Notificaciones push que quiere recibir la persona. La bandeja de avisos
+/// las guarda todas aunque se apaguen.
+class PreferenciasAvisos {
+  final bool pedidoListo;
+  final bool pagos;
+  final bool personal;
+  const PreferenciasAvisos(
+      {this.pedidoListo = true, this.pagos = true, this.personal = true});
+
+  PreferenciasAvisos copiar({bool? pedidoListo, bool? pagos, bool? personal}) =>
+      PreferenciasAvisos(
+        pedidoListo: pedidoListo ?? this.pedidoListo,
+        pagos: pagos ?? this.pagos,
+        personal: personal ?? this.personal,
+      );
 }

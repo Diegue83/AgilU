@@ -520,6 +520,8 @@ void main() {
     expect(find.text('Alumno demo'), findsWidgets);
     expect(find.text('Nivel de confianza'), findsOneWidget);
     expect(find.text('Excelente'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Eliminar mi cuenta'), 300,
+        scrollable: find.byType(Scrollable).last);
     expect(find.text('Eliminar mi cuenta'), findsOneWidget);
 
     await tester.tap(find.text('Editar datos'));
@@ -539,8 +541,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Encargado · Central'), findsOneWidget);
     expect(find.text('Nivel de confianza'), findsNothing);
-    expect(find.text('Eliminar mi cuenta'), findsNothing);
+    await tester.scrollUntilVisible(find.text('Cambiar contraseña'), 300,
+        scrollable: find.byType(Scrollable).last);
     expect(find.text('Cambiar contraseña'), findsOneWidget);
+    expect(find.text('Eliminar mi cuenta'), findsNothing);
+    // El personal también elige sus avisos de comprobantes y solicitudes.
+    expect(find.text('Comprobantes y solicitudes de trabajo'), findsOneWidget);
   });
 
   testWidgets('la campana muestra los avisos sin leer y los marca al abrir',

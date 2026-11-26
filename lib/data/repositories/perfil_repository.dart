@@ -12,6 +12,9 @@ abstract class PerfilRepository {
 
   Future<void> editar(String nombre, String? telefono);
 
+  /// Qué notificaciones push recibe quien tiene la sesión.
+  Future<void> editarAvisos(PreferenciasAvisos avisos);
+
   /// Cafeterías activas para el registro (no requiere sesión).
   Future<List<OpcionCafeteria>> cafeteriasParaRegistro();
 
@@ -49,6 +52,12 @@ class DataConnectPerfilRepository implements PerfilRepository {
   @override
   Future<void> editar(String nombre, String? telefono) =>
       _conector.editarMiPerfil(nombre: nombre).telefono(telefono).execute();
+
+  @override
+  Future<void> editarAvisos(PreferenciasAvisos a) => _conector
+      .editarMisAvisos(
+          pedidoListo: a.pedidoListo, pagos: a.pagos, personal: a.personal)
+      .execute();
 
   static const motivosBaja = [
     'Tienes pedidos en curso: espera a recogerlos o cancélalos',
@@ -88,6 +97,11 @@ class DataConnectPerfilRepository implements PerfilRepository {
         telefono: a.usuario.numeroDeTelefono,
         rol: RolUsuario.desdeNombre(a.usuario.rol?.nombre),
         nombreRol: a.usuario.rol?.nombre,
+        avisos: PreferenciasAvisos(
+          pedidoListo: a.usuario.avisoPedidoListo,
+          pagos: a.usuario.avisoPagos,
+          personal: a.usuario.avisoPersonal,
+        ),
         permisos: {
           for (final x in a.usuario.rol?.rolPermisos_on_rol ?? const [])
             x.permiso.codigoAccion,
@@ -151,6 +165,7 @@ class MockPerfilRepository implements PerfilRepository {
         estacion: perfil.estacion,
         nombreRol: perfil.nombreRol,
         permisos: perfil.permisos,
+        avisos: perfil.avisos,
       );
 
   @override
@@ -160,4 +175,19 @@ class MockPerfilRepository implements PerfilRepository {
     }
     eliminado = true;
   }
+
+  @override
+  Future<void> editarAvisos(PreferenciasAvisos a) async => perfil = Perfil(
+        nombre: perfil.nombre,
+        correo: perfil.correo,
+        telefono: perfil.telefono,
+        rol: perfil.rol,
+        cafeteriaId: perfil.cafeteriaId,
+        cafeteria: perfil.cafeteria,
+        estacionId: perfil.estacionId,
+        estacion: perfil.estacion,
+        nombreRol: perfil.nombreRol,
+        permisos: perfil.permisos,
+        avisos: a,
+      );
 }

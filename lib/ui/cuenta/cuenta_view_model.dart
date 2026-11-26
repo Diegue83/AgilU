@@ -69,6 +69,26 @@ class CuentaViewModel extends ChangeNotifier {
     }
   }
 
+  /// Cambia una preferencia de notificaciones; si falla, se regresa.
+  Future<bool> cambiarAvisos(PreferenciasAvisos nuevas) async {
+    final p = perfil;
+    if (p == null || guardando) return false;
+    guardando = true;
+    error = null;
+    notifyListeners();
+    try {
+      await _perfiles.editarAvisos(nuevas);
+      perfil = await _perfiles.miPerfil();
+      return true;
+    } catch (_) {
+      error = 'No se pudieron guardar tus notificaciones.';
+      return false;
+    } finally {
+      guardando = false;
+      notifyListeners();
+    }
+  }
+
   /// Problema con los datos editados, o null si son válidos.
   String? validarDatos(String nombre, String telefono) {
     final n = nombre.trim();

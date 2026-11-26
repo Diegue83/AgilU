@@ -56,6 +56,9 @@ query MiPerfil @auth(level: USER) {
         id
         nombre
       }
+      avisoPedidoListo
+      avisoPagos
+      avisoPersonal
       solicitudEmpleo_on_usuario {
         cafeteria {
           nombre

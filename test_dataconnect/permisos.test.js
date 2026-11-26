@@ -2182,3 +2182,17 @@ describe('existencias', () => {
     }));
   });
 });
+
+describe('preferencias de avisos', () => {
+  test('cada quien elige sus avisos y empiezan encendidos', async () => {
+    const antes = (await ana.query('MiPerfil')).data.autenticacion.usuario;
+    assert.equal(antes.avisoPedidoListo, true);
+    assert.equal(antes.avisoPagos, true);
+    await ana.mutation('EditarMisAvisos', { pedidoListo: false, pagos: true, personal: true });
+    const despues = (await ana.query('MiPerfil')).data.autenticacion.usuario;
+    assert.equal(despues.avisoPedidoListo, false);
+    // Solo cambia a quien tiene la sesión.
+    assert.equal((await beto.query('MiPerfil')).data.autenticacion.usuario.avisoPedidoListo, true);
+    await ana.mutation('EditarMisAvisos', { pedidoListo: true, pagos: true, personal: true });
+  });
+});
