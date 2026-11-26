@@ -27,6 +27,12 @@ class AppConfig {
   static bool get usarSupabase =>
       supabaseUrl.isNotEmpty && supabaseKey.isNotEmpty;
 
+  /// Repositorio público de GitHub cuyos releases traen el APK firmado y su
+  /// suma SHA-256. La app solo lee el último release; no usa token.
+  static const String repositorioReleases = String.fromEnvironment(
+      'REPOSITORIO_RELEASES',
+      defaultValue: 'Diegue83/AgilU');
+
   /// HU-23: pedidos sin recoger en 30 días que bloquean nuevos pedidos.
   /// Debe coincidir con CrearPedido en dataconnect/agilu/mutations.gql.
   static const int limiteNoRecogidos = 3;

@@ -53,6 +53,12 @@ configuración de Firebase. No se encontraron credenciales.
   desactivarla, cambiar la disponibilidad, editar, poner foto y dar de alta productos
   solo en esa estación; no puede renombrarla, borrarla, mover productos a otra
   estación, eliminarlos ni publicar ofertas. Al dejar de ser empleado pierde la estación.
+- **Actualizaciones de la app**: el APK se firma con una llave de release que vive
+  solo en los secretos de GitHub y en poder del equipo (nunca en el repositorio).
+  La app solo acepta releases publicados de este repositorio, descarga desde
+  `github.com/<repo>/releases/download/`, comprueba el SHA-256 publicado antes de
+  abrir el instalador y Android rechaza cualquier APK firmado con otra llave. La app
+  no usa token de GitHub; solo lee el release público.
 - **Solicitudes de trabajo**: quien se registra como empleado queda sin rol y con una
   solicitud; el servidor le impide hacer pedidos y solo el encargado de esa cafetería
   la aprueba (pasa a empleado) o la rechaza. La única consulta sin sesión expone

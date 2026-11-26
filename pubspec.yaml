@@ -1,7 +1,7 @@
 name: agilu
 description: ÁgilU - App móvil para pre-ordenar alimentos en cafeterías universitarias.
 publish_to: "none"
-version: 0.1.0+1
+version: 1.1.0+2
 
 environment:
   sdk: ">=3.3.0 <4.0.0"
@@ -20,6 +20,7 @@ dependencies:
   firebase_messaging: 15.2.10
   storage_client: ^2.8.1
   http: ^1.6.0
+  crypto: ^3.0.8
 
 dev_dependencies:
   flutter_test:

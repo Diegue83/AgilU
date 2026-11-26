@@ -1,3 +1,4 @@
+import 'ui/comun/actualizacion.dart';
 import 'ui/comun/contadores.dart';
 import 'dart:async';
 
@@ -31,6 +32,7 @@ class AgilUApp extends StatefulWidget {
 
 class _AgilUAppState extends State<AgilUApp> {
   final _mensajero = GlobalKey<ScaffoldMessengerState>();
+  final _navegador = GlobalKey<NavigatorState>();
   StreamSubscription<String>? _avisos;
 
   @override
@@ -42,6 +44,18 @@ class _AgilUAppState extends State<AgilUApp> {
       _mensajero.currentState?.showSnackBar(SnackBar(content: Text(texto)));
       contadores.actualizar();
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _revisarVersion());
+  }
+
+  /// Al abrir la app, si hay un release más nuevo, ofrece actualizar.
+  Future<void> _revisarVersion() async {
+    final c = actualizadorDe(context);
+    if (c == null || !c.soportada) return;
+    await c.buscar();
+    final ctx = _navegador.currentContext;
+    if (c.nueva != null && ctx != null && ctx.mounted) {
+      await ofrecerActualizacion(ctx, c);
+    }
   }
 
   @override
@@ -72,6 +86,7 @@ class _AgilUAppState extends State<AgilUApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       scaffoldMessengerKey: _mensajero,
+      navigatorKey: _navegador,
       title: 'ÁgilU',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,

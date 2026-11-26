@@ -1,0 +1,108 @@
+name: Release
+
+# Al subir una etiqueta vX.Y.Z se compila el APK firmado con la llave de
+# release, se calcula su SHA-256 y se publica el release con los dos archivos.
+# La app instalada lee ese release para ofrecer la actualización.
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    name: APK firmado
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.6'
+          channel: stable
+          cache: true
+
+      - name: La etiqueta coincide con la versión de pubspec.yaml
+        run: |
+          version=$(grep '^version:' pubspec.yaml | sed 's/version: *//; s/+.*//')
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "pubspec.yaml dice $version y la etiqueta es $GITHUB_REF_NAME"
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      # Los secretos solo existen en este paso y nunca se imprimen.
+      - name: Configuración de Firebase y llave de firma
+        env:
+          FIREBASE_OPTIONS_DART: ${{ secrets.FIREBASE_OPTIONS_DART }}
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          for s in FIREBASE_OPTIONS_DART GOOGLE_SERVICES_JSON ANDROID_KEYSTORE_BASE64 \
+                   ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            if [ -z "${!s}" ]; then echo "Falta el secreto $s"; exit 1; fi
+          done
+          echo "$FIREBASE_OPTIONS_DART" | base64 -d > lib/firebase_options.dart
+          echo "$GOOGLE_SERVICES_JSON" | base64 -d > android/app/google-services.json
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/agilu-release.jks"
+          {
+            echo "storeFile=$RUNNER_TEMP/agilu-release.jks"
+            echo "storePassword=$ANDROID_KEYSTORE_PASSWORD"
+            echo "keyAlias=$ANDROID_KEY_ALIAS"
+            echo "keyPassword=$ANDROID_KEY_PASSWORD"
+          } > android/key.properties
+
+      - run: flutter pub get
+      - run: flutter test
+
+      - name: Compilar APK
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ vars.SUPABASE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_KEY" ]; then
+            echo "Faltan las variables SUPABASE_URL y SUPABASE_KEY del repositorio"
+            exit 1
+          fi
+          flutter build apk --release \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_KEY="$SUPABASE_KEY"
+
+      - name: La firma es la llave de release, no la de depuración
+        run: |
+          apksigner=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$apksigner" verify --print-certs build/app/outputs/flutter-apk/app-release.apk | tee firmas.txt
+          if grep -q "CN=Android Debug" firmas.txt; then
+            echo "El APK quedó firmado con la llave de depuración"
+            exit 1
+          fi
+
+      - name: APK y su SHA-256
+        run: |
+          cp build/app/outputs/flutter-apk/app-release.apk "AgilU-$VERSION.apk"
+          sha256sum "AgilU-$VERSION.apk" > "AgilU-$VERSION.apk.sha256"
+          cat "AgilU-$VERSION.apk.sha256"
+
+      - name: Publicar el release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          notas="release-notes/$GITHUB_REF_NAME.md"
+          if [ ! -f "$notas" ]; then
+            echo "ÁgilU $VERSION" > notas.md
+            notas=notas.md
+          fi
+          gh release create "$GITHUB_REF_NAME" \
+            "AgilU-$VERSION.apk" "AgilU-$VERSION.apk.sha256" \
+            --title "ÁgilU $VERSION" --notes-file "$notas" --verify-tag
+
+      - name: Borrar la llave del runner
+        if: always()
+        run: rm -f "$RUNNER_TEMP/agilu-release.jks" android/key.properties
