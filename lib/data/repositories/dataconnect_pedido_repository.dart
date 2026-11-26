@@ -145,10 +145,13 @@ class DataConnectPedidoRepository implements PedidoRepository {
 
   @override
   Future<bool> cancelar(String pedidoId) async {
-    final res = await _conector.cancelarMiPedido(id: pedidoId).execute();
-    final fila = res.data.resultado?.value as Map?;
-    if (fila == null) throw const PedidoRechazado(motivoNoCancelable);
-    return fila['pagado'] == true;
+    // Regresa las existencias de los productos que las controlan.
+    final res = await _conector.cancelarPedido(id: pedidoId).execute();
+    if ((res.data.execute_ ?? 0) == 0) {
+      throw const PedidoRechazado(motivoNoCancelable);
+    }
+    final t = await ticket(pedidoId);
+    return t?.pagadoEn != null;
   }
 
   @override

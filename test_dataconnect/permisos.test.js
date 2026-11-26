@@ -2113,3 +2113,72 @@ describe('cobro por estación', () => {
     assert.equal(otra.data._execute, 0);
   });
 });
+
+describe('existencias', () => {
+  let gelatina;
+  const existencias = async (id) =>
+    (await beto.query('MisProductos')).data.productos.find((p) => p.id === id).cantidadEnStock;
+  const pide = (cantidad) => pedido({ items: [{ productoId: gelatina, cantidad }] });
+
+  before(async () => {
+    const r = await beto.mutation('CrearMiProducto', {
+      nombre: 'Gelatina', precio: 12, puestoId: 'a0000000000040008000000000000001',
+      disponible: true, controlarStock: true, cantidadEnStock: 3,
+    });
+    gelatina = r.data.producto_insert.id;
+  });
+
+  test('el menú muestra las existencias de los productos que las controlan', async () => {
+    const { data } = await ana.query('ListarMenu');
+    const g = data.productos.find((p) => p.id === gelatina);
+    assert.equal(g.controlarStock, true);
+    assert.equal(g.cantidadEnStock, 3);
+    const molletes = data.productos.find((p) => p.id === MOLLETES);
+    assert.equal(molletes.controlarStock, false);
+  });
+
+  test('al pedir se descuentan y no se vende más de lo que hay', async () => {
+    const primero = pide(2);
+    assert.equal((await ana.mutation('CrearPedido', primero)).data._execute, 1);
+    assert.equal(await existencias(gelatina), 1);
+
+    const demasiado = pide(2);
+    assert.equal((await ana.mutation('CrearPedido', demasiado)).data._execute, 0);
+    const d = await ana.query('DiagnosticarPedido', {
+      cafeteriaId: CAFETERIA, recogerA: demasiado.recogerA, items: demasiado.items,
+    });
+    assert.equal(d.data.diagnostico.motivo, 'Solo quedan 1 de Gelatina.');
+    assert.equal(await existencias(gelatina), 1);
+
+    // Cancelar regresa las existencias.
+    assert.equal((await ana.mutation('CancelarPedido', { id: primero.id })).data._execute, 1);
+    assert.equal(await existencias(gelatina), 3);
+    assert.equal((await ana.mutation('CancelarPedido', { id: primero.id })).data._execute, 0);
+    assert.equal(await existencias(gelatina), 3);
+  });
+
+  test('sin existencias se explica que se agotó', async () => {
+    await beto.mutation('EditarMiProducto', {
+      id: gelatina, nombre: 'Gelatina', precio: 12, puestoId: 'a0000000000040008000000000000001',
+      disponible: true, controlarStock: true, cantidadEnStock: 0,
+    });
+    const p = pide(1);
+    assert.equal((await ana.mutation('CrearPedido', p)).data._execute, 0);
+    const d = await ana.query('DiagnosticarPedido', {
+      cafeteriaId: CAFETERIA, recogerA: p.recogerA, items: p.items,
+    });
+    assert.equal(d.data.diagnostico.motivo, 'Se agotó Gelatina. Quítalo de tu carrito.');
+  });
+
+  test('los productos sin control no cambian sus existencias y nadie ajeno cancela', async () => {
+    const antes = await existencias(MOLLETES);
+    const p = pedido();
+    await ana.mutation('CrearPedido', p);
+    assert.equal(await existencias(MOLLETES), antes);
+    assert.equal((await beto.mutation('CancelarPedido', { id: p.id })).data._execute, 0);
+    await assert.rejects(beto.mutation('EditarMiProducto', {
+      id: gelatina, nombre: 'Gelatina', precio: 12, puestoId: 'a0000000000040008000000000000001',
+      disponible: true, cantidadEnStock: -1,
+    }));
+  });
+});

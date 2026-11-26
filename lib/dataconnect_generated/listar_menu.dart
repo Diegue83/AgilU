@@ -24,6 +24,8 @@ class ListarMenuProductos {
   final double precio;
   final String categoria;
   final bool disponible;
+  final bool controlarStock;
+  final int cantidadEnStock;
   final String? urlDeImagen;
   final double? precioOferta;
   final Timestamp? ofertaHasta;
@@ -38,6 +40,8 @@ class ListarMenuProductos {
   precio = nativeFromJson<double>(json['precio']),
   categoria = nativeFromJson<String>(json['categoria']),
   disponible = nativeFromJson<bool>(json['disponible']),
+  controlarStock = nativeFromJson<bool>(json['controlarStock']),
+  cantidadEnStock = nativeFromJson<int>(json['cantidadEnStock']),
   urlDeImagen = json['urlDeImagen'] == null ? null : nativeFromJson<String>(json['urlDeImagen']),
   precioOferta = json['precioOferta'] == null ? null : nativeFromJson<double>(json['precioOferta']),
   ofertaHasta = json['ofertaHasta'] == null ? null : Timestamp.fromJson(json['ofertaHasta']),
@@ -60,6 +64,8 @@ class ListarMenuProductos {
     precio == otherTyped.precio && 
     categoria == otherTyped.categoria && 
     disponible == otherTyped.disponible && 
+    controlarStock == otherTyped.controlarStock && 
+    cantidadEnStock == otherTyped.cantidadEnStock && 
     urlDeImagen == otherTyped.urlDeImagen && 
     precioOferta == otherTyped.precioOferta && 
     ofertaHasta == otherTyped.ofertaHasta && 
@@ -69,7 +75,7 @@ class ListarMenuProductos {
     
   }
   @override
-  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, descripcion.hashCode, precio.hashCode, categoria.hashCode, disponible.hashCode, urlDeImagen.hashCode, precioOferta.hashCode, ofertaHasta.hashCode, esEspecialidad.hashCode, preparacionInmediata.hashCode, puesto.hashCode]);
+  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, descripcion.hashCode, precio.hashCode, categoria.hashCode, disponible.hashCode, controlarStock.hashCode, cantidadEnStock.hashCode, urlDeImagen.hashCode, precioOferta.hashCode, ofertaHasta.hashCode, esEspecialidad.hashCode, preparacionInmediata.hashCode, puesto.hashCode]);
   
 
   Map<String, dynamic> toJson() {
@@ -82,6 +88,8 @@ class ListarMenuProductos {
     json['precio'] = nativeToJson<double>(precio);
     json['categoria'] = nativeToJson<String>(categoria);
     json['disponible'] = nativeToJson<bool>(disponible);
+    json['controlarStock'] = nativeToJson<bool>(controlarStock);
+    json['cantidadEnStock'] = nativeToJson<int>(cantidadEnStock);
     if (urlDeImagen != null) {
       json['urlDeImagen'] = nativeToJson<String?>(urlDeImagen);
     }
@@ -104,6 +112,8 @@ class ListarMenuProductos {
     required this.precio,
     required this.categoria,
     required this.disponible,
+    required this.controlarStock,
+    required this.cantidadEnStock,
     this.urlDeImagen,
     this.precioOferta,
     this.ofertaHasta,

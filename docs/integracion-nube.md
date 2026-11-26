@@ -26,7 +26,7 @@ sistema se cargan con `dataconnect/permisos.gql` (`SembrarPermisos`).
 | --- | --- |
 | Sin sesión | `CafeteriasParaRegistro` (solo id, nombre y ubicación de cafeterías activas) |
 | Cualquier usuario con sesión | `MisPendientes` (puntos rojos según sus permisos), `PermisosDisponibles`, `CrearPerfilEmpleado`, `ListarMenu`, `ListarCafeterias`, `OcupacionFranjas` (solo conteos), `MiPerfil`, `CrearPerfil`, `EditarMiPerfil`, `RegistrarDispositivo`, `OlvidarDispositivo` |
-| Alumno (dueño) | `EnviarComprobante`, `EliminarMiCuenta`, `CrearPedido`, `CancelarMiPedido`, `DiagnosticarPedido`, `MiPedido`, `MisPedidos`, `MiConfianza`, `MisNotificaciones`, `MarcarAvisosLeidos` |
+| Alumno (dueño) | `EnviarComprobante`, `EliminarMiCuenta`, `CrearPedido`, `CancelarMiPedido`, `DiagnosticarPedido`, `MiPedido`, `MisPedidos`, `CancelarPedido` (regresa existencias), `MiConfianza`, `MisNotificaciones`, `MarcarAvisosLeidos` |
 | `pedidos.atender` (encargado, empleado) | `PanelPedidos`, `HistorialPedidos`, `AvanzarPedido`, `EntregarPedido`, `MarcarNoRecogido` |
 | `pagos.validar` (encargado; con estación asignada, solo los de esa estación) | `PagosPorValidar`, `ValidarPago`, `AdeudosPorCobrar`, `CobrarAdeudo` |
 | `catalogo.gestionar` (encargado) | `MisEstaciones`, `CrearEstacion`, `EditarEstacion`, `EditarCobroEstacion`, `ActivarEstacion`, `EliminarEstacion`, `MisProductos`, `CrearMiProducto`, `EditarMiProducto`, `EstablecerDisponibilidad`, `GuardarFotoProducto`, `EliminarMiProducto`, `PublicarOferta`, `QuitarOferta` |

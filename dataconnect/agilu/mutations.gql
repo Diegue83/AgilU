@@ -71,6 +71,9 @@ mutation CrearPedido(
           AND e.activo
           AND e.cafeteria_id = $3::uuid
           AND i.cantidad BETWEEN 1 AND 50
+          AND (NOT p.controlar_stock OR p.cantidad_en_stock >= i.cantidad)
+        /* Bloquea los productos para que dos pedidos no tomen la misma existencia. */
+        FOR UPDATE OF p
       ),
       valido AS (
         SELECT 1 FROM cliente
@@ -138,6 +141,12 @@ mutation CrearPedido(
                (SELECT min(puesto_id::text)::uuid FROM lineas), $8::uuid
         FROM folio, cliente
         RETURNING id
+      ),
+      descuento AS (
+        UPDATE producto p SET cantidad_en_stock = p.cantidad_en_stock - l.cantidad
+        FROM lineas l
+        WHERE p.id = l.producto_id AND p.controlar_stock AND EXISTS (SELECT 1 FROM nuevo)
+        RETURNING p.id
       )
     INSERT INTO detalle_pedido (id, cantidad, precio_en_el_momento, pedido_id, producto_id)
     SELECT gen_random_uuid(), lineas.cantidad, lineas.precio, nuevo.id, lineas.producto_id
@@ -351,7 +360,10 @@ mutation CrearMiProducto(
   $puestoId: UUID!
   $disponible: Boolean!
   $preparacionInmediata: Boolean
-) @auth(level: USER) @transaction {
+  $controlarStock: Boolean
+  $cantidadEnStock: Int
+) @auth(expr: "auth != null && (!has(vars.cantidadEnStock) || vars.cantidadEnStock == null || (vars.cantidadEnStock >= 0 && vars.cantidadEnStock <= 9999))")
+  @transaction {
   query @redact {
     puesto(id: $puestoId)
       @check(expr: "this != null", message: "Elige una estación")
@@ -397,6 +409,8 @@ mutation CrearMiProducto(
       descripcion: $descripcion
       precio: $precio
       preparacionInmediata: $preparacionInmediata
+      controlarStock: $controlarStock
+      cantidadEnStock: $cantidadEnStock
       disponible: $disponible
       puesto: { id: $puestoId }
     }
@@ -413,7 +427,10 @@ mutation EditarMiProducto(
   $puestoId: UUID!
   $disponible: Boolean!
   $preparacionInmediata: Boolean
-) @auth(level: USER) @transaction {
+  $controlarStock: Boolean
+  $cantidadEnStock: Int
+) @auth(expr: "auth != null && (!has(vars.cantidadEnStock) || vars.cantidadEnStock == null || (vars.cantidadEnStock >= 0 && vars.cantidadEnStock <= 9999))")
+  @transaction {
   query @redact {
     producto(id: $id)
       @check(expr: "this != null", message: "El producto no existe")
@@ -492,6 +509,8 @@ mutation EditarMiProducto(
       descripcion: $descripcion
       precio: $precio
       preparacionInmediata: $preparacionInmediata
+      controlarStock: $controlarStock
+      cantidadEnStock: $cantidadEnStock
       disponible: $disponible
       puesto: { id: $puestoId }
     }
@@ -908,6 +927,33 @@ mutation MarcarAvisosLeidos @auth(level: USER) {
 # El alumno cancela su pedido mientras no se empiece a preparar: por pagar,
 # con el comprobante en revisión o pagado esperando en cocina. Devuelve si ya
 # estaba pagado (la cafetería hace el reembolso), o null si ya no se puede.
+# Cancela el pedido del alumno antes de que se prepare y regresa las
+# existencias de los productos que las controlan. Devuelve 1 si lo canceló.
+# (CancelarMiPedido se conserva para las versiones anteriores de la app.)
+mutation CancelarPedido($id: UUID!) @auth(level: USER) {
+  _execute(
+    sql: """
+    WITH
+      c AS (
+        SELECT o.id FROM pedido o
+        WHERE o.id = $2::uuid
+          AND o.estado IN ('por_pagar', 'pago_en_revision', 'pendiente')
+          AND o.usuario_id = (SELECT usuario_id FROM autenticacion WHERE firebase_auth_uid = $1)
+        FOR UPDATE
+      ),
+      repone AS (
+        UPDATE producto p SET cantidad_en_stock = p.cantidad_en_stock + d.cantidad
+        FROM detalle_pedido d, c
+        WHERE d.pedido_id = c.id AND d.producto_id = p.id AND p.controlar_stock
+        RETURNING p.id
+      )
+    UPDATE pedido SET estado = 'cancelado', codigo_entrega = NULL
+    FROM c WHERE pedido.id = c.id
+    """
+    params: [{ _expr: "auth.uid" }, $id]
+  )
+}
+
 mutation CancelarMiPedido($id: UUID!) @auth(level: USER) {
   resultado: _executeReturningFirst(
     sql: """

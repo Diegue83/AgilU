@@ -23,6 +23,8 @@ void main() {
       'ofertaHasta': null,
       'esEspecialidad': false,
       'preparacionInmediata': false,
+      'controlarStock': true,
+      'cantidadEnStock': 2,
       'puesto': {
         'id': 'a0000000000040008000000000000001',
         'nombre': 'Guisados',
@@ -40,6 +42,9 @@ void main() {
     expect(p.cafeteriaId, 'c0000000000040008000000000000001');
     expect(p.estacionId, 'a0000000000040008000000000000001');
     expect(p.estacion, 'Guisados');
+    expect(p.controlarStock, isTrue);
+    expect(p.existencias, 2);
+    expect(p.etiquetaExistencias, 'Agotado');
   });
 
   test('el pedido solo manda producto y cantidad, nunca el precio', () {

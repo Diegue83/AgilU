@@ -52,6 +52,8 @@ class _FormularioState extends State<_Formulario> {
   String? _estacionId;
   bool _disponible = true;
   bool _inmediato = false;
+  bool _controlarStock = false;
+  final _existencias = TextEditingController(text: '0');
 
   @override
   void initState() {
@@ -64,6 +66,8 @@ class _FormularioState extends State<_Formulario> {
       _estacionId = p.estacionId;
       _disponible = p.disponible;
       _inmediato = p.preparacionInmediata;
+      _controlarStock = p.controlarStock;
+      _existencias.text = '${p.existencias}';
     } else {
       final estaciones = context.read<ProductoFormViewModel>().estaciones;
       if (estaciones.length == 1) _estacionId = estaciones.first.id;
@@ -75,6 +79,7 @@ class _FormularioState extends State<_Formulario> {
     _nombre.dispose();
     _descripcion.dispose();
     _precio.dispose();
+    _existencias.dispose();
     super.dispose();
   }
 
@@ -86,6 +91,8 @@ class _FormularioState extends State<_Formulario> {
       estacionId: _estacionId,
       disponible: _disponible,
       preparacionInmediata: _inmediato,
+      controlarStock: _controlarStock,
+      existencias: _existencias.text,
     );
     if (ok && mounted) Navigator.pop(context, true);
   }
@@ -227,6 +234,23 @@ class _FormularioState extends State<_Formulario> {
             value: _inmediato,
             onChanged: (v) => setState(() => _inmediato = v),
           ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Controlar existencias'),
+            subtitle: const Text('Se descuentan al pedir y el menú avisa '
+                'cuando quedan pocas.'),
+            value: _controlarStock,
+            onChanged: (v) => setState(() => _controlarStock = v),
+          ),
+          if (_controlarStock)
+            TextField(
+              controller: _existencias,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: 'Existencias',
+                errorText: vm.errores.existencias,
+              ),
+            ),
           if (vm.error != null) ...[
             const SizedBox(height: 8),
             Text(vm.error!,

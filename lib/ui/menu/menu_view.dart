@@ -165,12 +165,22 @@ class _MenuScaffold extends StatelessWidget {
                 itemBuilder: (_, i) {
                   final p = vm.productosVisibles[i];
                   return ListTile(
-                    enabled: p.disponible,
+                    enabled: p.disponibleAhora,
                     leading: FotoProducto(url: p.urlImagen),
                     title: Text(p.nombre),
-                    subtitle: Text(p.disponible
-                        ? p.descripcion
-                        : 'No disponible por ahora'),
+                    subtitle: p.disponibleAhora
+                        ? Text.rich(TextSpan(children: [
+                            if (p.ultimasUnidades)
+                              TextSpan(
+                                  text: '${p.etiquetaExistencias} · ',
+                                  style: TextStyle(
+                                      color: Colors.orange.shade800,
+                                      fontWeight: FontWeight.bold)),
+                            TextSpan(text: p.descripcion),
+                          ]))
+                        : Text(p.agotadoPorExistencias
+                            ? 'Agotado'
+                            : 'No disponible por ahora'),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -182,7 +192,7 @@ class _MenuScaffold extends StatelessWidget {
                         Text('\$${p.precioEn(vm.ahora).toStringAsFixed(2)}'),
                         IconButton(
                           icon: const Icon(Icons.add_circle_outline),
-                          onPressed: p.disponible && vm.puedePedir
+                          onPressed: p.disponibleAhora && vm.puedePedir
                               ? () {
                                   carrito.configurarCafeteria(vm.cafeteria);
                                   if (!carrito.agregar(p)) {

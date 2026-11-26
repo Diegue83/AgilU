@@ -25,6 +25,7 @@ class MisProductosProductos {
   final String categoria;
   final bool disponible;
   final int cantidadEnStock;
+  final bool controlarStock;
   final String? urlDeImagen;
   final double? precioOferta;
   final Timestamp? ofertaHasta;
@@ -40,6 +41,7 @@ class MisProductosProductos {
   categoria = nativeFromJson<String>(json['categoria']),
   disponible = nativeFromJson<bool>(json['disponible']),
   cantidadEnStock = nativeFromJson<int>(json['cantidadEnStock']),
+  controlarStock = nativeFromJson<bool>(json['controlarStock']),
   urlDeImagen = json['urlDeImagen'] == null ? null : nativeFromJson<String>(json['urlDeImagen']),
   precioOferta = json['precioOferta'] == null ? null : nativeFromJson<double>(json['precioOferta']),
   ofertaHasta = json['ofertaHasta'] == null ? null : Timestamp.fromJson(json['ofertaHasta']),
@@ -63,6 +65,7 @@ class MisProductosProductos {
     categoria == otherTyped.categoria && 
     disponible == otherTyped.disponible && 
     cantidadEnStock == otherTyped.cantidadEnStock && 
+    controlarStock == otherTyped.controlarStock && 
     urlDeImagen == otherTyped.urlDeImagen && 
     precioOferta == otherTyped.precioOferta && 
     ofertaHasta == otherTyped.ofertaHasta && 
@@ -72,7 +75,7 @@ class MisProductosProductos {
     
   }
   @override
-  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, descripcion.hashCode, precio.hashCode, categoria.hashCode, disponible.hashCode, cantidadEnStock.hashCode, urlDeImagen.hashCode, precioOferta.hashCode, ofertaHasta.hashCode, esEspecialidad.hashCode, preparacionInmediata.hashCode, puesto.hashCode]);
+  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, descripcion.hashCode, precio.hashCode, categoria.hashCode, disponible.hashCode, cantidadEnStock.hashCode, controlarStock.hashCode, urlDeImagen.hashCode, precioOferta.hashCode, ofertaHasta.hashCode, esEspecialidad.hashCode, preparacionInmediata.hashCode, puesto.hashCode]);
   
 
   Map<String, dynamic> toJson() {
@@ -86,6 +89,7 @@ class MisProductosProductos {
     json['categoria'] = nativeToJson<String>(categoria);
     json['disponible'] = nativeToJson<bool>(disponible);
     json['cantidadEnStock'] = nativeToJson<int>(cantidadEnStock);
+    json['controlarStock'] = nativeToJson<bool>(controlarStock);
     if (urlDeImagen != null) {
       json['urlDeImagen'] = nativeToJson<String?>(urlDeImagen);
     }
@@ -109,6 +113,7 @@ class MisProductosProductos {
     required this.categoria,
     required this.disponible,
     required this.cantidadEnStock,
+    required this.controlarStock,
     this.urlDeImagen,
     this.precioOferta,
     this.ofertaHasta,

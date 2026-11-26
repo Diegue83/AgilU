@@ -129,8 +129,16 @@ class CartViewModel extends ChangeNotifier {
       notifyListeners();
       return false;
     }
-    error = null;
     final actual = _items[p.id];
+    final yaLleva = actual?.cantidad ?? 0;
+    if (p.controlarStock && yaLleva >= p.existencias) {
+      error = p.existencias <= 0
+          ? 'Se agotó ${p.nombre}.'
+          : 'Solo quedan ${p.existencias} de ${p.nombre}.';
+      notifyListeners();
+      return false;
+    }
+    error = null;
     if (actual == null) {
       _items[p.id] = ItemCarrito(producto: p);
     } else {

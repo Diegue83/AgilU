@@ -7,6 +7,8 @@ class CrearMiProductoVariablesBuilder {
   String puestoId;
   bool disponible;
   Optional<bool> _preparacionInmediata = Optional.optional(nativeFromJson, nativeToJson);
+  Optional<bool> _controlarStock = Optional.optional(nativeFromJson, nativeToJson);
+  Optional<int> _cantidadEnStock = Optional.optional(nativeFromJson, nativeToJson);
 
   final FirebaseDataConnect _dataConnect;  CrearMiProductoVariablesBuilder descripcion(String? t) {
    _descripcion.value = t;
@@ -14,6 +16,14 @@ class CrearMiProductoVariablesBuilder {
   }
   CrearMiProductoVariablesBuilder preparacionInmediata(bool? t) {
    _preparacionInmediata.value = t;
+   return this;
+  }
+  CrearMiProductoVariablesBuilder controlarStock(bool? t) {
+   _controlarStock.value = t;
+   return this;
+  }
+  CrearMiProductoVariablesBuilder cantidadEnStock(int? t) {
+   _cantidadEnStock.value = t;
    return this;
   }
 
@@ -25,7 +35,7 @@ class CrearMiProductoVariablesBuilder {
   }
 
   MutationRef<CrearMiProductoData, CrearMiProductoVariables> ref() {
-    CrearMiProductoVariables vars= CrearMiProductoVariables(nombre: nombre,descripcion: _descripcion,precio: precio,puestoId: puestoId,disponible: disponible,preparacionInmediata: _preparacionInmediata,);
+    CrearMiProductoVariables vars= CrearMiProductoVariables(nombre: nombre,descripcion: _descripcion,precio: precio,puestoId: puestoId,disponible: disponible,preparacionInmediata: _preparacionInmediata,controlarStock: _controlarStock,cantidadEnStock: _cantidadEnStock,);
     return _dataConnect.mutation("CrearMiProducto", dataDeserializer, varsSerializer, vars);
   }
 }
@@ -106,6 +116,8 @@ class CrearMiProductoVariables {
   final String puestoId;
   final bool disponible;
   late final Optional<bool>preparacionInmediata;
+  late final Optional<bool>controlarStock;
+  late final Optional<int>cantidadEnStock;
   @Deprecated('fromJson is deprecated for Variable classes as they are no longer required for deserialization.')
   CrearMiProductoVariables.fromJson(Map<String, dynamic> json):
   
@@ -126,6 +138,14 @@ class CrearMiProductoVariables {
     preparacionInmediata = Optional.optional(nativeFromJson, nativeToJson);
     preparacionInmediata.value = json['preparacionInmediata'] == null ? null : nativeFromJson<bool>(json['preparacionInmediata']);
   
+  
+    controlarStock = Optional.optional(nativeFromJson, nativeToJson);
+    controlarStock.value = json['controlarStock'] == null ? null : nativeFromJson<bool>(json['controlarStock']);
+  
+  
+    cantidadEnStock = Optional.optional(nativeFromJson, nativeToJson);
+    cantidadEnStock.value = json['cantidadEnStock'] == null ? null : nativeFromJson<int>(json['cantidadEnStock']);
+  
   }
   @override
   bool operator ==(Object other) {
@@ -142,11 +162,13 @@ class CrearMiProductoVariables {
     precio == otherTyped.precio && 
     puestoId == otherTyped.puestoId && 
     disponible == otherTyped.disponible && 
-    preparacionInmediata == otherTyped.preparacionInmediata;
+    preparacionInmediata == otherTyped.preparacionInmediata && 
+    controlarStock == otherTyped.controlarStock && 
+    cantidadEnStock == otherTyped.cantidadEnStock;
     
   }
   @override
-  int get hashCode => Object.hashAll([nombre.hashCode, descripcion.hashCode, precio.hashCode, puestoId.hashCode, disponible.hashCode, preparacionInmediata.hashCode]);
+  int get hashCode => Object.hashAll([nombre.hashCode, descripcion.hashCode, precio.hashCode, puestoId.hashCode, disponible.hashCode, preparacionInmediata.hashCode, controlarStock.hashCode, cantidadEnStock.hashCode]);
   
 
   Map<String, dynamic> toJson() {
@@ -161,6 +183,12 @@ class CrearMiProductoVariables {
     if(preparacionInmediata.state == OptionalState.set) {
       json['preparacionInmediata'] = preparacionInmediata.toJson();
     }
+    if(controlarStock.state == OptionalState.set) {
+      json['controlarStock'] = controlarStock.toJson();
+    }
+    if(cantidadEnStock.state == OptionalState.set) {
+      json['cantidadEnStock'] = cantidadEnStock.toJson();
+    }
     return json;
   }
 
@@ -171,6 +199,8 @@ class CrearMiProductoVariables {
     required this.puestoId,
     required this.disponible,
     required this.preparacionInmediata,
+    required this.controlarStock,
+    required this.cantidadEnStock,
   });
 }
 
