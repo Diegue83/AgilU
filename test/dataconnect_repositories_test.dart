@@ -78,16 +78,28 @@ void main() {
       'usuario': {
         'id': 'u2',
         'nombre': 'Beto',
-        'rol': {'nombre': 'encargado'},
+        'rol': {
+          'nombre': 'encargado',
+          'rolPermisos_on_rol': [
+            {
+              'permiso': {'codigoAccion': 'personal.gestionar'}
+            },
+            {
+              'permiso': {'codigoAccion': 'pedidos.atender'}
+            },
+          ],
+        },
         'cafeteria': {'id': 'c1', 'nombre': 'Central'},
       },
     }));
     expect(p.rol, RolUsuario.encargado);
     expect(p.esEncargado, isTrue);
+    expect(p.permisos, {'personal.gestionar', 'pedidos.atender'});
     expect(p.cafeteriaId, 'c1');
   });
 
-  test('un rol desconocido se trata como alumno', () {
-    expect(RolUsuario.desdeNombre('administrador'), RolUsuario.alumno);
+  test('un rol que no es de sistema es un rol propio del administrador', () {
+    expect(RolUsuario.desdeNombre('cajero'), RolUsuario.otro);
+    expect(RolUsuario.desdeNombre(null), RolUsuario.alumno);
   });
 }

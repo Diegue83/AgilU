@@ -1,14 +1,19 @@
+import '../../core/permisos.dart';
+
+/// Roles de sistema; [otro] es un rol creado por el administrador. Lo que cada
+/// cuenta puede hacer lo dicen sus permisos, no el rol.
 enum RolUsuario {
   alumno,
   empleado,
   encargado,
-  beneficiaria,
-  admin;
+  admin,
+  otro;
 
-  static RolUsuario desdeNombre(String? nombre) => RolUsuario.values.firstWhere(
-        (r) => r.name == nombre,
-        orElse: () => RolUsuario.alumno,
-      );
+  static RolUsuario desdeNombre(String? nombre) {
+    if (nombre == null || nombre.isEmpty) return RolUsuario.alumno;
+    return RolUsuario.values
+        .firstWhere((r) => r.name == nombre, orElse: () => RolUsuario.otro);
+  }
 }
 
 class Perfil {
@@ -31,14 +36,31 @@ class Perfil {
     this.solicitudCafeteria,
     this.estacionId,
     this.estacion,
-  });
+    this.nombreRol,
+    Set<String>? permisos,
+  }) : _permisos = permisos;
+
+  /// Nombre del rol tal como está en la base (incluye roles propios).
+  final String? nombreRol;
+
+  final Set<String>? _permisos;
+
+  /// Permisos del rol. Si el perfil no los trae (datos de prueba), se usan los
+  /// iniciales del rol de sistema.
+  Set<String> get permisos =>
+      _permisos ?? Permisos.porDefecto(nombreRol ?? rol.name);
+
+  bool puede(String permiso) => permisos.contains(permiso);
 
   /// Estación que el encargado le asignó a un empleado.
   final String? estacionId;
   final String? estacion;
 
   /// Empleado con estación: puede activarla y manejar sus productos.
-  bool get tieneEstacion => esEmpleado && estacionId != null;
+  bool get tieneEstacion =>
+      cafeteriaId != null &&
+      puede(Permisos.estacionPropia) &&
+      estacionId != null;
 
   /// Cafetería a la que pidió entrar como empleado, mientras el encargado no
   /// apruebe o rechace la solicitud.
@@ -48,17 +70,21 @@ class Perfil {
   bool get esperandoAprobacion =>
       rol == RolUsuario.alumno && solicitudCafeteria != null;
 
-  bool get esEncargado => rol == RolUsuario.encargado && cafeteriaId != null;
+  /// Administra el personal de su cafetería.
+  bool get esEncargado =>
+      cafeteriaId != null && puede(Permisos.personalGestionar);
 
   /// Atiende pedidos de su cafetería, sin acceso a pagos, precios ni ajustes.
   bool get esEmpleado => rol == RolUsuario.empleado && cafeteriaId != null;
 
-  /// Encargado o empleado: entra al panel de la cafetería.
-  bool get esPersonal => esEncargado || esEmpleado;
+  /// Tiene algún permiso de cafetería y una cafetería asignada: entra al
+  /// panel del personal.
+  bool get esPersonal =>
+      cafeteriaId != null && permisos.any(Permisos.deCafeteria.contains);
 
-  bool get esAdmin => rol == RolUsuario.admin;
+  bool get esAdmin => puede(Permisos.adminGestionar);
 
-  bool get esBeneficiaria => rol == RolUsuario.beneficiaria;
+  String get etiquetaRol => etiquetaRolNombre(nombreRol ?? rol.name);
 }
 
 /// Lo que el alumno captura en el primer paso del registro.

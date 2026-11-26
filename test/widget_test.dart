@@ -356,17 +356,20 @@ void main() {
     expect(avisos.registrado, isTrue);
   });
 
-  testWidgets('la beneficiaria entra directo a su reporte', (tester) async {
+  testWidgets('el encargado consulta el reporte de su cafetería en el panel',
+      (tester) async {
     await tester.pumpWidget(_app(MockAuthRepository(),
         perfiles: MockPerfilRepository(
             perfil: const Perfil(
-                nombre: 'Elena',
-                correo: 'elena@utng.edu.mx',
-                rol: RolUsuario.beneficiaria))));
+                nombre: 'Beto',
+                correo: 'beto@utng.edu.mx',
+                rol: RolUsuario.encargado,
+                cafeteriaId: 'c1'))));
     await _iniciarSesion(tester);
-    expect(find.text('Reporte'), findsOneWidget);
+    await tester.tap(find.text('Reporte'));
+    await tester.pumpAndSettle();
     expect(find.text('Total'), findsOneWidget);
-    expect(find.text('Cafetería central'), findsOneWidget);
+    expect(find.text('Cafetería central'), findsWidgets);
     await tester.tap(find.text('Hoy'));
     await tester.pumpAndSettle();
     expect(find.text('Total'), findsOneWidget);
@@ -422,7 +425,8 @@ void main() {
         'nuevo@utng.edu.mx');
     await tester.tap(find.text('Agregar'));
     await tester.pumpAndSettle();
-    expect(find.text('Empleado · nuevo@utng.edu.mx · Sin estación'), findsOneWidget);
+    expect(find.text('Empleado · nuevo@utng.edu.mx · Sin estación'),
+        findsOneWidget);
   });
 
   testWidgets('el administrador entra a cafeterías y crea una', (tester) async {

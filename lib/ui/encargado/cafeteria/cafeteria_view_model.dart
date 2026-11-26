@@ -57,7 +57,7 @@ class CafeteriaViewModel extends ChangeNotifier {
         'La anticipación debe estar entre 0 y 240 minutos',
         'El intervalo debe estar entre 5 y 60 minutos',
         'La capacidad debe estar entre 1 y 200 pedidos',
-        'Solo el encargado puede hacer esto',
+        'No tienes permiso para hacer esto',
       ]);
       return false;
     } finally {

@@ -184,7 +184,7 @@ class _Personal extends StatelessWidget {
                           : Icons.badge_outlined),
                       title: Text(m.nombre),
                       subtitle: Text([
-                        etiquetaRol(m.rol),
+                        m.etiqueta,
                         m.correo,
                         if (m.rol == RolUsuario.empleado)
                           m.estacion ?? 'Sin estación',

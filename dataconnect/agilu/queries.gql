@@ -40,6 +40,11 @@ query MiPerfil @auth(level: USER) {
       numeroDeTelefono
       rol {
         nombre
+        rolPermisos_on_rol {
+          permiso {
+            codigoAccion
+          }
+        }
       }
       cafeteria {
         id
@@ -134,7 +139,7 @@ query MisEstaciones @auth(level: USER) {
           cafeteria: {
             usuarios_on_cafeteria: {
               exist: {
-                rol: { nombre: { eq: "encargado" } }
+                rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "catalogo.gestionar" } } } } }
                 autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
               }
             }
@@ -143,7 +148,7 @@ query MisEstaciones @auth(level: USER) {
         {
           usuarios_on_puesto: {
             exist: {
-              rol: { nombre: { eq: "empleado" } }
+              rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "estacion.propia" } } } } }
               autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
             }
           }
@@ -174,7 +179,7 @@ query MisProductos @auth(level: USER) {
             cafeteria: {
               usuarios_on_cafeteria: {
                 exist: {
-                  rol: { nombre: { eq: "encargado" } }
+                  rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "catalogo.gestionar" } } } } }
                   autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
                 }
               }
@@ -183,7 +188,7 @@ query MisProductos @auth(level: USER) {
           {
             usuarios_on_puesto: {
               exist: {
-                rol: { nombre: { eq: "empleado" } }
+                rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "estacion.propia" } } } } }
                 autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
               }
             }
@@ -356,7 +361,7 @@ query PanelPedidos($desde: Timestamp!, $hasta: Timestamp!) @auth(level: USER) {
       cafeteria: {
         usuarios_on_cafeteria: {
           exist: {
-            rol: { nombre: { in: ["encargado", "empleado"] } }
+            rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "pedidos.atender" } } } } }
             autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
           }
         }
@@ -393,7 +398,7 @@ query PagosPorValidar @auth(level: USER) {
       cafeteria: {
         usuarios_on_cafeteria: {
           exist: {
-            rol: { nombre: { eq: "encargado" } }
+            rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "pagos.validar" } } } } }
             autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
           }
         }
@@ -455,7 +460,7 @@ query AdeudosPorCobrar @auth(level: USER) {
       cafeteria: {
         usuarios_on_cafeteria: {
           exist: {
-            rol: { nombre: { eq: "encargado" } }
+            rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "pagos.validar" } } } } }
             autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
           }
         }
@@ -496,9 +501,9 @@ query MisNotificaciones @auth(level: USER) {
   }
 }
 
-# HU-11: resumen del negocio por cafetería para la beneficiaria. Para cualquier
-# otro rol la consulta regresa una lista vacía. Solo expone totales.
-query ReporteBeneficiaria($desde: Timestamp!, $hasta: Timestamp!) @auth(level: USER) {
+# Reporte de la cafetería de quien tiene el permiso reporte.ver (el encargado):
+# pedidos, entregas, no recogidos, cancelados e ingresos en el periodo.
+query ReporteCafeteria($desde: Timestamp!, $hasta: Timestamp!) @auth(level: USER) {
   filas: _select(
     sql: """
     SELECT c.id AS "cafeteriaId",
@@ -512,14 +517,13 @@ query ReporteBeneficiaria($desde: Timestamp!, $hasta: Timestamp!) @auth(level: U
     FROM cafeteria c
     LEFT JOIN pedido o ON o.cafeteria_id = c.id
       AND o.recoger_a >= $2::timestamptz AND o.recoger_a < $3::timestamptz
-    WHERE EXISTS (
-      SELECT 1 FROM usuario u
+    WHERE c.id = (
+      SELECT u.cafeteria_id FROM usuario u
       JOIN autenticacion a ON a.usuario_id = u.id
       JOIN rol r ON r.id = u.rol_id
-      WHERE a.firebase_auth_uid = $1 AND r.nombre = 'beneficiaria'
+      WHERE a.firebase_auth_uid = $1 AND EXISTS (SELECT 1 FROM rol_permiso rp JOIN permiso pe ON pe.id = rp.permiso_id WHERE rp.rol_id = r.id AND pe.codigo_accion = 'reporte.ver')
     )
     GROUP BY c.id, c.nombre
-    ORDER BY c.nombre
     """
     params: [{ _expr: "auth.uid" }, $desde, $hasta]
   )
@@ -533,7 +537,7 @@ query HistorialPedidos($desde: Timestamp!, $hasta: Timestamp!) @auth(level: USER
       cafeteria: {
         usuarios_on_cafeteria: {
           exist: {
-            rol: { nombre: { in: ["encargado", "empleado"] } }
+            rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "pedidos.atender" } } } } }
             autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
           }
         }
@@ -570,21 +574,25 @@ query MisPendientes @auth(level: USER) {
   pendientes: _selectFirst(
     sql: """
     WITH yo AS (
-      SELECT u.id AS usuario_id, u.cafeteria_id, coalesce(r.nombre, 'alumno') AS rol
+      SELECT u.id AS usuario_id, u.cafeteria_id, coalesce(r.nombre, 'alumno') AS rol,
+             coalesce(array_agg(pe.codigo_accion) FILTER (WHERE pe.id IS NOT NULL), '{}') AS permisos
       FROM autenticacion a
       JOIN usuario u ON u.id = a.usuario_id
       LEFT JOIN rol r ON r.id = u.rol_id
+      LEFT JOIN rol_permiso rp ON rp.rol_id = r.id
+      LEFT JOIN permiso pe ON pe.id = rp.permiso_id
       WHERE a.firebase_auth_uid = $1
+      GROUP BY u.id, u.cafeteria_id, r.nombre
     )
     SELECT
       yo.rol AS "rol",
-      CASE WHEN yo.rol = 'encargado' THEN
+      CASE WHEN 'pagos.validar' = ANY (yo.permisos) THEN
         (SELECT count(*) FROM pedido p WHERE p.cafeteria_id = yo.cafeteria_id AND p.estado = 'pago_en_revision')
       ELSE 0 END::int AS "pagos",
-      CASE WHEN yo.rol IN ('encargado', 'empleado') THEN
+      CASE WHEN 'pedidos.atender' = ANY (yo.permisos) THEN
         (SELECT count(*) FROM pedido p WHERE p.cafeteria_id = yo.cafeteria_id AND p.estado = 'pendiente')
       ELSE 0 END::int AS "enEspera",
-      CASE WHEN yo.rol = 'encargado' THEN
+      CASE WHEN 'personal.gestionar' = ANY (yo.permisos) THEN
         (SELECT count(*) FROM solicitud_empleo s WHERE s.cafeteria_id = yo.cafeteria_id)
       ELSE 0 END::int AS "solicitudes",
       (SELECT count(*) FROM pedido p WHERE p.usuario_id = yo.usuario_id AND p.estado = 'listo')::int AS "listos",

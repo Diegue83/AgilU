@@ -21,6 +21,8 @@ export interface Persona {
   usuarioId: string;
   uid: string | null;
   rol: string | null;
+  /** Permisos del rol (RolPermiso): deciden quién avisa y a quién le llega. */
+  permisos: string[];
   tokens: string[];
 }
 
@@ -55,10 +57,11 @@ export class AvisoRechazado extends Error {
 
 export const formatearFolio = (n: number) => `AGU-${String(n).padStart(5, '0')}`;
 
-const esPersonalDe = (uid: string, p: PedidoParaAviso, roles: string[]) =>
-  p.personal.some((x) => x.uid === uid && x.rol !== null && roles.includes(x.rol));
+const esPersonalDe = (uid: string, p: PedidoParaAviso, permiso: string) =>
+  p.personal.some((x) => x.uid === uid && x.permisos.includes(permiso));
 
-const encargados = (personas: Persona[]) => personas.filter((x) => x.rol === 'encargado');
+const conPermiso = (personas: Persona[], permiso: string) =>
+  personas.filter((x) => x.permisos.includes(permiso));
 
 /** Decide el aviso de un pedido, o lanza AvisoRechazado. */
 export function avisoDePedido(evento: Evento, uid: string, p: PedidoParaAviso): Aviso {
@@ -70,10 +73,10 @@ export function avisoDePedido(evento: Evento, uid: string, p: PedidoParaAviso): 
       return {
         titulo: 'Nuevo comprobante',
         mensaje: `El pedido ${folio} espera que valides el pago.`,
-        destinatarios: encargados(p.personal),
+        destinatarios: conPermiso(p.personal, 'pagos.validar'),
       };
     case 'pago_validado':
-      if (!esPersonalDe(uid, p, ['encargado'])) throw new AvisoRechazado(403, 'No eres encargado de esta cafetería.');
+      if (!esPersonalDe(uid, p, 'pagos.validar')) throw new AvisoRechazado(403, 'No validas pagos en esta cafetería.');
       if (!p.pagadoEn || !['pendiente', 'preparando', 'listo'].includes(p.estado)) {
         throw new AvisoRechazado(409, 'El pago de este pedido no está validado.');
       }
@@ -83,7 +86,7 @@ export function avisoDePedido(evento: Evento, uid: string, p: PedidoParaAviso): 
         destinatarios: [p.alumno],
       };
     case 'pago_rechazado':
-      if (!esPersonalDe(uid, p, ['encargado'])) throw new AvisoRechazado(403, 'No eres encargado de esta cafetería.');
+      if (!esPersonalDe(uid, p, 'pagos.validar')) throw new AvisoRechazado(403, 'No validas pagos en esta cafetería.');
       if (p.estado !== 'por_pagar' || !p.motivoRechazoPago) {
         throw new AvisoRechazado(409, 'El pago de este pedido no fue rechazado.');
       }
@@ -93,7 +96,7 @@ export function avisoDePedido(evento: Evento, uid: string, p: PedidoParaAviso): 
         destinatarios: [p.alumno],
       };
     case 'pedido_listo':
-      if (!esPersonalDe(uid, p, ['encargado', 'empleado'])) {
+      if (!esPersonalDe(uid, p, 'pedidos.atender')) {
         throw new AvisoRechazado(403, 'No atiendes esta cafetería.');
       }
       if (p.estado !== 'listo') throw new AvisoRechazado(409, 'El pedido no está listo.');
@@ -112,7 +115,7 @@ export function avisoDeSolicitud(s: SolicitudParaAviso): Aviso {
   return {
     titulo: 'Nueva solicitud de trabajo',
     mensaje: `${s.nombre} pidió entrar como empleado. Revísala en Personal.`,
-    destinatarios: encargados(s.personal),
+    destinatarios: conPermiso(s.personal, 'personal.gestionar'),
   };
 }
 

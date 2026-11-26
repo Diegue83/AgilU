@@ -132,9 +132,13 @@ class MiPerfilAutenticacionUsuario {
 @immutable
 class MiPerfilAutenticacionUsuarioRol {
   final String nombre;
+  final List<MiPerfilAutenticacionUsuarioRolRolPermisosOnRol> rolPermisos_on_rol;
   MiPerfilAutenticacionUsuarioRol.fromJson(dynamic json):
   
-  nombre = nativeFromJson<String>(json['nombre']);
+  nombre = nativeFromJson<String>(json['nombre']),
+  rolPermisos_on_rol = (json['rolPermisos_on_rol'] as List<dynamic>)
+        .map((e) => MiPerfilAutenticacionUsuarioRolRolPermisosOnRol.fromJson(e))
+        .toList();
   @override
   bool operator ==(Object other) {
     if(identical(this, other)) {
@@ -145,21 +149,92 @@ class MiPerfilAutenticacionUsuarioRol {
     }
 
     final MiPerfilAutenticacionUsuarioRol otherTyped = other as MiPerfilAutenticacionUsuarioRol;
-    return nombre == otherTyped.nombre;
+    return nombre == otherTyped.nombre && 
+    rolPermisos_on_rol == otherTyped.rolPermisos_on_rol;
     
   }
   @override
-  int get hashCode => nombre.hashCode;
+  int get hashCode => Object.hashAll([nombre.hashCode, rolPermisos_on_rol.hashCode]);
   
 
   Map<String, dynamic> toJson() {
     Map<String, dynamic> json = {};
     json['nombre'] = nativeToJson<String>(nombre);
+    json['rolPermisos_on_rol'] = rolPermisos_on_rol.map((e) => e.toJson()).toList();
     return json;
   }
 
   MiPerfilAutenticacionUsuarioRol({
     required this.nombre,
+    required this.rolPermisos_on_rol,
+  });
+}
+
+@immutable
+class MiPerfilAutenticacionUsuarioRolRolPermisosOnRol {
+  final MiPerfilAutenticacionUsuarioRolRolPermisosOnRolPermiso permiso;
+  MiPerfilAutenticacionUsuarioRolRolPermisosOnRol.fromJson(dynamic json):
+  
+  permiso = MiPerfilAutenticacionUsuarioRolRolPermisosOnRolPermiso.fromJson(json['permiso']);
+  @override
+  bool operator ==(Object other) {
+    if(identical(this, other)) {
+      return true;
+    }
+    if(other.runtimeType != runtimeType) {
+      return false;
+    }
+
+    final MiPerfilAutenticacionUsuarioRolRolPermisosOnRol otherTyped = other as MiPerfilAutenticacionUsuarioRolRolPermisosOnRol;
+    return permiso == otherTyped.permiso;
+    
+  }
+  @override
+  int get hashCode => permiso.hashCode;
+  
+
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> json = {};
+    json['permiso'] = permiso.toJson();
+    return json;
+  }
+
+  MiPerfilAutenticacionUsuarioRolRolPermisosOnRol({
+    required this.permiso,
+  });
+}
+
+@immutable
+class MiPerfilAutenticacionUsuarioRolRolPermisosOnRolPermiso {
+  final String codigoAccion;
+  MiPerfilAutenticacionUsuarioRolRolPermisosOnRolPermiso.fromJson(dynamic json):
+  
+  codigoAccion = nativeFromJson<String>(json['codigoAccion']);
+  @override
+  bool operator ==(Object other) {
+    if(identical(this, other)) {
+      return true;
+    }
+    if(other.runtimeType != runtimeType) {
+      return false;
+    }
+
+    final MiPerfilAutenticacionUsuarioRolRolPermisosOnRolPermiso otherTyped = other as MiPerfilAutenticacionUsuarioRolRolPermisosOnRolPermiso;
+    return codigoAccion == otherTyped.codigoAccion;
+    
+  }
+  @override
+  int get hashCode => codigoAccion.hashCode;
+  
+
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> json = {};
+    json['codigoAccion'] = nativeToJson<String>(codigoAccion);
+    return json;
+  }
+
+  MiPerfilAutenticacionUsuarioRolRolPermisosOnRolPermiso({
+    required this.codigoAccion,
   });
 }
 

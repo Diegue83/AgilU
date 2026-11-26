@@ -21,8 +21,25 @@ void main() {
       expect(
           Routes.inicioPara(_perfil(RolUsuario.encargado, cafeteriaId: 'c1')),
           Routes.encargado);
+      // Un rol propio entra al panel solo si tiene permisos de cafetería.
       expect(
-          Routes.inicioPara(_perfil(RolUsuario.beneficiaria)), Routes.reporte);
+          Routes.inicioPara(const Perfil(
+              nombre: 'X',
+              correo: 'x@utng.edu.mx',
+              rol: RolUsuario.otro,
+              nombreRol: 'cajero',
+              cafeteriaId: 'c1',
+              permisos: {'pagos.validar'})),
+          Routes.encargado);
+      expect(
+          Routes.inicioPara(const Perfil(
+              nombre: 'X',
+              correo: 'x@utng.edu.mx',
+              rol: RolUsuario.otro,
+              nombreRol: 'invitado',
+              cafeteriaId: 'c1',
+              permisos: {})),
+          Routes.menu);
       expect(Routes.inicioPara(_perfil(RolUsuario.admin)), Routes.admin);
     });
 
@@ -31,8 +48,8 @@ void main() {
       expect(Routes.inicioPara(_perfil(RolUsuario.encargado)), Routes.menu);
     });
 
-    test('un rol desconocido se trata como alumno', () {
-      expect(RolUsuario.desdeNombre('superusuario'), RolUsuario.alumno);
+    test('un rol que no es de sistema es un rol propio', () {
+      expect(RolUsuario.desdeNombre('superusuario'), RolUsuario.otro);
       expect(RolUsuario.desdeNombre('empleado'), RolUsuario.empleado);
       expect(RolUsuario.desdeNombre('admin'), RolUsuario.admin);
     });
@@ -95,12 +112,10 @@ void main() {
     test('encargado y empleado necesitan cafetería; los demás no', () async {
       final vm = AdminViewModel(MockAdminRepository());
       await _esperar();
-      expect(vm.validarAsignacion('a@utng.edu.mx', RolUsuario.empleado, null),
+      expect(vm.validarAsignacion('a@utng.edu.mx', 'empleado', null),
           'Elige la cafetería.');
-      expect(
-          vm.validarAsignacion('a@utng.edu.mx', RolUsuario.beneficiaria, null),
-          isNull);
-      expect(vm.validarAsignacion('correo', RolUsuario.admin, null),
+      expect(vm.validarAsignacion('a@utng.edu.mx', 'admin', null), isNull);
+      expect(vm.validarAsignacion('correo', 'admin', null),
           'El correo no es válido.');
     });
 
@@ -108,13 +123,11 @@ void main() {
       final vm = AdminViewModel(MockAdminRepository());
       await _esperar();
       expect(
-          await vm.asignarRol('nuevo@utng.edu.mx', RolUsuario.encargado, 'c1'),
-          isTrue);
+          await vm.asignarRol('nuevo@utng.edu.mx', 'encargado', 'c1'), isTrue);
       expect(vm.personal.single.rol, RolUsuario.encargado);
       expect(vm.personal.single.cafeteria, 'Cafetería central');
 
-      expect(await vm.asignarRol('nuevo@utng.edu.mx', RolUsuario.alumno, 'c1'),
-          isTrue);
+      expect(await vm.asignarRol('nuevo@utng.edu.mx', 'alumno', 'c1'), isTrue);
       expect(vm.personal, isEmpty);
     });
 
@@ -124,8 +137,7 @@ void main() {
       await vm.editarCafeteria(vm.cafeterias.first.copiar(activa: false));
       expect(vm.cafeteriasActivas, isEmpty);
       expect(
-          await vm.asignarRol('nuevo@utng.edu.mx', RolUsuario.empleado, 'c1'),
-          isFalse);
+          await vm.asignarRol('nuevo@utng.edu.mx', 'empleado', 'c1'), isFalse);
       expect(vm.error, contains('la cafetería esté activa'));
     });
 

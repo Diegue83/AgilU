@@ -132,6 +132,7 @@ const CONFIG_PRUEBAS = `
 
 before(async () => {
   await sembrarCatalogo();
+  await comoAdmin('../dataconnect/permisos.gql', 'SembrarPermisos');
   await adminDataConnect.executeGraphql(CONFIG_PRUEBAS, { variables: { id: 'c0000000-0000-4000-8000-000000000001' } });
   ana = await alumno('ana');
   beto = await alumno('beto');
@@ -791,7 +792,7 @@ describe('pedido programado (HU-10)', () => {
     await assert.rejects(ana.mutation('EditarMiCafeteria', {
       aperturaMinutos: 420, cierreMinutos: 1260, anticipacionMinutos: 0,
       intervaloMinutos: 10, capacidadPorFranja: 15, permitirInmediatos: false,
-    }), /Solo el encargado/);
+    }), /No tienes permiso/);
     await restaurar();
   });
 });
@@ -1190,52 +1191,35 @@ describe('aviso de pedido listo (HU-05)', () => {
   });
 });
 
-describe('reporte para la beneficiaria (HU-11)', () => {
-  let elena;
+describe('reporte de la cafetería (HU-11)', () => {
   const periodo = () => ({
     desde: new Date(Date.now() - 2 * 864e5).toISOString(),
     hasta: new Date(Date.now() + 864e5).toISOString(),
   });
 
-  before(async () => {
-    elena = await alumno('elena');
-    await elena.mutation('CrearPerfil', { nombre: 'Elena' });
-    await comoAdmin('../dataconnect/agilu/mutations.gql', 'AsignarRol', {
-      correo: 'elena@utng.edu.mx', rol: 'beneficiaria',
-    });
-  });
-
-  after(async () => {
-    await signOut(elena.auth);
-    await deleteApp(elena.app);
-  });
-
-  test('la beneficiaria ve pedidos, ingresos y no recogidos por cafetería', async () => {
-    const { data } = await elena.query('ReporteBeneficiaria', periodo());
-    const central = data.filas.find((f) => sinGuiones(f.cafeteriaId) === CAFETERIA);
+  test('el encargado ve pedidos, ingresos y no recogidos de su cafetería', async () => {
+    const { data } = await beto.query('ReporteCafeteria', periodo());
+    assert.equal(data.filas.length, 1);
+    const central = data.filas[0];
+    assert.equal(sinGuiones(central.cafeteriaId), CAFETERIA);
     assert.ok(central.pedidos > 0);
     assert.ok(central.entregados >= 1);
     assert.ok(central.noRecogidos >= 2);
     assert.ok(central.cancelados >= 1);
     assert.ok(central.ingresos > 0);
     assert.ok(central.montoNoRecogido > 0);
-    const barra = data.filas.find((f) => sinGuiones(f.cafeteriaId) === BARRA);
-    assert.equal(barra.pedidos, 0);
     assert.ok(data.filas.every((f) => Object.keys(f).every((k) => !/usuario|correo|nombre$/i.test(k))));
   });
 
   test('un periodo sin pedidos regresa ceros', async () => {
-    const { data } = await elena.query('ReporteBeneficiaria', {
+    const { data } = await beto.query('ReporteCafeteria', {
       desde: '2020-01-01T00:00:00Z', hasta: '2020-01-02T00:00:00Z',
     });
     assert.ok(data.filas.every((f) => f.pedidos === 0 && f.ingresos === 0));
   });
 
-  test('alumnos y encargados no ven el reporte', async () => {
-    const a = await ana.query('ReporteBeneficiaria', periodo());
-    assert.equal(a.data.filas.length, 0);
-    const b = await beto.query('ReporteBeneficiaria', periodo());
-    assert.equal(b.data.filas.length, 0);
+  test('sin el permiso reporte.ver no se ve el reporte', async () => {
+    assert.equal((await ana.query('ReporteCafeteria', periodo())).data.filas.length, 0);
   });
 });
 
@@ -1314,7 +1298,8 @@ describe('administrador y personal', () => {
     const { data } = await luis.query('MiPerfil');
     assert.equal(data.autenticacion.usuario.rol.nombre, 'empleado');
     assert.equal(data.autenticacion.usuario.cafeteria.id, CAFETERIA);
-    await assert.rejects(admin.mutation('AsignarRolAdmin', { correo: 'luis@utng.edu.mx', rol: 'superusuario' }));
+    const inexistente = await admin.mutation('AsignarRolAdmin', { correo: 'luis@utng.edu.mx', rol: 'superusuario' });
+    assert.equal(inexistente.data.resultado, null);
   });
 
   test('el administrador no puede cambiar su propio rol y los demás no asignan roles', async () => {
@@ -1358,7 +1343,7 @@ describe('administrador y personal', () => {
   });
 
   test('el encargado no puede ascender a otros roles ni tocar cuentas con rol', async () => {
-    for (const correo of ['admin@utng.edu.mx', 'elena@utng.edu.mx', 'beto@utng.edu.mx', 'nadie@utng.edu.mx']) {
+    for (const correo of ['admin@utng.edu.mx', 'beto@utng.edu.mx', 'nadie@utng.edu.mx']) {
       const r = await beto.mutation('AgregarEmpleado', { correo });
       assert.equal(r.data.resultado, null, correo);
     }
@@ -1899,5 +1884,118 @@ describe('estación del empleado', () => {
     assert.equal((await memo.query('MiPerfil')).data.autenticacion.usuario.puesto, null);
     assert.equal((await memo.query('MisEstaciones')).data.puestos.length, 0);
     await assert.rejects(memo.mutation('ActivarEstacion', { id: jugos, activo: false }));
+  });
+});
+
+describe('roles y permisos', () => {
+  let jefa;
+  let caja;
+  let cajero;
+
+  const roles = async (quien) => (await quien.query('RolesAdmin')).data.roles;
+  const rolDe = async (nombre) => (await roles(jefa)).find((r) => r.nombre === nombre);
+  const cambiar = async (rolId, codigo, activo, quien = jefa) => {
+    const op = activo ? 'DarPermisoAdmin' : 'QuitarPermisoAdmin';
+    return (await quien.mutation(op, { rolId, codigo })).data._execute;
+  };
+  const panel = (quien) => quien.query('PanelPedidos', {
+    desde: new Date(Date.now() - 864e5).toISOString(),
+    hasta: new Date(Date.now() + 864e5).toISOString(),
+  });
+
+  before(async () => {
+    jefa = await alumno('jefa');
+    caja = await alumno('caja');
+    await jefa.mutation('CrearPerfil', { nombre: 'Jefa' });
+    await caja.mutation('CrearPerfil', { nombre: 'Caja' });
+    await comoAdmin('../dataconnect/agilu/mutations.gql', 'AsignarRol', {
+      correo: 'jefa@utng.edu.mx', rol: 'admin',
+    });
+    const p = pedido();
+    await ana.mutation('CrearPedido', p);
+    await pagado(p);
+  });
+
+  after(async () => {
+    for (const a of [jefa, caja]) {
+      await signOut(a.auth);
+      await deleteApp(a.app);
+    }
+  });
+
+  test('el catálogo tiene los permisos y los roles de sistema los suyos', async () => {
+    const { data } = await ana.query('PermisosDisponibles');
+    assert.deepEqual(data.permisos.map((p) => p.codigoAccion), [
+      'admin.gestionar', 'cafeteria.configurar', 'catalogo.gestionar', 'estacion.propia',
+      'pagos.validar', 'pedidos.atender', 'personal.gestionar', 'reporte.ver',
+    ]);
+    assert.deepEqual((await rolDe('empleado')).permisos, ['estacion.propia', 'pedidos.atender']);
+    assert.deepEqual((await rolDe('admin')).permisos, ['admin.gestionar']);
+    assert.deepEqual((await rolDe('alumno')).permisos, []);
+    assert.ok((await rolDe('encargado')).permisos.includes('reporte.ver'));
+    assert.equal(await rolDe('beneficiaria'), undefined);
+    const { data: perfil } = await beto.query('MiPerfil');
+    assert.ok(perfil.autenticacion.usuario.rol.rolPermisos_on_rol
+      .some((x) => x.permiso.codigoAccion === 'pagos.validar'));
+  });
+
+  test('solo el administrador ve y cambia roles', async () => {
+    assert.equal((await roles(ana)).length, 0);
+    assert.equal((await roles(beto)).length, 0);
+    assert.equal((await beto.mutation('CrearRolAdmin', { nombre: 'pirata' })).data.resultado, null);
+    const enc = await rolDe('encargado');
+    assert.equal(await cambiar(enc.id, 'admin.gestionar', true, beto), 0);
+    assert.ok(!(await rolDe('encargado')).permisos.includes('admin.gestionar'));
+  });
+
+  test('el administrador crea un rol y sus permisos deciden lo que puede hacer', async () => {
+    await assert.rejects(jefa.mutation('CrearRolAdmin', { nombre: 'Con Espacios' }));
+    const r = await jefa.mutation('CrearRolAdmin', { nombre: 'cajero', descripcion: 'Cobra en caja' });
+    cajero = r.data.resultado.rolId;
+    assert.equal((await jefa.mutation('CrearRolAdmin', { nombre: 'cajero' })).data.resultado, null);
+    assert.equal(await cambiar(cajero, 'pedidos.atender', true), 1);
+    assert.equal(await cambiar(cajero, 'pagos.validar', true), 1);
+    assert.equal(await cambiar(cajero, 'pagos.validar', true), 0);
+    assert.deepEqual((await rolDe('cajero')).permisos, ['pagos.validar', 'pedidos.atender']);
+
+    // Con permisos de cafetería el rol exige cafetería.
+    const sin = await jefa.mutation('AsignarRolAdmin', { correo: 'caja@utng.edu.mx', rol: 'cajero' });
+    assert.equal(sin.data.resultado, null);
+    const ok = await jefa.mutation('AsignarRolAdmin', {
+      correo: 'caja@utng.edu.mx', rol: 'cajero', cafeteriaId: CAFETERIA,
+    });
+    assert.ok(ok.data.resultado);
+
+    assert.ok((await panel(caja)).data.pedidos.length > 0);
+    assert.equal((await caja.query('MisPendientes')).data.pendientes.rol, 'cajero');
+    await assert.rejects(caja.mutation('CrearEstacion', { nombre: 'Falsa', orden: 9 }));
+    assert.equal((await caja.query('MiPersonal')).data.personal.length, 0);
+
+    assert.equal(await cambiar(cajero, 'pedidos.atender', false), 1);
+    assert.equal((await panel(caja)).data.pedidos.length, 0);
+    assert.deepEqual((await rolDe('cajero')).permisos, ['pagos.validar']);
+  });
+
+  test('el alumno no lleva permisos y el admin no pierde el suyo', async () => {
+    const alumnoRol = await rolDe('alumno');
+    assert.equal(await cambiar(alumnoRol.id, 'pedidos.atender', true), 0);
+    const adminRol = await rolDe('admin');
+    assert.equal(await cambiar(adminRol.id, 'admin.gestionar', false), 0);
+    assert.ok((await rolDe('admin')).permisos.includes('admin.gestionar'));
+    assert.equal(await cambiar(cajero, 'no.existe', true), 0);
+  });
+
+  test('los roles de sistema y los roles con cuentas no se borran', async () => {
+    for (const nombre of ['alumno', 'empleado', 'encargado', 'admin']) {
+      const r = await jefa.mutation('EliminarRolAdmin', { rolId: (await rolDe(nombre)).id });
+      assert.equal(r.data.resultado, null, nombre);
+    }
+    assert.equal((await jefa.mutation('EliminarRolAdmin', { rolId: cajero })).data.resultado, null);
+    await jefa.mutation('EditarRolAdmin', { rolId: cajero, descripcion: 'Solo caja' });
+    assert.equal((await rolDe('cajero')).descripcion, 'Solo caja');
+
+    await jefa.mutation('AsignarRolAdmin', { correo: 'caja@utng.edu.mx', rol: 'alumno' });
+    assert.ok((await jefa.mutation('EliminarRolAdmin', { rolId: cajero })).data.resultado);
+    assert.equal(await rolDe('cajero'), undefined);
   });
 });

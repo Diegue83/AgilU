@@ -87,6 +87,11 @@ class DataConnectPerfilRepository implements PerfilRepository {
         correo: a.correoElectronico,
         telefono: a.usuario.numeroDeTelefono,
         rol: RolUsuario.desdeNombre(a.usuario.rol?.nombre),
+        nombreRol: a.usuario.rol?.nombre,
+        permisos: {
+          for (final x in a.usuario.rol?.rolPermisos_on_rol ?? const [])
+            x.permiso.codigoAccion,
+        },
         cafeteriaId: a.usuario.cafeteria?.id,
         cafeteria: a.usuario.cafeteria?.nombre,
         solicitudCafeteria:
@@ -144,6 +149,8 @@ class MockPerfilRepository implements PerfilRepository {
         cafeteria: perfil.cafeteria,
         estacionId: perfil.estacionId,
         estacion: perfil.estacion,
+        nombreRol: perfil.nombreRol,
+        permisos: perfil.permisos,
       );
 
   @override

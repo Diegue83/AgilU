@@ -18,19 +18,27 @@ funciones: `us-east4`.
 
 ## Operaciones de SQL Connect por rol
 
-| Rol | Operaciones |
+Cada operación del personal exige un permiso del catálogo (`Permiso.codigoAccion`)
+en el rol de quien llama (`RolPermiso`). Los permisos iniciales de cada rol de
+sistema se cargan con `dataconnect/permisos.gql` (`SembrarPermisos`).
+
+| Quién / permiso | Operaciones |
 | --- | --- |
 | Sin sesión | `CafeteriasParaRegistro` (solo id, nombre y ubicación de cafeterías activas) |
-| Cualquier usuario con sesión | `MisPendientes` (puntos rojos: conteos según su rol), `CrearPerfilEmpleado`, `ListarMenu`, `ListarCafeterias`, `OcupacionFranjas` (solo conteos), `MiPerfil`, `CrearPerfil`, `EditarMiPerfil`, `RegistrarDispositivo`, `OlvidarDispositivo` |
+| Cualquier usuario con sesión | `MisPendientes` (puntos rojos según sus permisos), `PermisosDisponibles`, `CrearPerfilEmpleado`, `ListarMenu`, `ListarCafeterias`, `OcupacionFranjas` (solo conteos), `MiPerfil`, `CrearPerfil`, `EditarMiPerfil`, `RegistrarDispositivo`, `OlvidarDispositivo` |
 | Alumno (dueño) | `EnviarComprobante`, `EliminarMiCuenta`, `CrearPedido`, `CancelarMiPedido`, `DiagnosticarPedido`, `MiPedido`, `MisPedidos`, `MiConfianza`, `MisNotificaciones`, `MarcarAvisosLeidos` |
-| Empleado (de su cafetería) | `HistorialPedidos`, `PanelPedidos`, `AvanzarPedido`, `EntregarPedido`, `MarcarNoRecogido` |
-| Encargado (de su cafetería) | `SolicitudesPendientes`, `AprobarSolicitud`, `RechazarSolicitud`, `GuardarFotoProducto`, `HistorialPedidos`, `MiPersonal`, `AgregarEmpleado`, `QuitarEmpleado`, `MisEstaciones`, `CrearEstacion`, `EditarEstacion`, `EliminarEstacion`, `MisProductos`, `CrearMiProducto`, `EditarMiProducto`, `EstablecerDisponibilidad`, `EliminarMiProducto`, `PublicarOferta`, `QuitarOferta`, `MiCafeteria`, `EditarMiCafeteria`, `PanelPedidos`, `AvanzarPedido`, `PagosPorValidar`, `ValidarPago`, `EntregarPedido`, `MarcarNoRecogido` |
-| Beneficiaria | `ReporteBeneficiaria` (solo totales) |
-| Administrador (rol `admin` en la base) | `CafeteriasAdmin`, `CrearCafeteriaAdmin`, `EditarCafeteriaAdmin`, `PersonalAdmin`, `AsignarRolAdmin` |
-| Consola o Admin SDK (`NO_ACCESS`) | `CrearCafeteria`, `CrearPuesto`, `CrearProducto`, `AsignarRol` (para nombrar al primer administrador) |
+| `pedidos.atender` (encargado, empleado) | `PanelPedidos`, `HistorialPedidos`, `AvanzarPedido`, `EntregarPedido`, `MarcarNoRecogido` |
+| `pagos.validar` (encargado) | `PagosPorValidar`, `ValidarPago`, `AdeudosPorCobrar`, `CobrarAdeudo` |
+| `catalogo.gestionar` (encargado) | `MisEstaciones`, `CrearEstacion`, `EditarEstacion`, `ActivarEstacion`, `EliminarEstacion`, `MisProductos`, `CrearMiProducto`, `EditarMiProducto`, `EstablecerDisponibilidad`, `GuardarFotoProducto`, `EliminarMiProducto`, `PublicarOferta`, `QuitarOferta` |
+| `estacion.propia` (empleado con estación) | Las mismas de estación y productos, solo sobre su estación y sin borrar ni ofertas |
+| `personal.gestionar` (encargado) | `MiPersonal`, `AgregarEmpleado`, `QuitarEmpleado`, `AsignarEstacion`, `SolicitudesPendientes`, `AprobarSolicitud`, `RechazarSolicitud` |
+| `cafeteria.configurar` (encargado) | `MiCafeteria`, `EditarMiCafeteria` |
+| `reporte.ver` (encargado) | `ReporteCafeteria` (solo totales de su cafetería) |
+| `admin.gestionar` (admin) | `CafeteriasAdmin`, `CrearCafeteriaAdmin`, `EditarCafeteriaAdmin`, `PersonalAdmin`, `AsignarRolAdmin`, `RolesAdmin`, `CrearRolAdmin`, `EditarRolAdmin`, `EliminarRolAdmin`, `DarPermisoAdmin`, `QuitarPermisoAdmin` |
+| Consola o Admin SDK (`NO_ACCESS`) | `CrearCafeteria`, `CrearPuesto`, `CrearProducto`, `AsignarRol` (primer administrador), `SembrarPermisos` |
 
-Para todos los roles, el rol se toma de la base (`Usuario.rol`) y se comprueba en cada
-operación; la app solo usa el rol para decidir qué pantalla abrir.
+El rol y sus permisos se toman de la base y se comprueban en cada operación; la app
+solo los usa para decidir qué pantallas mostrar.
 
 ## Valores públicos y secretos
 

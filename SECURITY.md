@@ -29,7 +29,11 @@ configuración de Firebase. No se encontraron credenciales.
 - **Autorización por objeto**: cada consulta y mutación filtra con `auth.uid`;
   nunca se recibe el id del usuario como variable. Un alumno solo ve su perfil,
   sus pedidos, sus avisos y su ticket; un encargado solo administra su
-  cafetería; la beneficiaria solo ve totales.
+  cafetería y el reporte solo trae totales de su cafetería.
+- **Permisos por rol**: cada operación del personal exige un permiso del catálogo
+  (`RolPermiso`) en el rol de quien llama, no el nombre del rol. Solo quien tiene
+  `admin.gestionar` crea roles y cambia permisos; el rol alumno no lleva permisos, el
+  rol admin no puede perder `admin.gestionar` y los roles de sistema no se borran.
 - **Datos personales**: el usuario ve y corrige su nombre y teléfono en *Mi cuenta*
   (validados también en el servidor) y puede eliminar su cuenta; la baja borra sus
   datos personales y deja sus pedidos anónimos.

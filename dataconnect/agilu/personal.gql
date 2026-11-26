@@ -1,12 +1,12 @@
 # Gestión de personal y de cafeterías.
 #
-# Roles: alumno (o sin rol), empleado, encargado, beneficiaria y admin.
-# - admin: da de alta cafeterías y asigna cualquier rol.
-# - encargado: da de alta y quita empleados de su propia cafetería.
-# - empleado: atiende los pedidos de su cafetería (panel, entrega), sin acceso
-#   a pagos, precios ni ajustes.
+# Cada operación del personal exige un permiso (Permiso.codigoAccion) que el
+# rol de quien llama debe tener en RolPermiso. El catálogo de permisos es fijo
+# (cada código lo revisa alguna operación); el administrador crea roles y les
+# da o quita permisos. Roles de sistema: alumno (sin permisos), empleado,
+# encargado y admin. El rol admin siempre conserva admin.gestionar.
 #
-# Toda comprobación de rol se hace aquí, en el servidor, con el uid del token.
+# Toda comprobación se hace aquí, en el servidor, con el uid del token.
 # El primer admin se asigna desde la consola con la mutación AsignarRol.
 
 # ---------- Administrador ----------
@@ -20,7 +20,7 @@ query CafeteriasAdmin @auth(level: USER) {
       SELECT 1 FROM usuario u
       JOIN autenticacion a ON a.usuario_id = u.id
       JOIN rol r ON r.id = u.rol_id
-      WHERE a.firebase_auth_uid = $1 AND r.nombre = 'admin'
+      WHERE a.firebase_auth_uid = $1 AND EXISTS (SELECT 1 FROM rol_permiso rp JOIN permiso pe ON pe.id = rp.permiso_id WHERE rp.rol_id = r.id AND pe.codigo_accion = 'admin.gestionar')
     )
     ORDER BY c.nombre
     """
@@ -42,7 +42,7 @@ query PersonalAdmin @auth(level: USER) {
         SELECT 1 FROM usuario yo
         JOIN autenticacion ya ON ya.usuario_id = yo.id
         JOIN rol yr ON yr.id = yo.rol_id
-        WHERE ya.firebase_auth_uid = $1 AND yr.nombre = 'admin'
+        WHERE ya.firebase_auth_uid = $1 AND EXISTS (SELECT 1 FROM rol_permiso rp JOIN permiso pe ON pe.id = rp.permiso_id WHERE rp.rol_id = yr.id AND pe.codigo_accion = 'admin.gestionar')
       )
     ORDER BY r.nombre, u.nombre
     """
@@ -57,8 +57,13 @@ mutation CrearCafeteriaAdmin($nombre: String!, $ubicacion: String)
     autenticacion(key: { firebaseAuthUid_expr: "auth.uid" })
       @check(expr: "this != null", message: "No tienes perfil") {
       usuario {
-        rol @check(expr: "this != null && this.nombre == 'admin'", message: "Solo el administrador puede hacer esto") {
-          nombre
+        rol @check(expr: "this != null", message: "No tienes permiso para hacer esto") {
+          rolPermisos_on_rol(where: { permiso: { codigoAccion: { eq: "admin.gestionar" } } })
+            @check(expr: "this.size() == 1", message: "No tienes permiso para hacer esto") {
+            permiso {
+              codigoAccion
+            }
+          }
         }
       }
     }
@@ -73,8 +78,13 @@ mutation EditarCafeteriaAdmin($id: UUID!, $nombre: String!, $ubicacion: String, 
     autenticacion(key: { firebaseAuthUid_expr: "auth.uid" })
       @check(expr: "this != null", message: "No tienes perfil") {
       usuario {
-        rol @check(expr: "this != null && this.nombre == 'admin'", message: "Solo el administrador puede hacer esto") {
-          nombre
+        rol @check(expr: "this != null", message: "No tienes permiso para hacer esto") {
+          rolPermisos_on_rol(where: { permiso: { codigoAccion: { eq: "admin.gestionar" } } })
+            @check(expr: "this.size() == 1", message: "No tienes permiso para hacer esto") {
+            permiso {
+              codigoAccion
+            }
+          }
         }
       }
     }
@@ -83,34 +93,151 @@ mutation EditarCafeteriaAdmin($id: UUID!, $nombre: String!, $ubicacion: String, 
     @check(expr: "this != null", message: "La cafetería no existe")
 }
 
-# Asigna un rol a la cuenta con ese correo. Encargado y empleado necesitan una
-# cafetería activa; los demás roles la dejan vacía. El admin no puede cambiarse
-# su propio rol, así no se queda el sistema sin administrador por error.
+# Asigna un rol a la cuenta con ese correo. Un rol con permisos de cafetería
+# (cualquiera distinto de admin.gestionar) necesita una cafetería activa; los
+# demás la dejan vacía. El admin no puede cambiarse su propio rol, así no se
+# queda el sistema sin administrador por error.
 # Devuelve el id del usuario, o null si no se cumplió alguna condición.
 mutation AsignarRolAdmin($correo: String!, $rol: String!, $cafeteriaId: UUID)
-  @auth(expr: "auth != null && vars.rol in ['alumno', 'empleado', 'encargado', 'beneficiaria', 'admin']") {
+  @auth(expr: "auth != null && vars.rol.size() > 0 && vars.rol.size() <= 30") {
   resultado: _executeReturningFirst(
     sql: """
+    WITH ro AS (
+      SELECT r.id, EXISTS (
+        SELECT 1 FROM rol_permiso rp JOIN permiso pe ON pe.id = rp.permiso_id
+        WHERE rp.rol_id = r.id AND pe.codigo_accion <> 'admin.gestionar'
+      ) AS de_cafeteria
+      FROM rol r WHERE r.nombre = $3
+    )
     UPDATE usuario u
-    SET rol_id = (SELECT id FROM rol WHERE nombre = $3),
-        cafeteria_id = CASE WHEN $3 IN ('encargado', 'empleado') THEN $4::uuid ELSE NULL END,
+    SET rol_id = (SELECT id FROM ro),
+        cafeteria_id = CASE WHEN (SELECT de_cafeteria FROM ro) THEN $4::uuid ELSE NULL END,
         puesto_id = NULL
     FROM autenticacion a
     WHERE a.usuario_id = u.id
       AND lower(a.correo_electronico) = lower(trim($2))
       AND a.firebase_auth_uid <> $1
-      AND EXISTS (SELECT 1 FROM rol WHERE nombre = $3)
-      AND ($3 NOT IN ('encargado', 'empleado')
+      AND EXISTS (SELECT 1 FROM ro)
+      AND (NOT (SELECT de_cafeteria FROM ro)
            OR EXISTS (SELECT 1 FROM cafeteria WHERE id = $4::uuid AND activa))
-      AND EXISTS (
-        SELECT 1 FROM usuario yo
-        JOIN autenticacion ya ON ya.usuario_id = yo.id
-        JOIN rol yr ON yr.id = yo.rol_id
-        WHERE ya.firebase_auth_uid = $1 AND yr.nombre = 'admin'
-      )
+      AND EXISTS (SELECT 1 FROM usuario yo JOIN autenticacion ya ON ya.usuario_id = yo.id
+        JOIN rol_permiso rp ON rp.rol_id = yo.rol_id JOIN permiso pe ON pe.id = rp.permiso_id
+        WHERE ya.firebase_auth_uid = $1 AND pe.codigo_accion = 'admin.gestionar')
     RETURNING u.id AS "usuarioId"
     """
     params: [{ _expr: "auth.uid" }, $correo, $rol, $cafeteriaId]
+  )
+}
+
+# ---------- Administrador: roles y permisos ----------
+
+# Catálogo fijo de permisos. Lo ve cualquiera con sesión: solo son nombres.
+query PermisosDisponibles @auth(level: USER) {
+  permisos(orderBy: [{ codigoAccion: ASC }]) {
+    id
+    nombre
+    codigoAccion
+  }
+}
+
+# Roles con sus permisos y cuántas cuentas los tienen. Solo el administrador.
+query RolesAdmin @auth(level: USER) {
+  roles: _select(
+    sql: """
+    SELECT r.id, r.nombre, r.descripcion,
+           coalesce((SELECT jsonb_agg(pe.codigo_accion ORDER BY pe.codigo_accion)
+                     FROM rol_permiso rp JOIN permiso pe ON pe.id = rp.permiso_id
+                     WHERE rp.rol_id = r.id), '[]'::jsonb) AS "permisos",
+           (SELECT count(*) FROM usuario u WHERE u.rol_id = r.id)::int AS "usuarios"
+    FROM rol r
+    WHERE EXISTS (SELECT 1 FROM usuario yo JOIN autenticacion ya ON ya.usuario_id = yo.id
+        JOIN rol_permiso rp ON rp.rol_id = yo.rol_id JOIN permiso pe ON pe.id = rp.permiso_id
+        WHERE ya.firebase_auth_uid = $1 AND pe.codigo_accion = 'admin.gestionar')
+    ORDER BY r.nombre
+    """
+    params: [{ _expr: "auth.uid" }]
+  )
+}
+
+# Crea un rol sin permisos. El nombre va en minúsculas, sin espacios.
+mutation CrearRolAdmin($nombre: String!, $descripcion: String)
+  @auth(expr: "auth != null && vars.nombre.matches('^[a-z][a-z0-9_]{2,29}$') && (!has(vars.descripcion) || vars.descripcion == null || vars.descripcion.size() <= 120)") {
+  resultado: _executeReturningFirst(
+    sql: """
+    INSERT INTO rol (id, nombre, descripcion)
+    SELECT gen_random_uuid(), $2, nullif(trim($3::text), '')
+    WHERE NOT EXISTS (SELECT 1 FROM rol WHERE nombre = $2)
+      AND EXISTS (SELECT 1 FROM usuario yo JOIN autenticacion ya ON ya.usuario_id = yo.id
+        JOIN rol_permiso rp ON rp.rol_id = yo.rol_id JOIN permiso pe ON pe.id = rp.permiso_id
+        WHERE ya.firebase_auth_uid = $1 AND pe.codigo_accion = 'admin.gestionar')
+    RETURNING id AS "rolId"
+    """
+    params: [{ _expr: "auth.uid" }, $nombre, $descripcion]
+  )
+}
+
+mutation EditarRolAdmin($rolId: UUID!, $descripcion: String)
+  @auth(expr: "auth != null && (!has(vars.descripcion) || vars.descripcion == null || vars.descripcion.size() <= 120)") {
+  resultado: _executeReturningFirst(
+    sql: """
+    UPDATE rol SET descripcion = nullif(trim($3::text), '')
+    WHERE id = $2::uuid AND EXISTS (SELECT 1 FROM usuario yo JOIN autenticacion ya ON ya.usuario_id = yo.id
+        JOIN rol_permiso rp ON rp.rol_id = yo.rol_id JOIN permiso pe ON pe.id = rp.permiso_id
+        WHERE ya.firebase_auth_uid = $1 AND pe.codigo_accion = 'admin.gestionar')
+    RETURNING id AS "rolId"
+    """
+    params: [{ _expr: "auth.uid" }, $rolId, $descripcion]
+  )
+}
+
+# Borra un rol propio que nadie tiene. Los roles de sistema no se borran.
+mutation EliminarRolAdmin($rolId: UUID!) @auth(level: USER) {
+  resultado: _executeReturningFirst(
+    sql: """
+    DELETE FROM rol r
+    WHERE r.id = $2::uuid
+      AND r.nombre NOT IN ('alumno', 'empleado', 'encargado', 'admin')
+      AND NOT EXISTS (SELECT 1 FROM usuario u WHERE u.rol_id = r.id)
+      AND EXISTS (SELECT 1 FROM usuario yo JOIN autenticacion ya ON ya.usuario_id = yo.id
+        JOIN rol_permiso rp ON rp.rol_id = yo.rol_id JOIN permiso pe ON pe.id = rp.permiso_id
+        WHERE ya.firebase_auth_uid = $1 AND pe.codigo_accion = 'admin.gestionar')
+    RETURNING r.id AS "rolId"
+    """
+    params: [{ _expr: "auth.uid" }, $rolId]
+  )
+}
+
+# Da un permiso a un rol. Devuelve 1 si lo dio y 0 si no se permitió o ya lo
+# tenía. El rol alumno no lleva permisos.
+mutation DarPermisoAdmin($rolId: UUID!, $codigo: String!) @auth(level: USER) {
+  _execute(
+    sql: """
+    INSERT INTO rol_permiso (rol_id, permiso_id)
+    SELECT r.id, p.id FROM rol r JOIN permiso p ON p.codigo_accion = $3
+    WHERE r.id = $2::uuid AND r.nombre <> 'alumno'
+      AND EXISTS (SELECT 1 FROM usuario yo JOIN autenticacion ya ON ya.usuario_id = yo.id
+        JOIN rol_permiso rp ON rp.rol_id = yo.rol_id JOIN permiso pe ON pe.id = rp.permiso_id
+        WHERE ya.firebase_auth_uid = $1 AND pe.codigo_accion = 'admin.gestionar')
+    ON CONFLICT DO NOTHING
+    """
+    params: [{ _expr: "auth.uid" }, $rolId, $codigo]
+  )
+}
+
+# Quita un permiso a un rol. Devuelve 1 si lo quitó. El rol admin no puede
+# perder admin.gestionar, así nunca se queda el sistema sin administrador.
+mutation QuitarPermisoAdmin($rolId: UUID!, $codigo: String!) @auth(level: USER) {
+  _execute(
+    sql: """
+    DELETE FROM rol_permiso x USING rol r, permiso p
+    WHERE x.rol_id = r.id AND x.permiso_id = p.id
+      AND r.id = $2::uuid AND p.codigo_accion = $3
+      AND NOT (r.nombre = 'admin' AND p.codigo_accion = 'admin.gestionar')
+      AND EXISTS (SELECT 1 FROM usuario yo JOIN autenticacion ya ON ya.usuario_id = yo.id
+        JOIN rol_permiso rp ON rp.rol_id = yo.rol_id JOIN permiso pe ON pe.id = rp.permiso_id
+        WHERE ya.firebase_auth_uid = $1 AND pe.codigo_accion = 'admin.gestionar')
+    """
+    params: [{ _expr: "auth.uid" }, $rolId, $codigo]
   )
 }
 
@@ -125,12 +252,12 @@ query MiPersonal @auth(level: USER) {
     JOIN autenticacion a ON a.usuario_id = u.id
     JOIN rol r ON r.id = u.rol_id
     LEFT JOIN puesto e ON e.id = u.puesto_id
-    WHERE r.nombre IN ('encargado', 'empleado')
+    WHERE r.nombre <> 'alumno'
       AND u.cafeteria_id = (
         SELECT yo.cafeteria_id FROM usuario yo
         JOIN autenticacion ya ON ya.usuario_id = yo.id
         JOIN rol yr ON yr.id = yo.rol_id
-        WHERE ya.firebase_auth_uid = $1 AND yr.nombre = 'encargado'
+        WHERE ya.firebase_auth_uid = $1 AND EXISTS (SELECT 1 FROM rol_permiso rp JOIN permiso pe ON pe.id = rp.permiso_id WHERE rp.rol_id = yr.id AND pe.codigo_accion = 'personal.gestionar')
       )
     ORDER BY r.nombre DESC, u.nombre
     """
@@ -147,7 +274,7 @@ mutation AgregarEmpleado($correo: String!) @auth(level: USER) {
       SELECT yo.cafeteria_id AS id FROM usuario yo
       JOIN autenticacion ya ON ya.usuario_id = yo.id
       JOIN rol yr ON yr.id = yo.rol_id
-      WHERE ya.firebase_auth_uid = $1 AND yr.nombre = 'encargado' AND yo.cafeteria_id IS NOT NULL
+      WHERE ya.firebase_auth_uid = $1 AND EXISTS (SELECT 1 FROM rol_permiso rp JOIN permiso pe ON pe.id = rp.permiso_id WHERE rp.rol_id = yr.id AND pe.codigo_accion = 'personal.gestionar') AND yo.cafeteria_id IS NOT NULL
     )
     UPDATE usuario u
     SET rol_id = (SELECT id FROM rol WHERE nombre = 'empleado'),
@@ -178,7 +305,7 @@ mutation QuitarEmpleado($usuarioId: UUID!) @auth(level: USER) {
         SELECT yo.cafeteria_id FROM usuario yo
         JOIN autenticacion ya ON ya.usuario_id = yo.id
         JOIN rol yr ON yr.id = yo.rol_id
-        WHERE ya.firebase_auth_uid = $1 AND yr.nombre = 'encargado'
+        WHERE ya.firebase_auth_uid = $1 AND EXISTS (SELECT 1 FROM rol_permiso rp JOIN permiso pe ON pe.id = rp.permiso_id WHERE rp.rol_id = yr.id AND pe.codigo_accion = 'personal.gestionar')
       )
     RETURNING u.id AS "usuarioId"
     """
@@ -195,7 +322,7 @@ mutation AsignarEstacion($usuarioId: UUID!, $estacionId: UUID) @auth(level: USER
       SELECT yo.cafeteria_id AS id FROM usuario yo
       JOIN autenticacion ya ON ya.usuario_id = yo.id
       JOIN rol yr ON yr.id = yo.rol_id
-      WHERE ya.firebase_auth_uid = $1 AND yr.nombre = 'encargado' AND yo.cafeteria_id IS NOT NULL
+      WHERE ya.firebase_auth_uid = $1 AND EXISTS (SELECT 1 FROM rol_permiso rp JOIN permiso pe ON pe.id = rp.permiso_id WHERE rp.rol_id = yr.id AND pe.codigo_accion = 'personal.gestionar') AND yo.cafeteria_id IS NOT NULL
     )
     UPDATE usuario u
     SET puesto_id = $3::uuid
@@ -255,7 +382,7 @@ query SolicitudesPendientes @auth(level: USER) {
       cafeteria: {
         usuarios_on_cafeteria: {
           exist: {
-            rol: { nombre: { eq: "encargado" } }
+            rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "personal.gestionar" } } } } }
             autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
           }
         }
@@ -282,8 +409,13 @@ mutation AprobarSolicitud($usuarioId: UUID!) @auth(level: USER) @transaction {
     autenticacion(key: { firebaseAuthUid_expr: "auth.uid" })
       @check(expr: "this != null", message: "No tienes perfil") {
       usuario {
-        rol @check(expr: "this != null && this.nombre == 'encargado'", message: "Solo el encargado puede hacer esto") {
-          nombre
+        rol @check(expr: "this != null", message: "No tienes permiso para hacer esto") {
+          rolPermisos_on_rol(where: { permiso: { codigoAccion: { eq: "personal.gestionar" } } })
+            @check(expr: "this.size() == 1", message: "No tienes permiso para hacer esto") {
+            permiso {
+              codigoAccion
+            }
+          }
         }
         cafeteria @check(expr: "this != null", message: "No tienes cafetería asignada") {
           id
@@ -318,7 +450,7 @@ mutation RechazarSolicitud($usuarioId: UUID!) @auth(level: USER) {
       cafeteria: {
         usuarios_on_cafeteria: {
           exist: {
-            rol: { nombre: { eq: "encargado" } }
+            rol: { rolPermisos_on_rol: { exist: { permiso: { codigoAccion: { eq: "personal.gestionar" } } } } }
             autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
           }
         }

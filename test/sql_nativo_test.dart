@@ -55,9 +55,9 @@ void main() {
         0);
   });
 
-  test('ReporteBeneficiaria convierte las filas', () {
+  test('ReporteCafeteria convierte las filas', () {
     final filas = DataConnectReporteRepository.filasDe(
-        ReporteBeneficiariaData.fromJson(const {
+        ReporteCafeteriaData.fromJson(const {
       'filas': [
         {
           'cafeteriaId': 'c0000000-0000-4000-8000-000000000001',
