@@ -10,6 +10,10 @@ class MiembroPersonal {
   final String? cafeteriaId;
   final String? cafeteria;
 
+  /// Estación asignada a un empleado.
+  final String? estacionId;
+  final String? estacion;
+
   const MiembroPersonal({
     required this.usuarioId,
     required this.nombre,
@@ -17,6 +21,8 @@ class MiembroPersonal {
     required this.rol,
     this.cafeteriaId,
     this.cafeteria,
+    this.estacionId,
+    this.estacion,
   });
 
   /// Fila de SQL nativo (PersonalAdmin, MiPersonal).
@@ -27,6 +33,19 @@ class MiembroPersonal {
         rol: RolUsuario.desdeNombre(m['rol'] as String?),
         cafeteriaId: m['cafeteriaId'] as String?,
         cafeteria: m['cafeteria'] as String?,
+        estacionId: m['estacionId'] as String?,
+        estacion: m['estacion'] as String?,
+      );
+
+  MiembroPersonal conEstacion(String? id, String? nombre) => MiembroPersonal(
+        usuarioId: usuarioId,
+        nombre: this.nombre,
+        correo: correo,
+        rol: rol,
+        cafeteriaId: cafeteriaId,
+        cafeteria: cafeteria,
+        estacionId: id,
+        estacion: nombre,
       );
 }
 

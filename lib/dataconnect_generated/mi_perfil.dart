@@ -62,6 +62,7 @@ class MiPerfilAutenticacionUsuario {
   final String? numeroDeTelefono;
   final MiPerfilAutenticacionUsuarioRol? rol;
   final MiPerfilAutenticacionUsuarioCafeteria? cafeteria;
+  final MiPerfilAutenticacionUsuarioPuesto? puesto;
   final MiPerfilAutenticacionUsuarioSolicitudEmpleoOnUsuario? solicitudEmpleo_on_usuario;
   MiPerfilAutenticacionUsuario.fromJson(dynamic json):
   
@@ -70,6 +71,7 @@ class MiPerfilAutenticacionUsuario {
   numeroDeTelefono = json['numeroDeTelefono'] == null ? null : nativeFromJson<String>(json['numeroDeTelefono']),
   rol = json['rol'] == null ? null : MiPerfilAutenticacionUsuarioRol.fromJson(json['rol']),
   cafeteria = json['cafeteria'] == null ? null : MiPerfilAutenticacionUsuarioCafeteria.fromJson(json['cafeteria']),
+  puesto = json['puesto'] == null ? null : MiPerfilAutenticacionUsuarioPuesto.fromJson(json['puesto']),
   solicitudEmpleo_on_usuario = json['solicitudEmpleo_on_usuario'] == null ? null : MiPerfilAutenticacionUsuarioSolicitudEmpleoOnUsuario.fromJson(json['solicitudEmpleo_on_usuario']);
   @override
   bool operator ==(Object other) {
@@ -86,11 +88,12 @@ class MiPerfilAutenticacionUsuario {
     numeroDeTelefono == otherTyped.numeroDeTelefono && 
     rol == otherTyped.rol && 
     cafeteria == otherTyped.cafeteria && 
+    puesto == otherTyped.puesto && 
     solicitudEmpleo_on_usuario == otherTyped.solicitudEmpleo_on_usuario;
     
   }
   @override
-  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, numeroDeTelefono.hashCode, rol.hashCode, cafeteria.hashCode, solicitudEmpleo_on_usuario.hashCode]);
+  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, numeroDeTelefono.hashCode, rol.hashCode, cafeteria.hashCode, puesto.hashCode, solicitudEmpleo_on_usuario.hashCode]);
   
 
   Map<String, dynamic> toJson() {
@@ -106,6 +109,9 @@ class MiPerfilAutenticacionUsuario {
     if (cafeteria != null) {
       json['cafeteria'] = cafeteria!.toJson();
     }
+    if (puesto != null) {
+      json['puesto'] = puesto!.toJson();
+    }
     if (solicitudEmpleo_on_usuario != null) {
       json['solicitudEmpleo_on_usuario'] = solicitudEmpleo_on_usuario!.toJson();
     }
@@ -118,6 +124,7 @@ class MiPerfilAutenticacionUsuario {
     this.numeroDeTelefono,
     this.rol,
     this.cafeteria,
+    this.puesto,
     this.solicitudEmpleo_on_usuario,
   });
 }
@@ -190,6 +197,45 @@ class MiPerfilAutenticacionUsuarioCafeteria {
   }
 
   MiPerfilAutenticacionUsuarioCafeteria({
+    required this.id,
+    required this.nombre,
+  });
+}
+
+@immutable
+class MiPerfilAutenticacionUsuarioPuesto {
+  final String id;
+  final String nombre;
+  MiPerfilAutenticacionUsuarioPuesto.fromJson(dynamic json):
+  
+  id = nativeFromJson<String>(json['id']),
+  nombre = nativeFromJson<String>(json['nombre']);
+  @override
+  bool operator ==(Object other) {
+    if(identical(this, other)) {
+      return true;
+    }
+    if(other.runtimeType != runtimeType) {
+      return false;
+    }
+
+    final MiPerfilAutenticacionUsuarioPuesto otherTyped = other as MiPerfilAutenticacionUsuarioPuesto;
+    return id == otherTyped.id && 
+    nombre == otherTyped.nombre;
+    
+  }
+  @override
+  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode]);
+  
+
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> json = {};
+    json['id'] = nativeToJson<String>(id);
+    json['nombre'] = nativeToJson<String>(nombre);
+    return json;
+  }
+
+  MiPerfilAutenticacionUsuarioPuesto({
     required this.id,
     required this.nombre,
   });

@@ -8,6 +8,10 @@ abstract class EstacionRepository {
   Future<void> crear(String nombre, int orden);
   Future<void> editar(Estacion estacion);
   Future<void> eliminar(String id);
+
+  /// Activa o desactiva una estación. También lo puede hacer el empleado
+  /// con la estación que tiene asignada.
+  Future<void> activar(String id, bool activo);
 }
 
 class DataConnectEstacionRepository implements EstacionRepository {
@@ -42,6 +46,10 @@ class DataConnectEstacionRepository implements EstacionRepository {
   @override
   Future<void> eliminar(String id) =>
       _conector.eliminarEstacion(id: id).execute();
+
+  @override
+  Future<void> activar(String id, bool activo) =>
+      _conector.activarEstacion(id: id, activo: activo).execute();
 }
 
 class MockEstacionRepository implements EstacionRepository {
@@ -75,5 +83,12 @@ class MockEstacionRepository implements EstacionRepository {
           'La estación tiene productos: desactívala en lugar de borrarla');
     }
     _estaciones.remove(e);
+  }
+
+  @override
+  Future<void> activar(String id, bool activo) async {
+    final i = _estaciones.indexWhere((x) => x.id == id);
+    if (i < 0) throw Exception('La estación no es tuya');
+    _estaciones[i] = _estaciones[i].copiar(activo: activo);
   }
 }

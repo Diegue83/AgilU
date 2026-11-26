@@ -91,6 +91,8 @@ class DataConnectPerfilRepository implements PerfilRepository {
         cafeteria: a.usuario.cafeteria?.nombre,
         solicitudCafeteria:
             a.usuario.solicitudEmpleo_on_usuario?.cafeteria.nombre,
+        estacionId: a.usuario.puesto?.id,
+        estacion: a.usuario.puesto?.nombre,
       );
 }
 
@@ -140,6 +142,8 @@ class MockPerfilRepository implements PerfilRepository {
         rol: perfil.rol,
         cafeteriaId: perfil.cafeteriaId,
         cafeteria: perfil.cafeteria,
+        estacionId: perfil.estacionId,
+        estacion: perfil.estacion,
       );
 
   @override

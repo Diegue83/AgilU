@@ -224,6 +224,45 @@ mutation EditarEstacion($id: UUID!, $nombre: String!, $orden: Int!, $activo: Boo
   ) @check(expr: "this != null", message: "La estación no es de tu cafetería")
 }
 
+# El encargado o el empleado que la atiende activan o desactivan una estación.
+# El empleado no puede renombrarla, moverla ni borrarla.
+mutation ActivarEstacion($id: UUID!, $activo: Boolean!)
+  @auth(level: USER)
+  @transaction {
+  puesto_update(
+    first: {
+      where: {
+        _and: [
+          { id: { eq: $id } }
+          {
+            _or: [
+              {
+                cafeteria: {
+                  usuarios_on_cafeteria: {
+                    exist: {
+                      rol: { nombre: { eq: "encargado" } }
+                      autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+                    }
+                  }
+                }
+              }
+              {
+                usuarios_on_puesto: {
+                  exist: {
+                    rol: { nombre: { eq: "empleado" } }
+                    autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+    data: { activo: $activo }
+  ) @check(expr: "this != null", message: "La estación no es tuya")
+}
+
 mutation EliminarEstacion($id: UUID!) @auth(level: USER) @transaction {
   query @redact {
     puesto(id: $id) @check(expr: "this != null", message: "La estación no existe") {
@@ -265,16 +304,38 @@ mutation CrearMiProducto(
       @check(expr: "this != null", message: "Elige una estación")
       @check(expr: "vars.nombre.trim().size() > 0", message: "El nombre es obligatorio")
       @check(expr: "vars.precio > 0.0", message: "El precio debe ser mayor a 0") {
-      cafeteria {
-        usuarios_on_cafeteria(
-          where: {
-            rol: { nombre: { eq: "encargado" } }
-            autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+      id
+    }
+    mias: puestos(
+      where: {
+        _and: [
+          { id: { eq: $puestoId } }
+          {
+            _or: [
+              {
+                cafeteria: {
+                  usuarios_on_cafeteria: {
+                    exist: {
+                      rol: { nombre: { eq: "encargado" } }
+                      autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+                    }
+                  }
+                }
+              }
+              {
+                usuarios_on_puesto: {
+                  exist: {
+                    rol: { nombre: { eq: "empleado" } }
+                    autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+                  }
+                }
+              }
+            ]
           }
-        ) @check(expr: "this.size() == 1", message: "La estación no es de tu cafetería") {
-          id
-        }
+        ]
       }
+    ) @check(expr: "this.size() == 1", message: "La estación no es de tu cafetería") {
+      id
     }
   }
   producto_insert(
@@ -305,30 +366,70 @@ mutation EditarMiProducto(
       @check(expr: "this != null", message: "El producto no existe")
       @check(expr: "vars.nombre.trim().size() > 0", message: "El nombre es obligatorio")
       @check(expr: "vars.precio > 0.0", message: "El precio debe ser mayor a 0") {
-      puesto {
-        cafeteria {
-          usuarios_on_cafeteria(
-            where: {
-              rol: { nombre: { eq: "encargado" } }
-              autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+      id
+    }
+    propios: productos(
+      where: {
+        id: { eq: $id }
+        puesto: {
+          _or: [
+            {
+              cafeteria: {
+                usuarios_on_cafeteria: {
+                  exist: {
+                    rol: { nombre: { eq: "encargado" } }
+                    autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+                  }
+                }
+              }
             }
-          ) @check(expr: "this.size() == 1", message: "El producto no es de tu cafetería") {
-            id
-          }
+            {
+              usuarios_on_puesto: {
+                exist: {
+                  rol: { nombre: { eq: "empleado" } }
+                  autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+                }
+              }
+            }
+          ]
         }
       }
+    ) @check(expr: "this.size() == 1", message: "El producto no es de tu cafetería") {
+      id
     }
     puesto(id: $puestoId) @check(expr: "this != null", message: "Elige una estación") {
-      cafeteria {
-        usuarios_on_cafeteria(
-          where: {
-            rol: { nombre: { eq: "encargado" } }
-            autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+      id
+    }
+    mias: puestos(
+      where: {
+        _and: [
+          { id: { eq: $puestoId } }
+          {
+            _or: [
+              {
+                cafeteria: {
+                  usuarios_on_cafeteria: {
+                    exist: {
+                      rol: { nombre: { eq: "encargado" } }
+                      autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+                    }
+                  }
+                }
+              }
+              {
+                usuarios_on_puesto: {
+                  exist: {
+                    rol: { nombre: { eq: "empleado" } }
+                    autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+                  }
+                }
+              }
+            ]
           }
-        ) @check(expr: "this.size() == 1", message: "La estación no es de tu cafetería") {
-          id
-        }
+        ]
       }
+    ) @check(expr: "this.size() == 1", message: "La estación no es de tu cafetería") {
+      id
     }
   }
   producto_update(
@@ -344,7 +445,8 @@ mutation EditarMiProducto(
   )
 }
 
-# HU-16: marcar un producto agotado o disponible desde la lista.
+# HU-16: marcar un producto agotado o disponible desde la lista. También lo
+# puede hacer el empleado con los productos de su estación.
 # La función cancelarAlAgotar (functions/) cancela los pedidos pendientes que lo incluyen.
 mutation EstablecerDisponibilidad($id: UUID!, $disponible: Boolean!)
   @auth(level: USER)
@@ -354,14 +456,26 @@ mutation EstablecerDisponibilidad($id: UUID!, $disponible: Boolean!)
       where: {
         id: { eq: $id }
         puesto: {
-          cafeteria: {
-            usuarios_on_cafeteria: {
-              exist: {
-                rol: { nombre: { eq: "encargado" } }
-                autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+          _or: [
+            {
+              cafeteria: {
+                usuarios_on_cafeteria: {
+                  exist: {
+                    rol: { nombre: { eq: "encargado" } }
+                    autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+                  }
+                }
               }
             }
-          }
+            {
+              usuarios_on_puesto: {
+                exist: {
+                  rol: { nombre: { eq: "empleado" } }
+                  autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+                }
+              }
+            }
+          ]
         }
       }
     }
@@ -723,8 +837,8 @@ mutation EnviarComprobante($pedidoId: UUID!, $ruta: String!)
   )
 }
 
-# HU-20 con Supabase Storage: el encargado ya subió la foto al bucket público
-# "productos" y aquí la liga a un producto de su cafetería.
+# HU-20 con Supabase Storage: el encargado (o el empleado de esa estación) ya
+# subió la foto al bucket público "productos" y aquí la liga al producto.
 mutation GuardarFotoProducto($id: UUID!, $url: String!)
   @auth(expr: "auth != null && vars.url.startsWith('https://') && vars.url.contains('.supabase.co/storage/v1/object/public/productos/' + auth.uid + '/') && vars.url.size() <= 500")
   @transaction {
@@ -734,14 +848,26 @@ mutation GuardarFotoProducto($id: UUID!, $url: String!)
         id: { eq: $id }
         eliminado: { eq: false }
         puesto: {
-          cafeteria: {
-            usuarios_on_cafeteria: {
-              exist: {
-                rol: { nombre: { eq: "encargado" } }
-                autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+          _or: [
+            {
+              cafeteria: {
+                usuarios_on_cafeteria: {
+                  exist: {
+                    rol: { nombre: { eq: "encargado" } }
+                    autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+                  }
+                }
               }
             }
-          }
+            {
+              usuarios_on_puesto: {
+                exist: {
+                  rol: { nombre: { eq: "empleado" } }
+                  autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+                }
+              }
+            }
+          ]
         }
       }
     }
