@@ -95,6 +95,12 @@ class _MenuScaffold extends StatelessWidget {
                   },
                 ),
               ),
+            if (vm.avisoSinConexion != null)
+              MaterialBanner(
+                leading: const Icon(Icons.cloud_off),
+                content: Text(vm.avisoSinConexion!),
+                actions: const [SizedBox.shrink()],
+              ),
             if (vm.avisoConfianza != null)
               MaterialBanner(
                 leading: const Icon(Icons.warning_amber),

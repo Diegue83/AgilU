@@ -22,6 +22,7 @@ import 'data/repositories/estacion_repository.dart';
 import 'data/repositories/firebase_auth_repository.dart';
 import 'data/repositories/foto_repository.dart';
 import 'data/repositories/historial_repository.dart';
+import 'data/repositories/menu_con_cache.dart';
 import 'data/repositories/menu_repository.dart';
 import 'data/repositories/notificador.dart';
 import 'data/repositories/pagos_repository.dart';
@@ -144,8 +145,9 @@ Future<void> main() async {
               : MockProductoRepository(),
         ),
         Provider<MenuRepository>(
+          // Guarda la última copia para mostrar el menú sin conexión.
           create: (_) => AppConfig.usarFirebase
-              ? DataConnectMenuRepository()
+              ? MenuConCache(DataConnectMenuRepository())
               : MockMenuRepository(),
         ),
         Provider<PedidoRepository>(
