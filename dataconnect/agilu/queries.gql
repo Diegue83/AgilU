@@ -14,6 +14,8 @@ query ListarMenu
     precio
     categoria
     disponible
+    controlarStock
+    cantidadEnStock
     urlDeImagen
     precioOferta
     ofertaHasta
@@ -215,6 +217,7 @@ query MisProductos @auth(level: USER) {
     categoria
     disponible
     cantidadEnStock
+    controlarStock
     urlDeImagen
     precioOferta
     ofertaHasta
@@ -294,6 +297,14 @@ query DiagnosticarPedido(
         JOIN puesto e ON e.id = p.puesto_id
         WHERE p.disponible AND NOT p.eliminado AND e.activo
           AND e.cafeteria_id = $2::uuid AND i.cantidad BETWEEN 1 AND 50
+          AND (NOT p.controlar_stock OR p.cantidad_en_stock >= i.cantidad)
+      ),
+      faltan AS (
+        SELECT p.nombre, p.cantidad_en_stock FROM pedidos_items i
+        JOIN producto p ON p.id = i.producto_id
+        WHERE p.controlar_stock AND p.disponible AND NOT p.eliminado
+          AND p.cantidad_en_stock < i.cantidad
+        LIMIT 1
       ),
       m AS (
         SELECT f.*, (extract(hour FROM f.local) * 60 + extract(minute FROM f.local))::int AS minuto
@@ -322,6 +333,11 @@ query DiagnosticarPedido(
           WHERE n.usuario_id = (SELECT usuario_id FROM cliente) AND n.estado = 'no_recogido'), 0))::int < 100
         THEN 'Para pagar al recoger necesitas 100 de confianza. Paga por transferencia.'
       WHEN NOT EXISTS (SELECT 1 FROM caf WHERE activa) THEN 'La cafetería no está recibiendo pedidos.'
+      WHEN EXISTS (SELECT 1 FROM faltan)
+        THEN (SELECT CASE WHEN cantidad_en_stock <= 0
+                          THEN 'Se agotó ' || nombre || '. Quítalo de tu carrito.'
+                          ELSE 'Solo quedan ' || cantidad_en_stock || ' de ' || nombre || '.' END
+              FROM faltan)
       WHEN (SELECT count(*) FROM validos) <> (SELECT count(*) FROM pedidos_items)
         THEN 'Algún producto ya no está disponible. Revisa tu carrito.'
       WHEN (SELECT local::date <> ahora_local::date FROM m) THEN 'Solo se pueden hacer pedidos para hoy.'

@@ -24,6 +24,8 @@ class DatosProducto {
   final String estacionId;
   final bool disponible;
   final bool preparacionInmediata;
+  final bool controlarStock;
+  final int existencias;
 
   const DatosProducto({
     required this.nombre,
@@ -32,6 +34,8 @@ class DatosProducto {
     required this.estacionId,
     this.disponible = true,
     this.preparacionInmediata = false,
+    this.controlarStock = false,
+    this.existencias = 0,
   });
 }
 
@@ -56,6 +60,8 @@ class DataConnectProductoRepository implements ProductoRepository {
       )
       .descripcion(d.descripcion.isEmpty ? null : d.descripcion)
       .preparacionInmediata(d.preparacionInmediata)
+      .controlarStock(d.controlarStock)
+      .cantidadEnStock(d.existencias)
       .execute();
 
   @override
@@ -69,6 +75,8 @@ class DataConnectProductoRepository implements ProductoRepository {
       )
       .descripcion(d.descripcion.isEmpty ? null : d.descripcion)
       .preparacionInmediata(d.preparacionInmediata)
+      .controlarStock(d.controlarStock)
+      .cantidadEnStock(d.existencias)
       .execute();
 
   @override
@@ -112,6 +120,8 @@ class DataConnectProductoRepository implements ProductoRepository {
         ofertaHasta: p.ofertaHasta?.toDateTime().toLocal(),
         esEspecialidad: p.esEspecialidad,
         preparacionInmediata: p.preparacionInmediata,
+        controlarStock: p.controlarStock,
+        existencias: p.cantidadEnStock,
       );
 }
 

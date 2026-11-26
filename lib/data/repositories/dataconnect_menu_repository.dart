@@ -76,5 +76,7 @@ class DataConnectMenuRepository implements MenuRepository {
         ofertaHasta: p.ofertaHasta?.toDateTime().toLocal(),
         esEspecialidad: p.esEspecialidad,
         preparacionInmediata: p.preparacionInmediata,
+        controlarStock: p.controlarStock,
+        existencias: p.cantidadEnStock,
       );
 }

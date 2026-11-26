@@ -8,6 +8,8 @@ class EditarMiProductoVariablesBuilder {
   String puestoId;
   bool disponible;
   Optional<bool> _preparacionInmediata = Optional.optional(nativeFromJson, nativeToJson);
+  Optional<bool> _controlarStock = Optional.optional(nativeFromJson, nativeToJson);
+  Optional<int> _cantidadEnStock = Optional.optional(nativeFromJson, nativeToJson);
 
   final FirebaseDataConnect _dataConnect;  EditarMiProductoVariablesBuilder descripcion(String? t) {
    _descripcion.value = t;
@@ -15,6 +17,14 @@ class EditarMiProductoVariablesBuilder {
   }
   EditarMiProductoVariablesBuilder preparacionInmediata(bool? t) {
    _preparacionInmediata.value = t;
+   return this;
+  }
+  EditarMiProductoVariablesBuilder controlarStock(bool? t) {
+   _controlarStock.value = t;
+   return this;
+  }
+  EditarMiProductoVariablesBuilder cantidadEnStock(int? t) {
+   _cantidadEnStock.value = t;
    return this;
   }
 
@@ -26,7 +36,7 @@ class EditarMiProductoVariablesBuilder {
   }
 
   MutationRef<EditarMiProductoData, EditarMiProductoVariables> ref() {
-    EditarMiProductoVariables vars= EditarMiProductoVariables(id: id,nombre: nombre,descripcion: _descripcion,precio: precio,puestoId: puestoId,disponible: disponible,preparacionInmediata: _preparacionInmediata,);
+    EditarMiProductoVariables vars= EditarMiProductoVariables(id: id,nombre: nombre,descripcion: _descripcion,precio: precio,puestoId: puestoId,disponible: disponible,preparacionInmediata: _preparacionInmediata,controlarStock: _controlarStock,cantidadEnStock: _cantidadEnStock,);
     return _dataConnect.mutation("EditarMiProducto", dataDeserializer, varsSerializer, vars);
   }
 }
@@ -110,6 +120,8 @@ class EditarMiProductoVariables {
   final String puestoId;
   final bool disponible;
   late final Optional<bool>preparacionInmediata;
+  late final Optional<bool>controlarStock;
+  late final Optional<int>cantidadEnStock;
   @Deprecated('fromJson is deprecated for Variable classes as they are no longer required for deserialization.')
   EditarMiProductoVariables.fromJson(Map<String, dynamic> json):
   
@@ -132,6 +144,14 @@ class EditarMiProductoVariables {
     preparacionInmediata = Optional.optional(nativeFromJson, nativeToJson);
     preparacionInmediata.value = json['preparacionInmediata'] == null ? null : nativeFromJson<bool>(json['preparacionInmediata']);
   
+  
+    controlarStock = Optional.optional(nativeFromJson, nativeToJson);
+    controlarStock.value = json['controlarStock'] == null ? null : nativeFromJson<bool>(json['controlarStock']);
+  
+  
+    cantidadEnStock = Optional.optional(nativeFromJson, nativeToJson);
+    cantidadEnStock.value = json['cantidadEnStock'] == null ? null : nativeFromJson<int>(json['cantidadEnStock']);
+  
   }
   @override
   bool operator ==(Object other) {
@@ -149,11 +169,13 @@ class EditarMiProductoVariables {
     precio == otherTyped.precio && 
     puestoId == otherTyped.puestoId && 
     disponible == otherTyped.disponible && 
-    preparacionInmediata == otherTyped.preparacionInmediata;
+    preparacionInmediata == otherTyped.preparacionInmediata && 
+    controlarStock == otherTyped.controlarStock && 
+    cantidadEnStock == otherTyped.cantidadEnStock;
     
   }
   @override
-  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, descripcion.hashCode, precio.hashCode, puestoId.hashCode, disponible.hashCode, preparacionInmediata.hashCode]);
+  int get hashCode => Object.hashAll([id.hashCode, nombre.hashCode, descripcion.hashCode, precio.hashCode, puestoId.hashCode, disponible.hashCode, preparacionInmediata.hashCode, controlarStock.hashCode, cantidadEnStock.hashCode]);
   
 
   Map<String, dynamic> toJson() {
@@ -169,6 +191,12 @@ class EditarMiProductoVariables {
     if(preparacionInmediata.state == OptionalState.set) {
       json['preparacionInmediata'] = preparacionInmediata.toJson();
     }
+    if(controlarStock.state == OptionalState.set) {
+      json['controlarStock'] = controlarStock.toJson();
+    }
+    if(cantidadEnStock.state == OptionalState.set) {
+      json['cantidadEnStock'] = cantidadEnStock.toJson();
+    }
     return json;
   }
 
@@ -180,6 +208,8 @@ class EditarMiProductoVariables {
     required this.puestoId,
     required this.disponible,
     required this.preparacionInmediata,
+    required this.controlarStock,
+    required this.cantidadEnStock,
   });
 }
 

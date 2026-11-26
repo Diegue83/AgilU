@@ -17,6 +17,13 @@ class Producto {
   final bool esEspecialidad;
   final bool preparacionInmediata;
 
+  /// Si se descuentan existencias al pedirlo.
+  final bool controlarStock;
+  final int existencias;
+
+  /// Con pocas existencias el menú avisa "Últimas N".
+  static const umbralUltimas = 5;
+
   const Producto({
     required this.id,
     required this.nombre,
@@ -33,7 +40,25 @@ class Producto {
     this.ofertaHasta,
     this.esEspecialidad = false,
     this.preparacionInmediata = false,
+    this.controlarStock = false,
+    this.existencias = 0,
   });
+
+  /// Disponible y, si controla existencias, con al menos una.
+  bool get disponibleAhora =>
+      disponible && (!controlarStock || existencias > 0);
+
+  bool get agotadoPorExistencias => controlarStock && existencias <= 0;
+
+  bool get ultimasUnidades =>
+      controlarStock && existencias > 0 && existencias <= umbralUltimas;
+
+  /// Etiqueta de estado del menú: disponible, últimas unidades o agotado.
+  String get etiquetaExistencias => !disponible || agotadoPorExistencias
+      ? 'Agotado'
+      : ultimasUnidades
+          ? (existencias == 1 ? 'Última unidad' : 'Últimas $existencias')
+          : 'Disponible';
 
   /// HU-21: la oferta vale mientras no llegue su fecha de término.
   bool ofertaVigente(DateTime ahora) =>

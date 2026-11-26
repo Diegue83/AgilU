@@ -11,9 +11,15 @@ class ErroresProducto {
   final String? nombre;
   final String? precio;
   final String? estacion;
-  const ErroresProducto({this.nombre, this.precio, this.estacion});
+  final String? existencias;
+  const ErroresProducto(
+      {this.nombre, this.precio, this.estacion, this.existencias});
 
-  bool get hayErrores => nombre != null || precio != null || estacion != null;
+  bool get hayErrores =>
+      nombre != null ||
+      precio != null ||
+      estacion != null ||
+      existencias != null;
 }
 
 class ProductoFormViewModel extends ChangeNotifier {
@@ -85,9 +91,16 @@ class ProductoFormViewModel extends ChangeNotifier {
   static double? leerPrecio(String texto) =>
       double.tryParse(texto.trim().replaceAll(',', '.').replaceAll(r'$', ''));
 
-  ErroresProducto validar(String nombre, String precio, String? estacionId) {
+  ErroresProducto validar(String nombre, String precio, String? estacionId,
+      {bool controlarStock = false, String existencias = '0'}) {
     final p = leerPrecio(precio);
+    final e = int.tryParse(existencias.trim());
     return ErroresProducto(
+      existencias: !controlarStock
+          ? null
+          : e == null || e < 0 || e > 9999
+              ? 'Escribe un número de 0 a 9999.'
+              : null,
       nombre: nombre.trim().isEmpty ? 'El nombre es obligatorio.' : null,
       precio: p == null
           ? 'Escribe un precio válido.'
@@ -188,9 +201,12 @@ class ProductoFormViewModel extends ChangeNotifier {
     required String? estacionId,
     required bool disponible,
     bool preparacionInmediata = false,
+    bool controlarStock = false,
+    String existencias = '0',
   }) async {
     if (guardando) return false;
-    errores = validar(nombre, precio, estacionId);
+    errores = validar(nombre, precio, estacionId,
+        controlarStock: controlarStock, existencias: existencias);
     if (errores.hayErrores) {
       notifyListeners();
       return false;
@@ -206,6 +222,8 @@ class ProductoFormViewModel extends ChangeNotifier {
         estacionId: estacionId!,
         disponible: disponible,
         preparacionInmediata: preparacionInmediata,
+        controlarStock: controlarStock,
+        existencias: controlarStock ? int.parse(existencias.trim()) : 0,
       );
       if (editando) {
         await _repo.editar(actual!.id, datos);

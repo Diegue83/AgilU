@@ -117,7 +117,10 @@ class _Productos extends StatelessWidget {
                 },
                 leading: FotoProducto(url: p.urlImagen),
                 title: Text(p.nombre),
-                subtitle: Text(p.estacion),
+                subtitle: Text([
+                  p.estacion,
+                  if (p.controlarStock) 'Existencias: ${p.existencias}',
+                ].join(' · ')),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

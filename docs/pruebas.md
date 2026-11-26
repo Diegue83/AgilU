@@ -36,6 +36,10 @@ y pull request.
   del release solo se aceptan publicados, con etiqueta vX.Y.Z, APK y .sha256 del
   mismo repositorio; si la suma no coincide no se instala; sin permiso de instalar se
   pide y luego se instala lo ya descargado; fuera de Android no se busca nada.
+- Existencias: el menú trae las existencias de los productos que las controlan; al
+  pedir se descuentan y no se vende más de lo que hay (con el motivo exacto); cancelar
+  las regresa una sola vez; los productos sin control no cambian. En la app, la
+  etiqueta disponible / últimas unidades / agotado y el carrito no deja llevar más.
 - Cobro por estación: un pedido no mezcla estaciones; los pedidos del mismo carrito
   comparten grupo, cuentan como una compra en la capacidad y pueden pagarse al recoger
   juntos; cada estación tiene su propia cuenta; quien cobra con estación asignada solo

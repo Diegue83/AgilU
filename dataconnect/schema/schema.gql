@@ -73,6 +73,9 @@ type Producto @table {
   nombre: String!
   precio: Float!
   cantidadEnStock: Int! @default(value: 0)
+  # Solo los productos con controlarStock descuentan existencias al pedirse y
+  # muestran "últimas unidades"; los demás se venden mientras estén disponibles.
+  controlarStock: Boolean! @default(value: false)
   descripcion: String
   urlDeImagen: String
   categoria: String! @default(value: "General")
