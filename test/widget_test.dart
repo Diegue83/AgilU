@@ -21,6 +21,8 @@ import 'package:agilu/data/repositories/reporte_repository.dart';
 import 'package:agilu/ui/cart/cart_view_model.dart';
 import 'package:agilu/ui/comun/contadores.dart';
 import 'package:flutter/material.dart';
+import 'package:agilu/data/models/ticket.dart';
+import 'package:agilu/data/models/pedido_panel.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
@@ -35,11 +37,14 @@ const _encargado = Perfil(
 Widget _app(AuthRepository auth,
         {String ruta = Routes.login,
         PerfilRepository? perfiles,
-        ContadoresRepository? contadores}) =>
+        ContadoresRepository? contadores,
+        AvisosRepository? avisos,
+        PedidoRepository? pedidos}) =>
     MultiProvider(
       providers: [
         Provider<AuthRepository>.value(value: auth),
-        Provider<AvisosRepository>(create: (_) => MockAvisosRepository()),
+        Provider<AvisosRepository>(
+            create: (_) => avisos ?? MockAvisosRepository()),
         Provider<ReporteRepository>(create: (_) => MockReporteRepository()),
         Provider<PerfilRepository>.value(
             value: perfiles ?? MockPerfilRepository()),
@@ -54,7 +59,8 @@ Widget _app(AuthRepository auth,
         Provider<PanelRepository>(create: (_) => MockPanelRepository()),
         Provider<PagosRepository>(create: (_) => MockPagosRepository()),
         Provider<MenuRepository>(create: (_) => MockMenuRepository()),
-        Provider<PedidoRepository>(create: (_) => MockPedidoRepository()),
+        Provider<PedidoRepository>(
+            create: (_) => pedidos ?? MockPedidoRepository()),
         ChangeNotifierProvider(create: (_) => CartViewModel()),
         Provider<Notificador>(create: (_) => MockNotificador()),
         ChangeNotifierProvider(
@@ -609,5 +615,29 @@ void main() {
         find.descendant(
             of: find.byTooltip('Mis pedidos'), matching: find.text('1')),
         findsOneWidget);
+  });
+
+  testWidgets('tocar el aviso de pedido listo abre su ticket', (tester) async {
+    final avisos = MockAvisosRepository();
+    final pedidos = MockPedidoRepository()
+      ..tickets['p7'] = TicketPedido(
+        id: 'p7',
+        folio: 'AGU-00007',
+        referencia: 'AGU-00007',
+        estado: EstadoPedido.listo,
+        recogerA: DateTime.now().add(const Duration(hours: 1)),
+        total: 40,
+        cafeteria: 'Cafetería central',
+        codigoEntrega: '4321',
+      );
+    await tester.pumpWidget(
+        _app(MockAuthRepository(), avisos: avisos, pedidos: pedidos));
+    await _iniciarSesion(tester);
+    avisos.abrir(const AvisoAbierto(evento: 'pedido_listo', pedidoId: 'p7'));
+    await tester.pump();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.textContaining('AGU-00007'), findsWidgets);
+    expect(find.byKey(const Key('codigo-entrega')), findsOneWidget);
   });
 }
