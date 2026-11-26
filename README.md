@@ -114,6 +114,43 @@ firebase deploy --only dataconnect,functions,storage,firestore:rules
 **Sin Firebase:** cambia `AppConfig.usarFirebase` a `false` en
 `lib/core/app_config.dart`; la app usa datos de ejemplo.
 
+## Publicar una versión y actualización automática
+
+La app instalada revisa al abrirse el último release de GitHub y, si es más nuevo,
+ofrece descargarlo (también en *Mi cuenta → Buscar actualizaciones*). Comprueba la
+suma SHA-256 publicada junto al APK y abre el instalador de Android, que pide
+confirmar; una app fuera de la Play Store no puede instalarse sola.
+
+**Llave de firma (una sola vez).** Todas las versiones deben firmarse con la misma
+llave o Android rechaza la actualización. Créala fuera del repositorio y guárdala
+junto con su contraseña en un lugar seguro; si se pierde, nadie podrá actualizar:
+
+```bash
+keytool -genkeypair -v -keystore ~/agilu-release.jks -alias agilu -keyalg RSA -keysize 4096 -validity 10000
+```
+
+Para compilar firmado en tu computadora crea `android/key.properties` (no se
+versiona) con `storeFile`, `storePassword`, `keyAlias` y `keyPassword`. Sin ese
+archivo el release se firma con la llave de depuración y no se puede instalar encima
+de una versión publicada.
+
+**Secretos de GitHub** (Settings → Secrets and variables → Actions):
+`ANDROID_KEYSTORE_BASE64` (la llave en base64), `ANDROID_KEYSTORE_PASSWORD`,
+`ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`, `FIREBASE_OPTIONS_DART` y
+`GOOGLE_SERVICES_JSON` (los dos archivos de Firebase en base64). Variables:
+`SUPABASE_URL` y `SUPABASE_KEY` (valores públicos).
+
+**Publicar:** sube `version:` en `pubspec.yaml` (por ejemplo `1.2.0+3`), escribe las
+novedades en `release-notes/v1.2.0.md`, fusiona a `main` y sube la etiqueta:
+
+```bash
+git tag v1.2.0 && git push origin v1.2.0
+```
+
+El workflow `Release` compila, verifica que no esté firmado con la llave de
+depuración, calcula el SHA-256 y publica el release con `AgilU-1.2.0.apk` y
+`AgilU-1.2.0.apk.sha256`.
+
 ## Estructura
 
 ```

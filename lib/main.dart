@@ -1,6 +1,7 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -8,6 +9,7 @@ import 'app.dart';
 import 'core/app_config.dart';
 import 'core/conector.dart';
 import 'core/routes.dart';
+import 'data/repositories/actualizacion_repository.dart';
 import 'data/repositories/almacen_archivos.dart';
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/avisos_repository.dart';
@@ -31,6 +33,7 @@ import 'data/repositories/personal_repository.dart';
 import 'data/repositories/reporte_repository.dart';
 import 'firebase_options.dart';
 import 'ui/cart/cart_view_model.dart';
+import 'ui/comun/actualizacion.dart';
 import 'ui/comun/contadores.dart';
 
 Future<void> main() async {
@@ -168,6 +171,15 @@ Future<void> main() async {
         ),
         // Estado compartido del carrito.
         ChangeNotifierProvider(create: (_) => CartViewModel()),
+        // Actualización desde los releases de GitHub (solo el APK de Android).
+        ChangeNotifierProvider(
+          create: (_) => ActualizacionController(
+            GitHubActualizacionRepository(
+                repositorio: AppConfig.repositorioReleases),
+            soportada:
+                !kIsWeb && defaultTargetPlatform == TargetPlatform.android,
+          ),
+        ),
       ],
       child: AgilUApp(
           rutaInicial:

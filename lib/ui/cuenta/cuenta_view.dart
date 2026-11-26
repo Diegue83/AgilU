@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/routes.dart';
+import '../comun/actualizacion.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/pedido_repository.dart';
 import '../../data/repositories/perfil_repository.dart';
@@ -190,6 +191,8 @@ class _Cuenta extends StatelessWidget {
                       icon: const Icon(Icons.edit_outlined),
                       label: const Text('Editar datos'),
                     ),
+                    const SizedBox(height: 16),
+                    const TarjetaVersion(),
                     const SizedBox(height: 16),
                     Text('Seguridad',
                         style: Theme.of(context).textTheme.titleMedium),

@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -7,6 +10,16 @@ plugins {
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// Llave de firma de las versiones publicadas. android/key.properties no se
+// versiona (ver .gitignore); en GitHub Actions se escribe desde los secretos.
+// Sin ese archivo, el release se firma con la llave de depuración de esta
+// computadora y no podrá instalarse encima de una versión publicada.
+val llaveRelease = Properties().apply {
+    val archivo = rootProject.file("key.properties")
+    if (archivo.exists()) FileInputStream(archivo).use { load(it) }
+}
+val conLlaveRelease = llaveRelease.getProperty("storeFile") != null
 
 android {
     namespace = "com.example.agilu"
@@ -33,13 +46,31 @@ android {
         versionName = flutter.versionName
     }
 
-    buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+    signingConfigs {
+        if (conLlaveRelease) {
+            create("release") {
+                storeFile = file(llaveRelease.getProperty("storeFile"))
+                storePassword = llaveRelease.getProperty("storePassword")
+                keyAlias = llaveRelease.getProperty("keyAlias")
+                keyPassword = llaveRelease.getProperty("keyPassword")
+            }
         }
     }
+
+    buildTypes {
+        release {
+            signingConfig = if (conLlaveRelease) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
+        }
+    }
+}
+
+dependencies {
+    // FileProvider para entregar el APK descargado al instalador de Android.
+    implementation("androidx.core:core-ktx:1.13.1")
 }
 
 flutter {

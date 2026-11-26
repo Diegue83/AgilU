@@ -32,6 +32,10 @@ y pull request.
   creada no es de alumno, no puede hacer pedidos mientras espera, y solo el encargado
   de esa cafetería ve, aprueba o rechaza la solicitud; una cafetería inactiva no las
   recibe.
+- Actualizaciones (`test/actualizacion_test.dart`): versiones comparadas por número;
+  del release solo se aceptan publicados, con etiqueta vX.Y.Z, APK y .sha256 del
+  mismo repositorio; si la suma no coincide no se instala; sin permiso de instalar se
+  pide y luego se instala lo ya descargado; fuera de Android no se busca nada.
 - Roles y permisos: el catálogo y los permisos iniciales; solo el administrador ve
   y cambia roles; un rol nuevo con permisos exige cafetería y sus permisos deciden lo
   que puede hacer (al quitarle uno pierde ese acceso); el alumno no lleva permisos,
