@@ -138,7 +138,11 @@ class _Tarjeta extends StatelessWidget {
                 Text('Recoge ${ReglasPedido.formatearHora(pedido.recogerA)}'),
               ],
             ),
-            Text(pedido.alumno),
+            Text([
+              pedido.alumno,
+              if (pedido.transcurrido(DateTime.now()) != null)
+                'pidió ${pedido.transcurrido(DateTime.now())}',
+            ].join(' · ')),
             if (pedido.alRecoger)
               Text('Cobrar \$${pedido.total.toStringAsFixed(2)} al entregar',
                   style: TextStyle(

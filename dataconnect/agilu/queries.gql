@@ -126,12 +126,14 @@ query MisPedidos @auth(level: USER) {
     referenciaPago
     motivoRechazoPago
     cafeteria {
+      id
       nombre
     }
     detallePedidos_on_pedido {
       cantidad
       precioEnElMomento
       producto {
+        id
         nombre
       }
     }
@@ -404,6 +406,7 @@ query PanelPedidos($desde: Timestamp!, $hasta: Timestamp!) @auth(level: USER) {
     notas
     montoTotal
     intentosEntrega
+    fechaCreacion
     esCredito
     usuario {
       nombre

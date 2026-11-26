@@ -8,6 +8,7 @@ import '../../data/models/confianza.dart';
 import '../../data/models/item_carrito.dart';
 import '../../data/models/pedido.dart';
 import '../../data/models/producto.dart';
+import '../../data/models/ticket.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/pedido_repository.dart';
 
@@ -146,6 +147,36 @@ class CartViewModel extends ChangeNotifier {
     }
     notifyListeners();
     return true;
+  }
+
+  /// "Volver a pedir": agrega al carrito lo que hoy sigue a la venta, con la
+  /// misma cantidad (o lo que haya). Devuelve los nombres que ya no se pueden
+  /// pedir. El carrito debe ser de la misma cafetería.
+  List<String> volverAPedir(List<LineaReorden> lineas, List<Producto> menu) {
+    final porId = {for (final p in menu) p.id: p};
+    final faltan = <String>[];
+    for (final l in lineas) {
+      final p = porId[l.productoId];
+      if (p == null || !p.disponibleAhora) {
+        faltan.add(l.nombre);
+        continue;
+      }
+      if (_items.isNotEmpty && cafeteriaId != p.cafeteriaId) {
+        error = 'Tu carrito es de otra cafetería. Envía o vacía ese pedido '
+            'primero.';
+        notifyListeners();
+        return lineas.map((x) => x.nombre).toList();
+      }
+      var agregados = 0;
+      for (var i = 0; i < l.cantidad; i++) {
+        if (!agregar(p)) break;
+        agregados++;
+      }
+      if (agregados < l.cantidad) faltan.add(l.nombre);
+    }
+    if (faltan.isEmpty) error = null;
+    notifyListeners();
+    return faltan;
   }
 
   void quitarUno(String productoId) {

@@ -27,6 +27,7 @@ class PanelPedidosPedidos {
   final String? notas;
   final double montoTotal;
   final int intentosEntrega;
+  final Timestamp fechaCreacion;
   final bool esCredito;
   final PanelPedidosPedidosUsuario usuario;
   final List<PanelPedidosPedidosDetallePedidosOnPedido> detallePedidos_on_pedido;
@@ -39,6 +40,7 @@ class PanelPedidosPedidos {
   notas = json['notas'] == null ? null : nativeFromJson<String>(json['notas']),
   montoTotal = nativeFromJson<double>(json['montoTotal']),
   intentosEntrega = nativeFromJson<int>(json['intentosEntrega']),
+  fechaCreacion = Timestamp.fromJson(json['fechaCreacion']),
   esCredito = nativeFromJson<bool>(json['esCredito']),
   usuario = PanelPedidosPedidosUsuario.fromJson(json['usuario']),
   detallePedidos_on_pedido = (json['detallePedidos_on_pedido'] as List<dynamic>)
@@ -61,13 +63,14 @@ class PanelPedidosPedidos {
     notas == otherTyped.notas && 
     montoTotal == otherTyped.montoTotal && 
     intentosEntrega == otherTyped.intentosEntrega && 
+    fechaCreacion == otherTyped.fechaCreacion && 
     esCredito == otherTyped.esCredito && 
     usuario == otherTyped.usuario && 
     detallePedidos_on_pedido == otherTyped.detallePedidos_on_pedido;
     
   }
   @override
-  int get hashCode => Object.hashAll([id.hashCode, folio.hashCode, estado.hashCode, recogerA.hashCode, notas.hashCode, montoTotal.hashCode, intentosEntrega.hashCode, esCredito.hashCode, usuario.hashCode, detallePedidos_on_pedido.hashCode]);
+  int get hashCode => Object.hashAll([id.hashCode, folio.hashCode, estado.hashCode, recogerA.hashCode, notas.hashCode, montoTotal.hashCode, intentosEntrega.hashCode, fechaCreacion.hashCode, esCredito.hashCode, usuario.hashCode, detallePedidos_on_pedido.hashCode]);
   
 
   Map<String, dynamic> toJson() {
@@ -81,6 +84,7 @@ class PanelPedidosPedidos {
     }
     json['montoTotal'] = nativeToJson<double>(montoTotal);
     json['intentosEntrega'] = nativeToJson<int>(intentosEntrega);
+    json['fechaCreacion'] = fechaCreacion.toJson();
     json['esCredito'] = nativeToJson<bool>(esCredito);
     json['usuario'] = usuario.toJson();
     json['detallePedidos_on_pedido'] = detallePedidos_on_pedido.map((e) => e.toJson()).toList();
@@ -95,6 +99,7 @@ class PanelPedidosPedidos {
     this.notas,
     required this.montoTotal,
     required this.intentosEntrega,
+    required this.fechaCreacion,
     required this.esCredito,
     required this.usuario,
     required this.detallePedidos_on_pedido,
