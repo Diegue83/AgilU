@@ -34,6 +34,7 @@ class _AgilUAppState extends State<AgilUApp> {
   final _mensajero = GlobalKey<ScaffoldMessengerState>();
   final _navegador = GlobalKey<NavigatorState>();
   StreamSubscription<String>? _avisos;
+  StreamSubscription<AvisoAbierto>? _abiertos;
 
   @override
   void initState() {
@@ -44,6 +45,8 @@ class _AgilUAppState extends State<AgilUApp> {
       _mensajero.currentState?.showSnackBar(SnackBar(content: Text(texto)));
       contadores.actualizar();
     });
+    // Tocar una notificación abre el ticket del pedido o el panel.
+    _abiertos = context.read<AvisosRepository>().abiertos.listen(_abrirAviso);
     WidgetsBinding.instance.addPostFrameCallback((_) => _revisarVersion());
   }
 
@@ -58,8 +61,29 @@ class _AgilUAppState extends State<AgilUApp> {
     }
   }
 
+  void _abrirAviso(AvisoAbierto aviso) {
+    final nav = _navegador.currentState;
+    if (nav == null) {
+      // La app apenas arranca: se intenta en el siguiente cuadro.
+      WidgetsBinding.instance
+        ..addPostFrameCallback((_) => _abrirAviso(aviso))
+        ..scheduleFrame();
+      return;
+    }
+    switch (aviso.destino) {
+      case DestinoAviso.ticket:
+        nav.push(MaterialPageRoute(
+            builder: (_) => TicketView(pedidoId: aviso.pedidoId!)));
+      case DestinoAviso.panel:
+        nav.pushNamedAndRemoveUntil(Routes.encargado, (_) => false);
+      case DestinoAviso.ninguno:
+        break;
+    }
+  }
+
   @override
   void dispose() {
+    _abiertos?.cancel();
     _avisos?.cancel();
     super.dispose();
   }
