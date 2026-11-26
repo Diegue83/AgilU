@@ -145,6 +145,12 @@ class _Ticket extends StatelessWidget {
                           ),
                         ),
                       ),
+                    if (t.pasoActual != null) ...[
+                      PasosPedido(
+                          paso: t.pasoActual!,
+                          etiquetaPago: t.alRecoger ? 'Al recoger' : 'Pago'),
+                      const SizedBox(height: 12),
+                    ],
                     Center(
                       child: Chip(
                         avatar: Icon(switch (t.estado) {
@@ -332,6 +338,63 @@ class _Instrucciones extends StatelessWidget {
             const Text('3. Sube aquí la captura o foto del comprobante.'),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Paso a paso del pedido: Pago → Recibido → Preparando → Listo → Entregado.
+class PasosPedido extends StatelessWidget {
+  final int paso;
+  final String etiquetaPago;
+  const PasosPedido(
+      {super.key, required this.paso, this.etiquetaPago = 'Pago'});
+
+  @override
+  Widget build(BuildContext context) {
+    final esquema = Theme.of(context).colorScheme;
+    final nombres = [etiquetaPago, ...TicketPedido.pasos.skip(1)];
+    return Semantics(
+      label: 'Estado del pedido: ${nombres[paso]}',
+      child: Row(
+        children: [
+          for (final (i, nombre) in nombres.indexed) ...[
+            if (i > 0)
+              Expanded(
+                child: Container(
+                  height: 2,
+                  margin: const EdgeInsets.only(bottom: 18),
+                  color: i <= paso ? esquema.primary : esquema.outlineVariant,
+                ),
+              ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircleAvatar(
+                  radius: 12,
+                  backgroundColor: i <= paso
+                      ? esquema.primary
+                      : esquema.surfaceContainerHighest,
+                  child: i < paso
+                      ? Icon(Icons.check, size: 14, color: esquema.onPrimary)
+                      : Text('${i + 1}',
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: i == paso
+                                  ? esquema.onPrimary
+                                  : esquema.onSurfaceVariant)),
+                ),
+                const SizedBox(height: 4),
+                Text(nombre,
+                    key: Key('paso-$i'),
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight:
+                            i == paso ? FontWeight.bold : FontWeight.normal)),
+              ],
+            ),
+          ],
+        ],
       ),
     );
   }
