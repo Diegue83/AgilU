@@ -2593,6 +2593,58 @@ ref.execute();
 ```
 
 
+### EditarMisAvisos
+#### Required Arguments
+```dart
+bool pedidoListo = ...;
+bool pagos = ...;
+bool personal = ...;
+AgiluConnector.instance.editarMisAvisos(
+  pedidoListo: pedidoListo,
+  pagos: pagos,
+  personal: personal,
+).execute();
+```
+
+
+
+#### Return Type
+`execute()` returns a `OperationResult<EditarMisAvisosData, EditarMisAvisosVariables>`
+```dart
+/// Result of an Operation Request (query/mutation).
+class OperationResult<Data, Variables> {
+  OperationResult(this.dataConnect, this.data, this.ref);
+  Data data;
+  OperationRef<Data, Variables> ref;
+  FirebaseDataConnect dataConnect;
+}
+
+final result = await AgiluConnector.instance.editarMisAvisos(
+  pedidoListo: pedidoListo,
+  pagos: pagos,
+  personal: personal,
+);
+EditarMisAvisosData data = result.data;
+final ref = result.ref;
+```
+
+#### Getting the Ref
+Each builder returns an `execute` function, which is a helper function that creates a `Ref` object, and executes the underlying operation.
+An example of how to use the `Ref` object is shown below:
+```dart
+bool pedidoListo = ...;
+bool pagos = ...;
+bool personal = ...;
+
+final ref = AgiluConnector.instance.editarMisAvisos(
+  pedidoListo: pedidoListo,
+  pagos: pagos,
+  personal: personal,
+).ref();
+ref.execute();
+```
+
+
 ### EditarMiPerfil
 #### Required Arguments
 ```dart

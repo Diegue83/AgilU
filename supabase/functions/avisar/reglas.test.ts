@@ -7,6 +7,7 @@ import {
   avisoDePedido,
   avisoDeSolicitud,
   formatearFolio,
+  quierePush,
   type PedidoParaAviso,
   type Persona,
   validarEntrada,
@@ -114,4 +115,17 @@ test('cada estación recibe y valida solo los comprobantes de sus pedidos', () =
   const validado = { ...p, estado: 'pendiente', pagadoEn: '2026-11-26T10:00:00Z' };
   assert.equal(avisoDePedido('pago_validado', 'uid-tacos', validado).destinatarios[0].usuarioId, 'u-ana');
   rechazo(() => avisoDePedido('pago_validado', 'uid-jugos', validado), 403);
+});
+
+test('el push respeta las preferencias de cada persona', () => {
+  const sinListos: Persona = {
+    ...ana, avisos: { pedidoListo: false, pagos: true, personal: true },
+  };
+  assert.equal(quierePush(sinListos, 'pedido_listo'), false);
+  assert.equal(quierePush(sinListos, 'pago_validado'), true);
+  const sinPersonal: Persona = { ...beto, avisos: { pedidoListo: true, pagos: true, personal: false } };
+  assert.equal(quierePush(sinPersonal, 'comprobante'), false);
+  assert.equal(quierePush(sinPersonal, 'solicitud'), false);
+  // Sin preferencias guardadas se avisa todo.
+  assert.equal(quierePush(ana, 'pedido_listo'), true);
 });

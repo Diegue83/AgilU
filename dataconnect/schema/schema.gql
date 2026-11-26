@@ -14,6 +14,10 @@ type Usuario @table {
   # empleado puede activarla, cambiar la disponibilidad de sus productos y
   # dar de alta productos en ella.
   puesto: Puesto
+  # Qué notificaciones push recibe. La bandeja de avisos guarda todo igual.
+  avisoPedidoListo: Boolean! @default(value: true)
+  avisoPagos: Boolean! @default(value: true)
+  avisoPersonal: Boolean! @default(value: true)
 }
 
 # Roles de sistema: alumno, empleado, encargado y admin; el administrador puede

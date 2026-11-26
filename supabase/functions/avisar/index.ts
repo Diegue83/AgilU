@@ -23,6 +23,8 @@ import {
   avisoDeSolicitud,
   Persona,
   validarEntrada,
+  quierePush,
+  type Evento,
 } from './reglas.ts';
 
 const PROYECTO = 'agilu-a232a';
@@ -99,6 +101,7 @@ async function graphql(query: string, variables: Record<string, unknown>) {
 const PERSONA = `
   id
   puestoId
+  avisoPedidoListo avisoPagos avisoPersonal
   rol { nombre rolPermisos_on_rol { permiso { codigoAccion } } }
   autenticacion_on_usuario { firebaseAuthUid }
   dispositivoTokens_on_usuario { token }
@@ -110,6 +113,11 @@ const persona = (u: any): Persona => ({
   uid: u.autenticacion_on_usuario?.firebaseAuthUid ?? null,
   rol: u.rol?.nombre ?? null,
   puestoId: u.puestoId ?? null,
+  avisos: {
+    pedidoListo: u.avisoPedidoListo !== false,
+    pagos: u.avisoPagos !== false,
+    personal: u.avisoPersonal !== false,
+  },
   // deno-lint-ignore no-explicit-any
   permisos: (u.rol?.rolPermisos_on_rol ?? []).map((x: any) => x.permiso.codigoAccion),
   // deno-lint-ignore no-explicit-any
@@ -189,7 +197,8 @@ async function guardarEnBandeja(aviso: Aviso, pedidoId: string | null) {
 
 async function enviarPush(aviso: Aviso, datos: Record<string, string>): Promise<number> {
   let enviados = 0;
-  for (const token of aviso.destinatarios.flatMap((x) => x.tokens)) {
+  const quieren = aviso.destinatarios.filter((x) => quierePush(x, datos.evento as Evento));
+  for (const token of quieren.flatMap((x) => x.tokens)) {
     const r = await fetch(FCM, {
       method: 'POST',
       headers: { Authorization: `Bearer ${await accesoGoogle()}`, 'Content-Type': 'application/json' },

@@ -192,6 +192,41 @@ class _Cuenta extends StatelessWidget {
                       label: const Text('Editar datos'),
                     ),
                     const SizedBox(height: 16),
+                    Text('Notificaciones',
+                        style: Theme.of(context).textTheme.titleMedium),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Pedido listo'),
+                      value: p.avisos.pedidoListo,
+                      onChanged: vm.guardando
+                          ? null
+                          : (v) =>
+                              vm.cambiarAvisos(p.avisos.copiar(pedidoListo: v)),
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Pagos validados o rechazados'),
+                      value: p.avisos.pagos,
+                      onChanged: vm.guardando
+                          ? null
+                          : (v) => vm.cambiarAvisos(p.avisos.copiar(pagos: v)),
+                    ),
+                    if (p.esPersonal)
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Comprobantes y solicitudes de '
+                            'trabajo'),
+                        value: p.avisos.personal,
+                        onChanged: vm.guardando
+                            ? null
+                            : (v) =>
+                                vm.cambiarAvisos(p.avisos.copiar(personal: v)),
+                      ),
+                    Text(
+                        'Lo que apagues no llega como notificación, pero '
+                        'sigue en tu bandeja de avisos.',
+                        style: Theme.of(context).textTheme.bodySmall),
+                    const SizedBox(height: 16),
                     const TarjetaVersion(),
                     const SizedBox(height: 16),
                     Text('Seguridad',

@@ -25,6 +25,8 @@ export interface Persona {
   permisos: string[];
   /** Estación asignada; quien cobra con estación solo cobra la suya. */
   puestoId?: string | null;
+  /** Preferencias de push (la bandeja guarda el aviso de todos modos). */
+  avisos?: { pedidoListo: boolean; pagos: boolean; personal: boolean };
   tokens: string[];
 }
 
@@ -138,4 +140,22 @@ export function validarEntrada(cuerpo: unknown): { evento: Evento; pedidoId: str
     throw new AvisoRechazado(400, 'Pedido inválido.');
   }
   return { evento, pedidoId };
+}
+
+/** Si la persona quiere recibir por push este evento. */
+export function quierePush(x: Persona, evento: Evento): boolean {
+  const a = x.avisos;
+  if (!a) return true;
+  switch (evento) {
+    case 'pedido_listo':
+      return a.pedidoListo;
+    case 'pago_validado':
+    case 'pago_rechazado':
+      return a.pagos;
+    case 'comprobante':
+    case 'solicitud':
+      return a.personal;
+    default:
+      return true;
+  }
 }

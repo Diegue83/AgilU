@@ -70,10 +70,19 @@ void main() {
     final p = DataConnectPerfilRepository.aPerfil(
         MiPerfilAutenticacion.fromJson(const {
       'correoElectronico': 'ana@utng.edu.mx',
-      'usuario': {'id': 'u1', 'nombre': 'Ana', 'rol': null, 'cafeteria': null},
+      'usuario': {
+        'id': 'u1',
+        'nombre': 'Ana',
+        'rol': null,
+        'cafeteria': null,
+        'avisoPedidoListo': false,
+        'avisoPagos': true,
+        'avisoPersonal': true,
+      },
     }));
     expect(p.rol, RolUsuario.alumno);
     expect(p.esEncargado, isFalse);
+    expect(p.avisos.pedidoListo, isFalse);
   });
 
   test('el encargado trae su cafetería', () {
@@ -83,6 +92,9 @@ void main() {
       'usuario': {
         'id': 'u2',
         'nombre': 'Beto',
+        'avisoPedidoListo': true,
+        'avisoPagos': true,
+        'avisoPersonal': true,
         'rol': {
           'nombre': 'encargado',
           'rolPermisos_on_rol': [
