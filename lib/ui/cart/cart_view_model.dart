@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../../core/app_config.dart';
 import '../../core/reglas_pedido.dart';
 import '../../data/models/cafeteria.dart';
+import '../../data/models/confianza.dart';
 import '../../data/models/item_carrito.dart';
 import '../../data/models/pedido.dart';
 import '../../data/models/producto.dart';
@@ -50,6 +51,27 @@ class CartViewModel extends ChangeNotifier {
   String notas = '';
   bool enviando = false;
   String? error;
+
+  /// Confianza del alumno: con 100 puede pagar al recoger.
+  Confianza? confianza;
+  bool pagoAlRecoger = false;
+
+  bool get puedePagarAlRecoger => confianza?.puedePagarAlRecoger ?? false;
+
+  Future<void> cargarConfianza(PedidoRepository repo) async {
+    try {
+      confianza = await repo.confianza();
+    } catch (_) {
+      confianza = null;
+    }
+    if (!puedePagarAlRecoger) pagoAlRecoger = false;
+    notifyListeners();
+  }
+
+  void elegirPagoAlRecoger(bool valor) {
+    pagoAlRecoger = valor && puedePagarAlRecoger;
+    notifyListeners();
+  }
 
   /// HU-07: minutos de anticipación que aplican a este carrito. Si la cocina
   /// lo permite y todo es de preparación inmediata, no se pide anticipación.
@@ -192,6 +214,7 @@ class CartViewModel extends ChangeNotifier {
         total: total,
         recogerA: recogerA!,
         notas: notas,
+        pagoAlRecoger: pagoAlRecoger && puedePagarAlRecoger,
       );
       final creado = await repo.crearPedido(pedido);
       final resultado = ResultadoPedido(
@@ -202,6 +225,10 @@ class CartViewModel extends ChangeNotifier {
       _items.clear();
       recogerA = null;
       notas = '';
+      if (pedido.pagoAlRecoger) {
+        pagoAlRecoger = false;
+        confianza = null;
+      }
       return resultado;
     } on PedidoRechazado catch (e) {
       error = e.motivo;

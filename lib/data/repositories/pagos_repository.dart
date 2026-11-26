@@ -19,6 +19,12 @@ abstract class PagosRepository {
 
   /// Imagen de un comprobante guardado en Supabase (su ruta en el bucket).
   Future<Uint8List> comprobante(String ruta);
+
+  /// Pedidos a pagar al recoger que no se recogieron y siguen sin pagarse.
+  Future<List<AdeudoPorCobrar>> adeudos();
+
+  /// Registra que el alumno pagó su adeudo en la cafetería.
+  Future<void> cobrarAdeudo(String pedidoId);
 }
 
 class DataConnectPagosRepository implements PagosRepository {
@@ -63,6 +69,29 @@ class DataConnectPagosRepository implements PagosRepository {
         .execute();
     if ((res.data.execute_ ?? 0) == 0) throw PagoDesactualizado();
   }
+
+  @override
+  Future<List<AdeudoPorCobrar>> adeudos() async {
+    final res = await _conector.adeudosPorCobrar().execute();
+    return res.data.pedidos
+        .map((p) => AdeudoPorCobrar(
+              pedidoId: p.id,
+              folio: ReglasPedido.formatearFolio(p.folio),
+              total: p.montoTotal,
+              recogerA: p.recogerA.toDateTime().toLocal(),
+              alumno: p.usuario.nombre,
+            ))
+        .toList();
+  }
+
+  @override
+  Future<void> cobrarAdeudo(String pedidoId) async {
+    try {
+      await _conector.cobrarAdeudo(id: pedidoId).execute();
+    } catch (_) {
+      throw PagoDesactualizado();
+    }
+  }
 }
 
 class MockPagosRepository implements PagosRepository {
@@ -97,5 +126,17 @@ class MockPagosRepository implements PagosRepository {
     final i = imagenes[ruta];
     if (i == null) throw Exception('No existe el comprobante.');
     return i;
+  }
+
+  final List<AdeudoPorCobrar> pendientes = [];
+
+  @override
+  Future<List<AdeudoPorCobrar>> adeudos() async => List.of(pendientes);
+
+  @override
+  Future<void> cobrarAdeudo(String pedidoId) async {
+    final antes = pendientes.length;
+    pendientes.removeWhere((a) => a.pedidoId == pedidoId);
+    if (pendientes.length == antes) throw PagoDesactualizado();
   }
 }

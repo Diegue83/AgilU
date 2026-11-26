@@ -43,6 +43,8 @@ part 'validar_pago.dart';
 
 part 'entregar_pedido.dart';
 
+part 'cobrar_adeudo.dart';
+
 part 'marcar_no_recogido.dart';
 
 part 'registrar_dispositivo.dart';
@@ -114,6 +116,8 @@ part 'panel_pedidos.dart';
 part 'pagos_por_validar.dart';
 
 part 'mi_confianza.dart';
+
+part 'adeudos_por_cobrar.dart';
 
 part 'mis_notificaciones.dart';
 
@@ -229,6 +233,11 @@ class AgiluConnector {
   
   EntregarPedidoVariablesBuilder entregarPedido ({required String id, required String codigo, }) {
     return EntregarPedidoVariablesBuilder(dataConnect, id: id,codigo: codigo,);
+  }
+  
+  
+  CobrarAdeudoVariablesBuilder cobrarAdeudo ({required String id, }) {
+    return CobrarAdeudoVariablesBuilder(dataConnect, id: id,);
   }
   
   
@@ -409,6 +418,11 @@ class AgiluConnector {
   
   MiConfianzaVariablesBuilder miConfianza () {
     return MiConfianzaVariablesBuilder(dataConnect, );
+  }
+  
+  
+  AdeudosPorCobrarVariablesBuilder adeudosPorCobrar () {
+    return AdeudosPorCobrarVariablesBuilder(dataConnect, );
   }
   
   

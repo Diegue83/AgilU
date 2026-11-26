@@ -32,6 +32,11 @@ y pull request.
   creada no es de alumno, no puede hacer pedidos mientras espera, y solo el encargado
   de esa cafetería ve, aprueba o rechaza la solicitud; una cafetería inactiva no las
   recibe.
+- Pago al recoger y adeudos: con 100 de confianza el pedido entra directo a cocina con
+  código y cuenta como adeudo; solo uno a la vez; entregarlo con el código lo cobra;
+  si no se recoge baja la confianza 20 puntos y no se recupera mientras se deba; solo
+  el encargado lo cobra y desde entonces se recuperan 5 puntos por día; con menos de
+  100 el servidor rechaza pagar al recoger y dice por qué.
 - Estación del empleado: sin estación asignada no ve ni cambia nada; el encargado
   solo asigna estaciones de su cafetería a sus empleados; el empleado activa su
   estación y da de alta, edita y pone foto a productos solo de ella, sin eliminar ni

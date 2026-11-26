@@ -76,6 +76,7 @@ query MiPedido($id: UUID!) @auth(level: USER) {
     comprobanteUrl
     motivoRechazoPago
     pagadoEn
+    esCredito
     codigoEntrega
     entregadoEn
     cafeteria {
@@ -251,8 +252,12 @@ query OcupacionFranjas($cafeteriaId: UUID!)
 }
 
 # HU-10: si CrearPedido no insertó nada, explica por qué con las mismas reglas.
-query DiagnosticarPedido($cafeteriaId: UUID!, $recogerA: Timestamp!, $items: Any!)
-  @auth(level: USER) {
+query DiagnosticarPedido(
+  $cafeteriaId: UUID!
+  $recogerA: Timestamp!
+  $items: Any!
+  $pagoAlRecoger: Boolean
+) @auth(level: USER) {
   diagnostico: _selectFirst(
     sql: """
     WITH
@@ -286,6 +291,21 @@ query DiagnosticarPedido($cafeteriaId: UUID!, $recogerA: Timestamp!, $items: Any
       WHEN (SELECT count(*) FROM pedido o JOIN cliente ON o.usuario_id = cliente.usuario_id
             WHERE o.estado = 'no_recogido' AND o.recoger_a > now() - interval '30 days') >= 3
         THEN 'Tienes 3 pedidos sin recoger en los últimos 30 días; por ahora no puedes hacer pedidos nuevos.'
+      WHEN coalesce($5::boolean, false)
+           AND (SELECT count(*) FROM pedido c
+          WHERE c.usuario_id = (SELECT usuario_id FROM cliente) AND c.es_credito AND c.pagado_en IS NULL
+            AND c.estado <> 'cancelado') > 0
+        THEN 'Ya tienes un pedido para pagar al recoger. Págalo antes de pedir otro así.'
+      WHEN coalesce($5::boolean, false)
+           AND greatest(0, 100 - coalesce((
+          SELECT sum(CASE
+                   WHEN n.es_credito AND n.pagado_en IS NULL THEN 20
+                   ELSE greatest(0, 20 - 5 * floor(extract(epoch FROM now() -
+                          CASE WHEN n.es_credito THEN n.pagado_en ELSE n.recoger_a END) / 86400))::int
+                 END)
+          FROM pedido n
+          WHERE n.usuario_id = (SELECT usuario_id FROM cliente) AND n.estado = 'no_recogido'), 0))::int < 100
+        THEN 'Para pagar al recoger necesitas 100 de confianza. Paga por transferencia.'
       WHEN NOT EXISTS (SELECT 1 FROM caf WHERE activa) THEN 'La cafetería no está recibiendo pedidos.'
       WHEN (SELECT count(*) FROM validos) <> (SELECT count(*) FROM pedidos_items)
         THEN 'Algún producto ya no está disponible. Revisa tu carrito.'
@@ -304,7 +324,7 @@ query DiagnosticarPedido($cafeteriaId: UUID!, $recogerA: Timestamp!, $items: Any
       ELSE 'No se pudo registrar el pedido. Intenta de nuevo.'
     END AS motivo
     """
-    params: [{ _expr: "auth.uid" }, $cafeteriaId, $recogerA, $items]
+    params: [{ _expr: "auth.uid" }, $cafeteriaId, $recogerA, $items, $pagoAlRecoger]
   )
 }
 
@@ -353,6 +373,7 @@ query PanelPedidos($desde: Timestamp!, $hasta: Timestamp!) @auth(level: USER) {
     notas
     montoTotal
     intentosEntrega
+    esCredito
     usuario {
       nombre
     }
@@ -393,19 +414,66 @@ query PagosPorValidar @auth(level: USER) {
   }
 }
 
-# HU-23: pedidos que el alumno con sesión no recogió en los últimos 30 días.
+# HU-23: confianza del alumno con sesión, de 0 a 100. Cada pedido sin recoger
+# quita 20 puntos; se recuperan 5 por día desde que el adeudo se paga (o desde
+# la hora de recogida si el pedido ya estaba pagado). Con 100 puede pagar al
+# recoger. "adeudo" es lo que debe de pedidos a pagar al recoger: cuenta desde
+# que se piden y hasta que se pagan.
 query MiConfianza @auth(level: USER) {
   confianza: _selectFirst(
     sql: """
-    SELECT count(*)::int AS "noRecogidos"
-    FROM pedido o
-    JOIN autenticacion a ON a.usuario_id = o.usuario_id
-    WHERE a.firebase_auth_uid = $1
-      AND o.estado = 'no_recogido'
-      AND o.recoger_a > now() - interval '30 days'
+    WITH yo AS (SELECT usuario_id AS id FROM autenticacion WHERE firebase_auth_uid = $1)
+    SELECT
+      (SELECT count(*) FROM pedido o
+        WHERE o.usuario_id = yo.id AND o.estado = 'no_recogido'
+          AND o.recoger_a > now() - interval '30 days')::int AS "noRecogidos",
+      greatest(0, 100 - coalesce((
+          SELECT sum(CASE
+                   WHEN n.es_credito AND n.pagado_en IS NULL THEN 20
+                   ELSE greatest(0, 20 - 5 * floor(extract(epoch FROM now() -
+                          CASE WHEN n.es_credito THEN n.pagado_en ELSE n.recoger_a END) / 86400))::int
+                 END)
+          FROM pedido n
+          WHERE n.usuario_id = yo.id AND n.estado = 'no_recogido'), 0))::int AS "puntos",
+      coalesce((SELECT sum(c.monto_total) FROM pedido c
+        WHERE c.usuario_id = yo.id AND c.es_credito AND c.pagado_en IS NULL
+          AND c.estado <> 'cancelado'), 0)::float AS "adeudo",
+      (SELECT count(*) FROM pedido c
+          WHERE c.usuario_id = yo.id AND c.es_credito AND c.pagado_en IS NULL
+            AND c.estado <> 'cancelado')::int AS "creditosAbiertos"
+    FROM yo
     """
     params: [{ _expr: "auth.uid" }]
   )
+}
+
+# El encargado ve los pedidos a pagar al recoger que no se recogieron y siguen
+# sin pagar: son los adeudos que puede cobrar.
+query AdeudosPorCobrar @auth(level: USER) {
+  pedidos(
+    where: {
+      cafeteria: {
+        usuarios_on_cafeteria: {
+          exist: {
+            rol: { nombre: { eq: "encargado" } }
+            autenticacion_on_usuario: { firebaseAuthUid: { eq_expr: "auth.uid" } }
+          }
+        }
+      }
+      estado: { eq: "no_recogido" }
+      esCredito: { eq: true }
+      pagadoEn: { isNull: true }
+    }
+    orderBy: [{ recogerA: ASC }]
+  ) {
+    id
+    folio
+    montoTotal
+    recogerA
+    usuario {
+      nombre
+    }
+  }
 }
 
 # HU-05: avisos recibidos por el alumno con sesión.

@@ -177,6 +177,22 @@ class _Ticket extends StatelessWidget {
                         ),
                       ),
                     ],
+                    if (t.debe) ...[
+                      const SizedBox(height: 12),
+                      Card(
+                        color: Theme.of(context).colorScheme.errorContainer,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Text(
+                            t.estado == EstadoPedido.noRecogido
+                                ? 'Debes \$${t.total.toStringAsFixed(2)} de este pedido. '
+                                    'Págalo en la cafetería para que tu confianza se recupere.'
+                                : 'Paga \$${t.total.toStringAsFixed(2)} en la cafetería al recoger. '
+                                    'Si no lo recoges queda como adeudo y baja tu confianza.',
+                          ),
+                        ),
+                      ),
+                    ],
                     if (t.pagadoEn != null)
                       Text(
                           'Pagado el ${t.pagadoEn!.day}/${t.pagadoEn!.month} a las ${ReglasPedido.formatearHora(t.pagadoEn!)}'),

@@ -1664,6 +1664,133 @@ describe('puntos rojos (MisPendientes)', () => {
   });
 });
 
+describe('pago al recoger y adeudos', () => {
+  let paco;
+  const confianza = async () => (await paco.query('MiConfianza')).data.confianza;
+  const alRecoger = (c = {}) => pedido({ pagoAlRecoger: true, ...c });
+  const marcarNoRecogido = async (p) => {
+    await beto.mutation('AvanzarPedido', { id: p.id, estado: 'preparando' });
+    await beto.mutation('AvanzarPedido', { id: p.id, estado: 'listo' });
+    await adminDataConnect.executeGraphql(
+      'mutation R($id: UUID!, $t: Timestamp!) { pedido_update(id: $id, data: { recogerA: $t }) }',
+      { variables: { id: p.id, t: new Date(Date.now() - 36e5).toISOString() } },
+    );
+    const r = await beto.mutation('MarcarNoRecogido', { id: p.id });
+    assert.equal(r.data._execute, 1);
+  };
+  const pagadoHace = (id, dias) => adminDataConnect.executeGraphql(
+    'mutation P($id: UUID!, $t: Timestamp!) { pedido_update(id: $id, data: { pagadoEn: $t }) }',
+    { variables: { id, t: new Date(Date.now() - dias * 864e5 - 6e4).toISOString() } },
+  );
+
+  before(async () => {
+    paco = await alumno('paco');
+    await paco.mutation('CrearPerfil', { nombre: 'Paco' });
+  });
+
+  after(async () => {
+    await signOut(paco.auth);
+    await deleteApp(paco.app);
+  });
+
+  test('con 100 de confianza paga al recoger: entra a cocina y cuenta como adeudo', async () => {
+    assert.equal((await confianza()).puntos, 100);
+    const p = alRecoger();
+    const r = await paco.mutation('CrearPedido', p);
+    assert.equal(r.data._execute, 2);
+    const { data } = await paco.query('MiPedido', { id: p.id });
+    const mio = data.pedidos[0];
+    assert.equal(mio.estado, 'pendiente');
+    assert.equal(mio.esCredito, true);
+    assert.match(mio.codigoEntrega, /^[0-9]{4}$/);
+    assert.equal(mio.pagadoEn, null);
+    const c = await confianza();
+    assert.equal(c.adeudo, mio.montoTotal);
+    assert.equal(c.creditosAbiertos, 1);
+    assert.equal(c.puntos, 100);
+
+    // Solo uno a la vez.
+    const otro = alRecoger();
+    assert.equal((await paco.mutation('CrearPedido', otro)).data._execute, 0);
+    const d = await paco.query('DiagnosticarPedido', {
+      cafeteriaId: otro.cafeteriaId, recogerA: otro.recogerA, items: otro.items, pagoAlRecoger: true,
+    });
+    assert.match(d.data.diagnostico.motivo, /Ya tienes un pedido para pagar al recoger/);
+
+    // Entregar con el código es cobrarlo.
+    await beto.mutation('AvanzarPedido', { id: p.id, estado: 'preparando' });
+    await beto.mutation('AvanzarPedido', { id: p.id, estado: 'listo' });
+    const e = await beto.mutation('EntregarPedido', { id: p.id, codigo: mio.codigoEntrega });
+    assert.equal(e.data.resultado.estado, 'entregado');
+    const pagado = (await paco.query('MiPedido', { id: p.id })).data.pedidos[0];
+    assert.ok(pagado.pagadoEn);
+    const despues = await confianza();
+    assert.equal(despues.adeudo, 0);
+    assert.equal(despues.creditosAbiertos, 0);
+    assert.equal(despues.puntos, 100);
+  });
+
+  test('si no lo recoge baja la confianza y el adeudo sigue hasta cobrarlo', async () => {
+    const p = alRecoger();
+    await paco.mutation('CrearPedido', p);
+    await marcarNoRecogido(p);
+    let c = await confianza();
+    assert.equal(c.puntos, 80);
+    assert.equal(c.noRecogidos, 1);
+    assert.ok(c.adeudo > 0);
+
+    // Ya no puede pagar al recoger, pero sí pagar por transferencia.
+    assert.equal((await paco.mutation('CrearPedido', alRecoger())).data._execute, 0);
+    assert.equal((await paco.mutation('CrearPedido', pedido())).data._execute, 2);
+
+    // Un adeudo sin pagar no se recupera con el tiempo.
+    await adminDataConnect.executeGraphql(
+      'mutation R($id: UUID!, $t: Timestamp!) { pedido_update(id: $id, data: { recogerA: $t }) }',
+      { variables: { id: p.id, t: new Date(Date.now() - 10 * 864e5).toISOString() } },
+    );
+    assert.equal((await confianza()).puntos, 80);
+
+    // Solo el encargado de la cafetería ve y cobra el adeudo.
+    const lista = (await beto.query('AdeudosPorCobrar')).data.pedidos;
+    assert.ok(lista.some((x) => x.id === sinGuiones(p.id) && x.usuario.nombre === 'Paco'));
+    assert.equal((await paco.query('AdeudosPorCobrar')).data.pedidos.length, 0);
+    await assert.rejects(paco.mutation('CobrarAdeudo', { id: p.id }));
+    await beto.mutation('CobrarAdeudo', { id: p.id });
+    await assert.rejects(beto.mutation('CobrarAdeudo', { id: p.id }));
+
+    c = await confianza();
+    assert.equal(c.adeudo, 0);
+    assert.equal(c.puntos, 80);
+
+    // Ya pagado, se recupera 5 puntos por día.
+    await pagadoHace(p.id, 2);
+    assert.equal((await confianza()).puntos, 90);
+    await pagadoHace(p.id, 4);
+    assert.equal((await confianza()).puntos, 100);
+    assert.equal((await paco.mutation('CrearPedido', alRecoger())).data._execute, 2);
+  });
+
+  test('con menos de 100 no puede pagar al recoger y se le dice por qué', async () => {
+    const quique = await alumno('quique');
+    await quique.mutation('CrearPerfil', { nombre: 'Quique' });
+    const p = pedido();
+    await quique.mutation('CrearPedido', p);
+    await pagado(p);
+    await marcarNoRecogido(p);
+    const c = (await quique.query('MiConfianza')).data.confianza;
+    assert.equal(c.puntos, 80);
+    assert.equal(c.adeudo, 0);
+    const otro = alRecoger();
+    assert.equal((await quique.mutation('CrearPedido', otro)).data._execute, 0);
+    const d = await quique.query('DiagnosticarPedido', {
+      cafeteriaId: otro.cafeteriaId, recogerA: otro.recogerA, items: otro.items, pagoAlRecoger: true,
+    });
+    assert.match(d.data.diagnostico.motivo, /100 de confianza/);
+    await signOut(quique.auth);
+    await deleteApp(quique.app);
+  });
+});
+
 describe('estación del empleado', () => {
   let memo;
   let jugos;

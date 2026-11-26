@@ -8,6 +8,7 @@ import 'package:firebase_data_connect/firebase_data_connect.dart';
 import '../../core/conector.dart';
 import '../../core/reglas_pedido.dart';
 import '../../dataconnect_generated/agilu.dart';
+import '../models/confianza.dart';
 import '../models/pedido.dart';
 import '../models/pedido_panel.dart';
 import '../models/ticket.dart';
@@ -52,6 +53,7 @@ class DataConnectPedidoRepository implements PedidoRepository {
           items: AnyValue(itemsDe(pedido)),
         )
         .notas(notas.isEmpty ? null : notas)
+        .pagoAlRecoger(pedido.pagoAlRecoger)
         .execute();
 
     if ((res.data.execute_ ?? 0) == 0) {
@@ -67,6 +69,12 @@ class DataConnectPedidoRepository implements PedidoRepository {
   Future<int> noRecogidos() async {
     final res = await _conector.miConfianza().execute();
     return noRecogidosDe(res.data);
+  }
+
+  @override
+  Future<Confianza> confianza() async {
+    final res = await _conector.miConfianza().execute();
+    return Confianza.desdeMapa(res.data.confianza?.value as Map?);
   }
 
   // Las operaciones de SQL nativo regresan AnyValue: el mapa o la lista
@@ -123,6 +131,7 @@ class DataConnectPedidoRepository implements PedidoRepository {
       motivoRechazo: p.motivoRechazoPago,
       pagadoEn: p.pagadoEn?.toDateTime().toLocal(),
       codigoEntrega: p.codigoEntrega,
+      alRecoger: p.esCredito,
       lineas: [
         for (final d in p.detallePedidos_on_pedido)
           LineaTicket(d.cantidad, d.producto.nombre, d.precioEnElMomento),
@@ -184,6 +193,7 @@ class DataConnectPedidoRepository implements PedidoRepository {
             recogerA: _timestamp(pedido.recogerA),
             items: AnyValue(itemsDe(pedido)),
           )
+          .pagoAlRecoger(pedido.pagoAlRecoger)
           .execute();
       final motivo = motivoDe(d.data);
       if (motivo != null) return motivo;

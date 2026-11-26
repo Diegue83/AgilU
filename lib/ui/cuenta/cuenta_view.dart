@@ -126,13 +126,35 @@ class _Cuenta extends StatelessWidget {
                               ),
                               const SizedBox(height: 8),
                               LinearProgressIndicator(
-                                value: (vm.limiteNoRecogidos - vm.noRecogidos)
-                                        .clamp(0, vm.limiteNoRecogidos) /
-                                    vm.limiteNoRecogidos,
+                                value: vm.datosConfianza.puntos / 100,
                                 color: _colorConfianza(context, vm.confianza),
                               ),
+                              const SizedBox(height: 4),
+                              Text('${vm.datosConfianza.puntos} de 100',
+                                  key: const Key('puntos-confianza')),
                               const SizedBox(height: 8),
                               Text(vm.confianza.descripcion),
+                              if (vm.datosConfianza.adeudo > 0)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    'Adeudo: \$${vm.datosConfianza.adeudo.toStringAsFixed(2)} '
+                                    'de pedidos a pagar al recoger.',
+                                    style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .error),
+                                  ),
+                                ),
+                              Text(
+                                vm.datosConfianza.puedePagarAlRecoger
+                                    ? 'Puedes pagar tus pedidos al recoger.'
+                                    : 'Con 100 de confianza puedes pagar al '
+                                        'recoger. Cada pedido sin recoger quita '
+                                        '20 puntos y se recuperan 5 por día '
+                                        'cuando ya no debes nada.',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
                               Text(
                                   'Pedidos sin recoger (30 días): '
                                   '${vm.noRecogidos} de ${vm.limiteNoRecogidos}',

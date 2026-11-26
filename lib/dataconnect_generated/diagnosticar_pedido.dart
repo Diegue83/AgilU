@@ -4,8 +4,13 @@ class DiagnosticarPedidoVariablesBuilder {
   String cafeteriaId;
   Timestamp recogerA;
   AnyValue items;
+  Optional<bool> _pagoAlRecoger = Optional.optional(nativeFromJson, nativeToJson);
 
-  final FirebaseDataConnect _dataConnect;
+  final FirebaseDataConnect _dataConnect;  DiagnosticarPedidoVariablesBuilder pagoAlRecoger(bool? t) {
+   _pagoAlRecoger.value = t;
+   return this;
+  }
+
   DiagnosticarPedidoVariablesBuilder(this._dataConnect, {required  this.cafeteriaId,required  this.recogerA,required  this.items,});
   Deserializer<DiagnosticarPedidoData> dataDeserializer = (dynamic json)  => DiagnosticarPedidoData.fromJson(jsonDecode(json));
   Serializer<DiagnosticarPedidoVariables> varsSerializer = (DiagnosticarPedidoVariables vars) => jsonEncode(vars.toJson());
@@ -14,7 +19,7 @@ class DiagnosticarPedidoVariablesBuilder {
   }
 
   QueryRef<DiagnosticarPedidoData, DiagnosticarPedidoVariables> ref() {
-    DiagnosticarPedidoVariables vars= DiagnosticarPedidoVariables(cafeteriaId: cafeteriaId,recogerA: recogerA,items: items,);
+    DiagnosticarPedidoVariables vars= DiagnosticarPedidoVariables(cafeteriaId: cafeteriaId,recogerA: recogerA,items: items,pagoAlRecoger: _pagoAlRecoger,);
     return _dataConnect.query("DiagnosticarPedido", dataDeserializer, varsSerializer, vars);
   }
 }
@@ -60,12 +65,22 @@ class DiagnosticarPedidoVariables {
   final String cafeteriaId;
   final Timestamp recogerA;
   final AnyValue items;
+  late final Optional<bool>pagoAlRecoger;
   @Deprecated('fromJson is deprecated for Variable classes as they are no longer required for deserialization.')
   DiagnosticarPedidoVariables.fromJson(Map<String, dynamic> json):
   
   cafeteriaId = nativeFromJson<String>(json['cafeteriaId']),
   recogerA = Timestamp.fromJson(json['recogerA']),
-  items = AnyValue.fromJson(json['items']);
+  items = AnyValue.fromJson(json['items']) {
+  
+  
+  
+  
+  
+    pagoAlRecoger = Optional.optional(nativeFromJson, nativeToJson);
+    pagoAlRecoger.value = json['pagoAlRecoger'] == null ? null : nativeFromJson<bool>(json['pagoAlRecoger']);
+  
+  }
   @override
   bool operator ==(Object other) {
     if(identical(this, other)) {
@@ -78,11 +93,12 @@ class DiagnosticarPedidoVariables {
     final DiagnosticarPedidoVariables otherTyped = other as DiagnosticarPedidoVariables;
     return cafeteriaId == otherTyped.cafeteriaId && 
     recogerA == otherTyped.recogerA && 
-    items == otherTyped.items;
+    items == otherTyped.items && 
+    pagoAlRecoger == otherTyped.pagoAlRecoger;
     
   }
   @override
-  int get hashCode => Object.hashAll([cafeteriaId.hashCode, recogerA.hashCode, items.hashCode]);
+  int get hashCode => Object.hashAll([cafeteriaId.hashCode, recogerA.hashCode, items.hashCode, pagoAlRecoger.hashCode]);
   
 
   Map<String, dynamic> toJson() {
@@ -90,6 +106,9 @@ class DiagnosticarPedidoVariables {
     json['cafeteriaId'] = nativeToJson<String>(cafeteriaId);
     json['recogerA'] = recogerA.toJson();
     json['items'] = items.toJson();
+    if(pagoAlRecoger.state == OptionalState.set) {
+      json['pagoAlRecoger'] = pagoAlRecoger.toJson();
+    }
     return json;
   }
 
@@ -97,6 +116,7 @@ class DiagnosticarPedidoVariables {
     required this.cafeteriaId,
     required this.recogerA,
     required this.items,
+    required this.pagoAlRecoger,
   });
 }
 
