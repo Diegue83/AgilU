@@ -128,4 +128,31 @@ void main() {
       expect(vm.puedePedir, isFalse);
     });
   });
+
+  test('el buscador filtra por nombre sin acentos 300 ms después de escribir',
+      () async {
+    final vm =
+        await _vm([_p('1', 'Torta de milanesa'), _p('2', 'Café americano')]);
+    vm.buscar('cafe');
+    // Antes de la espera no cambia nada.
+    expect(vm.productosVisibles, hasLength(2));
+    await Future<void>.delayed(MenuViewModel.esperaBusqueda);
+    await Future<void>.delayed(Duration.zero);
+    expect(vm.productosVisibles.map((p) => p.nombre), ['Café americano']);
+
+    // Teclear rápido solo aplica el último texto.
+    vm.buscar('t');
+    vm.buscar('to');
+    vm.buscar('zz');
+    await Future<void>.delayed(MenuViewModel.esperaBusqueda);
+    await Future<void>.delayed(Duration.zero);
+    expect(vm.busqueda, 'zz');
+    expect(vm.productosVisibles, isEmpty);
+
+    vm.buscar('');
+    await Future<void>.delayed(MenuViewModel.esperaBusqueda);
+    await Future<void>.delayed(Duration.zero);
+    expect(vm.productosVisibles, hasLength(2));
+    vm.dispose();
+  });
 }

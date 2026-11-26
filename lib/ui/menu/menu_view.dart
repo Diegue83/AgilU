@@ -143,6 +143,19 @@ class _MenuScaffold extends StatelessWidget {
                   ],
                 ),
               ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: TextField(
+                onChanged: vm.buscar,
+                textInputAction: TextInputAction.search,
+                decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.search),
+                  hintText: 'Buscar en el menú',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
             SizedBox(
               height: 56,
               child: ListView(
@@ -158,6 +171,11 @@ class _MenuScaffold extends StatelessWidget {
                 ],
               ),
             ),
+            if (vm.productosVisibles.isEmpty && vm.busqueda.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text('Nada en el menú coincide con "${vm.busqueda}".'),
+              ),
             Expanded(
               child: ListView.separated(
                 itemCount: vm.productosVisibles.length,
